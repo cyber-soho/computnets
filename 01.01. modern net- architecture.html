@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Network Architecture & Modern Paradigms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F7F6F2; color: #2D3748; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F1F0EA; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #A0AEC0; }
+        .active-tab { border-bottom: 2px solid #718096; color: #1A202C; font-weight: 600; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .layer-card { transition: all 0.3s ease; cursor: pointer; border-left: 4px solid transparent; }
+        .layer-card:hover, .layer-card.selected { transform: translateX(4px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .layer-card.selected { border-left-color: #4A5568; background-color: #EDF2F7; }
+        
+        /* Flashcard Flip Animation */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-stone-800 text-white flex items-center justify-center rounded font-bold text-sm">M1</div>
+                <h1 class="text-xl font-bold text-gray-800 tracking-tight">Computer Networks <span class="text-gray-400 font-normal">| Architecture & Paradigms</span></h1>
+            </div>
+            <div class="text-sm text-gray-500 hidden sm:block">Week 1 Module</div>
+        </div>
+        <!-- Navigation -->
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8 -mb-px overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('architecture')" id="tab-architecture" class="active-tab py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">Network Hierarchy</button>
+                <button onclick="switchTab('infrastructure')" id="tab-infrastructure" class="py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">On-Prem vs Cloud</button>
+                <button onclick="switchTab('virtualization')" id="tab-virtualization" class="py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">Virtualization</button>
+                <button onclick="switchTab('flashcards')" id="tab-flashcards" class="py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">Flashcards (25)</button>
+                <button onclick="switchTab('review')" id="tab-review" class="py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">Quiz (10)</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- VIEW 1: NETWORK HIERARCHY -->
+        <div id="view-architecture" class="tab-content active">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">The Hierarchy of Network Design</h2>
+                <p class="text-gray-600 max-w-3xl">
+                    Modern enterprise networks are built on a scalable three-tier architecture. This design optimizes for performance, cost, and manageability by assigning specific roles to each layer. Explore the stack below to understand the function of the Access, Distribution, and Core layers.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Interactive Diagram -->
+                <div class="lg:col-span-5 flex flex-col justify-center space-y-4 select-none">
+                    <div class="text-center text-xs text-gray-400 uppercase tracking-widest font-semibold mb-2">Internet / WAN</div>
+                    
+                    <!-- Core Layer -->
+                    <div onclick="selectLayer('core')" id="layer-btn-core" class="layer-card p-6 bg-white rounded-lg shadow-sm border border-gray-200 group transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">Core Layer</h3>
+                                <p class="text-sm text-gray-500">The Backbone</p>
+                            </div>
+                            <div class="h-8 w-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">C</div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">40-400+ Gbps • High Speed</div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="flex justify-center text-gray-300 text-xl">↓</div>
+
+                    <!-- Distribution Layer -->
+                    <div onclick="selectLayer('dist')" id="layer-btn-dist" class="layer-card p-6 bg-white rounded-lg shadow-sm border border-gray-200 group">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">Distribution Layer</h3>
+                                <p class="text-sm text-gray-500">The Aggregator</p>
+                            </div>
+                            <div class="h-8 w-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold">D</div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">10-40 Gbps • Policy Control</div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="flex justify-center text-gray-300 text-xl">↓</div>
+
+                    <!-- Access Layer -->
+                    <div onclick="selectLayer('access')" id="layer-btn-access" class="layer-card p-6 bg-white rounded-lg shadow-sm border border-gray-200 group">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">Access Layer</h3>
+                                <p class="text-sm text-gray-500">The Edge</p>
+                            </div>
+                            <div class="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">A</div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">1-10 Gbps • User Connectivity</div>
+                    </div>
+                    
+                    <div class="text-center text-xs text-gray-400 uppercase tracking-widest font-semibold mt-2">End Users</div>
+                </div>
+
+                <!-- Detail Pane -->
+                <div class="lg:col-span-7">
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden h-full flex flex-col">
+                        <div class="p-6 md:p-8 flex-grow" id="layer-detail-content">
+                            <!-- Dynamic Content Injected Here -->
+                            <div class="h-full flex items-center justify-center text-gray-400 flex-col">
+                                <span class="text-4xl mb-4">👆</span>
+                                <p>Select a layer on the left to explore its function.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
+                            <span>Key Takeaway</span>
+                            <span id="layer-takeaway" class="font-semibold text-gray-800 italic">Explore the stack.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: INFRASTRUCTURE & COSTS -->
+        <div id="view-infrastructure" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">On-Premise vs. Cloud Infrastructure</h2>
+                <p class="text-gray-600 max-w-3xl">
+                    Choosing between owning hardware (CapEx) and renting computing power (OpEx) is a critical financial and technical decision. Use the TCO (Total Cost of Ownership) Modeler below to visualize how upfront costs compare to monthly cloud fees over a 5-year period.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Controls -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="w-2 h-6 bg-indigo-500 rounded-full mr-2"></span>
+                        Cost Parameters
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">On-Prem Scale</label>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Physical Servers</span>
+                                <span id="val-servers" class="font-bold text-indigo-600">5</span>
+                            </div>
+                            <input type="range" id="input-servers" min="1" max="20" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-400 mt-1">@ $5,000 hardware cost ea.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">On-Prem Overhead</label>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>IT Admins</span>
+                                <span id="val-admins" class="font-bold text-indigo-600">1</span>
+                            </div>
+                            <input type="range" id="input-admins" min="0" max="5" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-400 mt-1">@ $80k/year ea.</p>
+                        </div>
+
+                        <hr class="border-dashed border-gray-300">
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Cloud Equivalent</label>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Monthly Spend</span>
+                                <span id="val-cloud" class="font-bold text-teal-600">$2,500</span>
+                            </div>
+                            <input type="range" id="input-cloud" min="500" max="10000" step="500" value="2500" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-400 mt-1">Includes Compute, Storage, Transfer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800">5-Year TCO Projection</h3>
+                        <div class="flex space-x-4 text-sm">
+                            <div class="flex items-center"><span class="w-3 h-3 bg-gray-700 rounded-full mr-2"></span>On-Premise</div>
+                            <div class="flex items-center"><span class="w-3 h-3 bg-teal-500 rounded-full mr-2"></span>Cloud</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow flex items-center justify-center bg-gray-50 rounded-lg p-2">
+                        <div class="chart-container">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                        <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                            <div class="text-xs text-gray-500">On-Prem Break-Even</div>
+                            <div id="breakeven-text" class="font-bold text-gray-800">Year 3</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                            <div class="text-xs text-gray-500">Key Difference</div>
+                            <div class="font-bold text-gray-800">CapEx vs OpEx</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: VIRTUALIZATION LAB -->
+        <div id="view-virtualization" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Virtualization Fundamentals</h2>
+                <p class="text-gray-600 max-w-3xl">
+                    Virtualization decouples software from hardware, allowing one physical server to run multiple Virtual Machines (VMs). This increases utilization from ~15% to ~80%. Compare the architectures below.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <!-- Interactive Stack Visualizer -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800">Hypervisor Architecture</h3>
+                        <div class="flex bg-gray-100 p-1 rounded-lg">
+                            <button onclick="setHyp('type1')" id="btn-type1" class="px-3 py-1 text-sm rounded-md shadow bg-white font-medium text-gray-800 transition-all">Type 1 (Bare Metal)</button>
+                            <button onclick="setHyp('type2')" id="btn-type2" class="px-3 py-1 text-sm rounded-md font-medium text-gray-500 hover:text-gray-700 transition-all">Type 2 (Hosted)</button>
+                        </div>
+                    </div>
+
+                    <!-- Stack Visualization -->
+                    <div id="stack-container" class="flex flex-col space-y-1 w-full max-w-sm mx-auto transition-all duration-500">
+                        <!-- Dynamic Content -->
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-indigo-50 rounded-lg text-sm text-indigo-800" id="hyp-desc">
+                        <!-- Description -->
+                    </div>
+                </div>
+
+                <!-- Containers vs VMs -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4">VMs vs. Containers</h3>
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer" onclick="toggleCompare('vm')">
+                            <div class="flex items-start">
+                                <div class="bg-blue-100 p-2 rounded text-blue-600 text-xl mr-4">🖥️</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Virtual Machines</h4>
+                                    <p class="text-sm text-gray-500 mt-1">Full OS per instance. Heavyweight (GBs). Slow startup (Minutes). Strongest isolation.</p>
+                                    <div id="detail-vm" class="hidden mt-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                                        <strong>Best for:</strong> Different OS needs, Legacy apps, Security isolation.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors cursor-pointer" onclick="toggleCompare('container')">
+                            <div class="flex items-start">
+                                <div class="bg-teal-100 p-2 rounded text-teal-600 text-xl mr-4">📦</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Containers (Docker)</h4>
+                                    <p class="text-sm text-gray-500 mt-1">Shared OS Kernel. Lightweight (MBs). Instant startup. Process-level isolation.</p>
+                                    <div id="detail-container" class="hidden mt-2 text-sm text-teal-700 bg-teal-50 p-2 rounded">
+                                        <strong>Best for:</strong> Microservices, CI/CD, Scalable web apps.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: FLASHCARDS (NEW) -->
+        <div id="view-flashcards" class="tab-content">
+            <div class="max-w-2xl mx-auto">
+                <div class="mb-6 text-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Review Flashcards</h2>
+                    <p class="text-gray-500 text-sm mt-1">Click the card to flip. Use arrow keys or buttons to navigate.</p>
+                </div>
+
+                <div class="relative w-full aspect-[3/2] mb-8 perspective-1000 cursor-pointer group" onclick="flipCard()">
+                    <div id="flashcard-inner" class="relative w-full h-full transition-transform duration-500 transform-style-3d shadow-lg rounded-xl">
+                        <!-- Front -->
+                        <div class="absolute w-full h-full bg-white border border-gray-200 rounded-xl backface-hidden flex flex-col items-center justify-center p-8 text-center">
+                            <div class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-4">Front</div>
+                            <h3 id="card-front" class="text-2xl font-bold text-gray-800"></h3>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute w-full h-full bg-slate-800 text-white rounded-xl backface-hidden rotate-y-180 flex flex-col items-center justify-center p-8 text-center">
+                            <div class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-4">Back</div>
+                            <p id="card-back" class="text-xl leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between px-4">
+                    <button onclick="prevCard()" class="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-600 font-medium transition-colors">← Previous</button>
+                    <span id="card-counter" class="text-gray-500 font-medium font-mono">1 / 25</span>
+                    <button onclick="nextCard()" class="px-4 py-2 bg-indigo-600 border border-transparent rounded hover:bg-indigo-700 text-white font-medium transition-colors">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: QUIZ (Updated) -->
+        <div id="view-review" class="tab-content">
+            <div class="max-w-3xl mx-auto">
+                <div class="mb-8 text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Module 1 Knowledge Check</h2>
+                    <p class="text-gray-600">Test your understanding of the core concepts.</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div id="quiz-container" class="p-8">
+                        <!-- Quiz populated by JS -->
+                    </div>
+                    <div class="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-between items-center">
+                        <span id="quiz-score" class="font-bold text-gray-800">Score: 0/10</span>
+                        <button onclick="resetQuiz()" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">Reset Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm text-gray-500">
+                &copy; 2026 Cyber.SoHo. Educational Material.
+                <span class="block mt-1 text-xs text-gray-400">Disclaimer: For educational purposes only. Verify external links.</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script>
+        // --- DATA ---
+        const layerData = {
+            core: {
+                title: "Core Layer (The Backbone)",
+                speed: "40-400+ Gbps",
+                desc: "The superhighway of the network. Optimized purely for speed and reliability. It connects geographically separated sites and moves data as fast as possible.",
+                features: ["Minimal Packet Processing", "High Redundancy (99.999%)", "No Policy Enforcement"],
+                devices: "High-performance Backbone Routers, Data Center Spines",
+                color: "orange"
+            },
+            dist: {
+                title: "Distribution Layer (The Aggregator)",
+                speed: "10-40 Gbps",
+                desc: "The intelligent middleman. It aggregates traffic from the access layer and applies policies before sending data to the core. It's the boundary for routing and security.",
+                features: ["Policy Enforcement (ACLs)", "Inter-VLAN Routing", "QoS & Traffic Filtering"],
+                devices: "Layer 3 Switches, Departmental Routers",
+                color: "teal"
+            },
+            access: {
+                title: "Access Layer (The Edge)",
+                speed: "1-10 Gbps",
+                desc: "Where end devices connect to the network. Focuses on high port density and connectivity features for users.",
+                features: ["Power over Ethernet (PoE)", "Port Security", "VLAN Assignment"],
+                devices: "Desktop Switches, WiFi Access Points",
+                color: "blue"
+            }
+        };
+
+        // --- FLASHCARD DATA (25 Items) ---
+        const flashcardData = [
+            { f: "Three Layers of Network Design Hierarchy", b: "Access Layer, Distribution Layer, and Core Layer" },
+            { f: "Primary Function of the Access Layer", b: "Connecting end devices (users, printers, APs) to the network; often called 'The Edge'." },
+            { f: "Primary Role of the Distribution Layer", b: "Policy enforcement, inter-VLAN routing, and traffic aggregation; often called 'The Brain'." },
+            { f: "Design Principle of the Core Layer", b: "Speed and reliability above all else; minimal packet processing or policy enforcement." },
+            { f: "CapEx (Capital Expenditure)", b: "Large upfront costs for purchasing physical assets like servers and network gear." },
+            { f: "OpEx (Operating Expenditure)", b: "Ongoing operational costs like monthly subscription fees or utility bills." },
+            { f: "IaaS (Infrastructure as a Service)", b: "Cloud model where you rent raw compute/storage but manage the OS and Apps (e.g., AWS EC2)." },
+            { f: "SaaS (Software as a Service)", b: "Cloud model where provider manages everything; you just use the software (e.g., Gmail)." },
+            { f: "Cloud Bursting", b: "Hybrid strategy where on-premise workloads overflow to the cloud only during peak demand." },
+            { f: "Hypervisor", b: "Software that creates and manages virtual machines (VMs)." },
+            { f: "Type 1 Hypervisor (Bare-Metal)", b: "Hypervisor running directly on hardware without a host OS (e.g., ESXi)." },
+            { f: "Type 2 Hypervisor (Hosted)", b: "Hypervisor running as an app on top of an existing OS (e.g., VirtualBox)." },
+            { f: "Difference: Containers vs. VMs", b: "Containers share the host OS kernel and are lightweight; VMs have a full independent OS." },
+            { f: "Network Utilization Formula", b: "(Current Traffic / Link Capacity) * 100" },
+            { f: "Snapshot", b: "A point-in-time backup of a VM's state, allowing for instant rollback." },
+            { f: "Docker", b: "The industry-standard platform for creating and deploying containers." },
+            { f: "Kubernetes", b: "Orchestration platform for managing large numbers of containers." },
+            { f: "Typical Speed of Access Layer", b: "1 - 10 Gbps" },
+            { f: "Typical Speed of Core Layer", b: "40 - 400+ Gbps" },
+            { f: "Consolidation Ratio Formula", b: "Physical Servers Before / Physical Servers After" },
+            { f: "IEEE 802.3", b: "The standard that defines wired Ethernet connections." },
+            { f: "IEEE 802.11", b: "The standard that defines Wireless LAN (WiFi) connections." },
+            { f: "PaaS (Platform as a Service)", b: "Cloud model where you manage Apps and Data, provider manages Runtime and OS (e.g., Heroku)." },
+            { f: "vCPU", b: "Virtual CPU; a portion of physical CPU cores assigned to a VM." },
+            { f: "Thin Provisioning", b: "Allocating virtual disk storage only as it is written to, rather than reserving full capacity." }
+        ];
+
+        // --- QUIZ DATA (10 Questions) ---
+        const quizData = [
+            {
+                q: "A network administrator needs to deploy a switch that connects directly to employee workstations and provides PoE. Which layer?",
+                options: ["Access Layer", "Distribution Layer", "Core Layer", "Internet/WAN Layer"],
+                correct: 0,
+                rationale: "Access Layer is the 'edge' where end devices connect."
+            },
+            {
+                q: "Which layer is responsible for enforcing security policies and inter-VLAN routing?",
+                options: ["Access Layer", "Distribution Layer", "Core Layer", "Physical Layer"],
+                correct: 1,
+                rationale: "Distribution Layer handles intelligent routing and policy enforcement."
+            },
+            {
+                q: "A CFO prefers a financial model with predictable monthly fees and no large upfront costs. Which model is this?",
+                options: ["CapEx", "OpEx", "Depreciation", "Fixed Asset"],
+                correct: 1,
+                rationale: "OpEx (Operating Expenditure) is pay-as-you-go, typical of cloud."
+            },
+            {
+                q: "Which technology is best for a microservice requiring rapid startup (seconds) and minimal overhead?",
+                options: ["Containers", "Type 1 Hypervisor", "Type 2 Hypervisor", "Physical Server"],
+                correct: 0,
+                rationale: "Containers share the OS kernel and start in seconds."
+            },
+            {
+                q: "In 'Cloud Bursting', how does an organization use cloud resources?",
+                options: ["Run steady workloads on-prem, overflow to cloud at peak", "Keep sensitive data in cloud only", "Use cloud for cold storage only", "Migrate all legacy systems permanently"],
+                correct: 0,
+                rationale: "It handles traffic spikes by temporarily expanding into the cloud."
+            },
+            {
+                q: "Which hypervisor type runs directly on hardware without a host OS?",
+                options: ["Type 1 (Bare-Metal)", "Type 2 (Hosted)", "Container Engine", "Emulator"],
+                correct: 0,
+                rationale: "Type 1 communicates directly with hardware for max performance."
+            },
+            {
+                q: "What is the utilization of a 40 Gbps link transmitting at 4 Gbps?",
+                options: ["10%", "40%", "1%", "4%"],
+                correct: 0,
+                rationale: "4 / 40 = 0.10, which is 10%."
+            },
+            {
+                q: "What is the primary design principle of the Core Layer?",
+                options: ["Speed and reliability", "Policy enforcement", "High port density", "PoE delivery"],
+                correct: 0,
+                rationale: "The Core moves packets as fast as possible without complex processing."
+            },
+            {
+                q: "Consolidating 50 physical servers into 5 physical servers results in what ratio?",
+                options: ["10:1", "5:1", "50:1", "2:1"],
+                correct: 0,
+                rationale: "50 divided by 5 equals 10."
+            },
+            {
+                q: "What is a key advantage of virtualization 'Isolation'?",
+                options: ["One VM crash doesn't affect others", "All VMs share one IP", "Bypasses OS kernel", "Limits CPU to 10%"],
+                correct: 0,
+                rationale: "Failure domain is contained within the single VM."
+            }
+        ];
+
+        // --- STATE & INIT ---
+        let currentHypType = 'type1';
+        let costChart = null;
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            selectLayer('core');
+            renderStack('type1');
+            initChart();
+            renderQuiz();
+            renderCard(); // Init flashcard
+
+            // Inputs for calculator
+            ['input-servers', 'input-admins', 'input-cloud'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateChart);
+            });
+
+            // Keyboard nav for cards
+            document.addEventListener('keydown', (e) => {
+                if(document.getElementById('view-flashcards').classList.contains('active')) {
+                    if(e.key === 'ArrowRight') nextCard();
+                    if(e.key === 'ArrowLeft') prevCard();
+                    if(e.key === ' ' || e.key === 'Enter') flipCard();
+                }
+            });
+        });
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('active-tab', 'text-gray-800');
+                btn.classList.add('text-gray-500');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('active-tab', 'text-gray-800');
+            activeBtn.classList.remove('text-gray-500');
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`view-${tabId}`).classList.add('active');
+        }
+
+        // --- FLASHCARD LOGIC ---
+        function renderCard() {
+            const card = flashcardData[currentCardIndex];
+            document.getElementById('card-front').innerText = card.f;
+            document.getElementById('card-back').innerText = card.b;
+            document.getElementById('card-counter').innerText = `${currentCardIndex + 1} / ${flashcardData.length}`;
+            
+            // Reset flip
+            const inner = document.getElementById('flashcard-inner');
+            inner.classList.remove('rotate-y-180');
+            isFlipped = false;
+        }
+
+        function flipCard() {
+            const inner = document.getElementById('flashcard-inner');
+            if (isFlipped) {
+                inner.classList.remove('rotate-y-180');
+            } else {
+                inner.classList.add('rotate-y-180');
+            }
+            isFlipped = !isFlipped;
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCard();
+            }
+        }
+
+        // --- LAYER INTERACTION ---
+        function selectLayer(layerKey) {
+            const data = layerData[layerKey];
+            const contentDiv = document.getElementById('layer-detail-content');
+            const takeawaySpan = document.getElementById('layer-takeaway');
+
+            document.querySelectorAll('.layer-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`layer-btn-${layerKey}`).classList.add('selected');
+
+            const colorClass = `text-${data.color}-600`;
+            const bgClass = `bg-${data.color}-50`;
+            
+            contentDiv.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <span class="px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full ${bgClass} ${colorClass} mr-3">
+                            ${data.speed}
+                        </span>
+                        <h3 class="text-2xl font-bold text-gray-800">${data.title}</h3>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed mb-6">${data.desc}</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1">Key Features</h4>
+                            <ul class="space-y-2">
+                                ${data.features.map(f => `<li class="flex items-start text-sm text-gray-600"><span class="mr-2 text-green-500">✓</span>${f}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1">Common Devices</h4>
+                            <div class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                ${data.devices}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            let takeaway = "";
+            if (layerKey === 'core') takeaway = "Optimized for SPEED.";
+            if (layerKey === 'dist') takeaway = "The BRAIN (Policy).";
+            if (layerKey === 'access') takeaway = "The EDGE (Connectivity).";
+            takeawaySpan.innerText = takeaway;
+        }
+
+        // --- CHART & CALCULATOR ---
+        function initChart() {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Year 0 (Start)', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return '$' + value/1000 + 'k'; } }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { mode: 'index', intersect: false },
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+            updateChart();
+        }
+
+        function updateChart() {
+            const serverCount = parseInt(document.getElementById('input-servers').value);
+            const adminCount = parseInt(document.getElementById('input-admins').value);
+            const monthlyCloud = parseInt(document.getElementById('input-cloud').value);
+
+            document.getElementById('val-servers').innerText = serverCount;
+            document.getElementById('val-admins').innerText = adminCount;
+            document.getElementById('val-cloud').innerText = `$${monthlyCloud.toLocaleString()}`;
+
+            const capexHardware = serverCount * 5000;
+            const capexNetwork = 50000;
+            const capexTotal = capexHardware + capexNetwork;
+            const annualOpex = (adminCount * 80000) + (serverCount * 2400) + (capexTotal * 0.15); 
+            
+            const annualCloud = monthlyCloud * 12;
+
+            const onPremData = [];
+            const cloudData = [];
+            let onPremAcc = capexTotal;
+            let cloudAcc = 0;
+
+            for(let i=0; i<=5; i++) {
+                if(i===0) {
+                    onPremData.push(onPremAcc);
+                    cloudData.push(cloudAcc);
+                } else {
+                    let yearCost = annualOpex;
+                    if(i === 3) yearCost += (capexHardware * 0.5); 
+                    
+                    onPremAcc += yearCost;
+                    cloudAcc += annualCloud;
+                    
+                    onPremData.push(onPremAcc);
+                    cloudData.push(cloudAcc);
+                }
+            }
+
+            let breakeven = "Never";
+            for(let i=1; i<=5; i++) {
+                if(onPremData[i] < cloudData[i]) {
+                    breakeven = `Year ${i}`;
+                    break;
+                }
+            }
+            document.getElementById('breakeven-text').innerText = breakeven;
+
+            costChart.data.datasets = [
+                {
+                    type: 'line',
+                    label: 'On-Premise (Cumulative)',
+                    data: onPremData,
+                    borderColor: '#2D3748',
+                    backgroundColor: '#2D3748',
+                    borderWidth: 2,
+                    tension: 0.1
+                },
+                {
+                    type: 'line',
+                    label: 'Cloud (Cumulative)',
+                    data: cloudData,
+                    borderColor: '#38B2AC',
+                    backgroundColor: '#38B2AC',
+                    borderWidth: 2,
+                    tension: 0.1
+                }
+            ];
+            costChart.update();
+        }
+
+        // --- VIRTUALIZATION STACK ---
+        function setHyp(type) {
+            currentHypType = type;
+            document.getElementById('btn-type1').className = type === 'type1' 
+                ? 'px-3 py-1 text-sm rounded-md shadow bg-white font-medium text-gray-800 transition-all'
+                : 'px-3 py-1 text-sm rounded-md font-medium text-gray-500 hover:text-gray-700 transition-all';
+            document.getElementById('btn-type2').className = type === 'type2'
+                ? 'px-3 py-1 text-sm rounded-md shadow bg-white font-medium text-gray-800 transition-all'
+                : 'px-3 py-1 text-sm rounded-md font-medium text-gray-500 hover:text-gray-700 transition-all';
+            
+            renderStack(type);
+        }
+
+        function renderStack(type) {
+            const container = document.getElementById('stack-container');
+            const desc = document.getElementById('hyp-desc');
+            
+            let html = '';
+            
+            html += `
+                <div class="flex space-x-1">
+                    <div class="flex-1 bg-blue-100 border border-blue-200 h-16 rounded flex items-center justify-center text-xs font-bold text-blue-700">VM 1</div>
+                    <div class="flex-1 bg-blue-100 border border-blue-200 h-16 rounded flex items-center justify-center text-xs font-bold text-blue-700">VM 2</div>
+                    <div class="flex-1 bg-blue-100 border border-blue-200 h-16 rounded flex items-center justify-center text-xs font-bold text-blue-700">VM 3</div>
+                </div>
+            `;
+
+            if (type === 'type1') {
+                html += `
+                    <div class="bg-indigo-600 h-12 rounded flex items-center justify-center text-white font-bold text-sm shadow-md z-10">HYPERVISOR (ESXi)</div>
+                    <div class="bg-gray-800 h-16 rounded flex items-center justify-center text-gray-300 font-bold text-sm">BARE METAL HARDWARE</div>
+                `;
+                desc.innerHTML = `<strong>Bare Metal:</strong> The Hypervisor installs directly on the hardware. <br>✅ Max Performance. <br>Used in Data Centers/Production.`;
+            } else {
+                html += `
+                    <div class="bg-indigo-400 h-10 rounded flex items-center justify-center text-white font-bold text-sm">HYPERVISOR (App)</div>
+                    <div class="bg-gray-200 h-10 rounded flex items-center justify-center text-gray-600 font-bold text-sm border border-gray-300">HOST OS (Windows/Mac)</div>
+                    <div class="bg-gray-800 h-12 rounded flex items-center justify-center text-gray-300 font-bold text-sm">HARDWARE</div>
+                `;
+                desc.innerHTML = `<strong>Hosted:</strong> Runs as an app on your OS. <br>✅ Easy Setup. ❌ Slower.<br>Used for Labs/Dev.`;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleCompare(id) {
+            const el = document.getElementById(`detail-${id}`);
+            el.classList.toggle('hidden');
+        }
+
+        // --- QUIZ ---
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizData.map((item, idx) => `
+                <div class="mb-6 last:mb-0">
+                    <p class="font-semibold text-gray-800 mb-3">${idx + 1}. ${item.q}</p>
+                    <div class="space-y-2">
+                        ${item.options.map((opt, optIdx) => `
+                            <button onclick="checkAnswer(${idx}, ${optIdx})" id="q${idx}-opt${optIdx}" class="w-full text-left p-3 rounded border border-gray-200 hover:bg-gray-50 text-sm transition-colors">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-${idx}" class="hidden mt-2 p-3 rounded text-sm"></div>
+                </div>
+            `).join('');
+        }
+
+        function checkAnswer(qIdx, optIdx) {
+            const q = quizData[qIdx];
+            const feedbackEl = document.getElementById(`feedback-${qIdx}`);
+            const isCorrect = optIdx === q.correct;
+            
+            q.options.forEach((_, i) => {
+                const btn = document.getElementById(`q${qIdx}-opt${i}`);
+                btn.disabled = true;
+                if(i === q.correct) btn.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                else if(i === optIdx && !isCorrect) btn.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+            });
+
+            feedbackEl.classList.remove('hidden');
+            if(isCorrect) {
+                feedbackEl.classList.add('bg-green-50', 'text-green-700');
+                feedbackEl.innerHTML = `<strong>Correct!</strong> ${q.rationale}`;
+                updateScore(1);
+            } else {
+                feedbackEl.classList.add('bg-red-50', 'text-red-700');
+                feedbackEl.innerHTML = `<strong>Incorrect.</strong> ${q.rationale}`;
+            }
+        }
+
+        let currentScore = 0;
+        function updateScore(points) {
+            currentScore += points;
+            document.getElementById('quiz-score').innerText = `Score: ${currentScore}/${quizData.length}`;
+        }
+
+        function resetQuiz() {
+            currentScore = 0;
+            document.getElementById('quiz-score').innerText = `Score: 0/${quizData.length}`;
+            renderQuiz();
+        }
+
+    </script>
+</body>
+</html>
+
+

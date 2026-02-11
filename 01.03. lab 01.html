@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetEng Project: Phase 1 Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Utilities for interactive elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        /* Connector lines for the Hierarchy Diagram */
+        .connector-vertical {
+            width: 2px;
+            background-color: #cbd5e1; /* slate-300 */
+            margin: 0 auto;
+        }
+        .connector-horizontal {
+            height: 2px;
+            background-color: #cbd5e1;
+            margin: 0 auto;
+        }
+
+        /* Transition classes */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Chart Container specific overrides */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Specific max-width constraint */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Professional Tech (Slate/Stone base with Blue/Teal accents) -->
+    <!-- Application Structure Plan: 
+         1. Mission Control (Header/Intro): Sets the tone of a professional engineering project.
+         2. The Roadmap (Interactive Timeline): Contextualizes Phase 1 within the 15-week semester.
+         3. Theory Core (Interactive Visualizer): Explains the 3-Tier model using interactive HTML blocks (No SVG) to satisfy Learning Objective 1.
+         4. Scenario Brief (Data Cards): Presents the HQ vs Branch requirements clearly.
+         5. Workstation (Lab Guide): A tabbed interface for the 6-step process to reduce cognitive load.
+         6. Evaluation (Data Viz): A donut chart visualizing the grading breakdown. 
+    -->
+    <!-- Visualization & Content Choices:
+         1. Roadmap: Vertical interactive list. Goal: Show progression. Justification: Better than a static table for timeline.
+         2. Hierarchy Diagram: CSS Grid/Flex layout with connector lines. Goal: Visualizing the Core/Dist/Access layers. Justification: Interactive DOM elements allow hover effects for definitions without SVG.
+         3. Evaluation Chart: Chart.js Donut. Goal: Show weight of grading criteria. Justification: Quick visual reference for "What's important?".
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">📡</span>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">NetArch <span class="text-blue-600">Project Hub</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <button onclick="scrollToSection('roadmap')" class="text-slate-500 hover:text-blue-600 font-medium transition">Roadmap</button>
+                    <button onclick="scrollToSection('theory')" class="text-slate-500 hover:text-blue-600 font-medium transition">Theory</button>
+                    <button onclick="scrollToSection('scenario')" class="text-slate-500 hover:text-blue-600 font-medium transition">Scenario</button>
+                    <button onclick="scrollToSection('lab')" class="text-slate-500 hover:text-blue-600 font-medium transition">Lab Guide</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+            <div class="lg:flex lg:items-center lg:justify-between">
+                <div class="lg:w-2/3">
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
+                        Week 01: Network Architecture & Modern Paradigms
+                    </h1>
+                    <p class="text-lg text-slate-600 leading-relaxed max-w-3xl">
+                        Welcome, Engineer. This semester, you aren't just doing exercises. You are building a 
+                        <strong>single, evolving enterprise network</strong>. Phase 1 focuses on the foundation: 
+                        <strong>Topology Design</strong> based on the 3-Tier Hierarchical Model.
+                    </p>
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-semibold">
+                            ⏱ Phase Duration: 1 Week
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm font-semibold">
+                            ⚠️ Deliverable: 4-Page PDF
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 lg:mt-0 lg:w-1/3 flex justify-center lg:justify-end">
+                    <div class="bg-slate-100 p-6 rounded-xl border border-slate-200 shadow-inner max-w-xs w-full text-center">
+                        <div class="text-slate-400 text-xs uppercase tracking-wider font-bold mb-2">Current Status</div>
+                        <div class="text-4xl font-bold text-blue-600">Phase 1</div>
+                        <div class="text-sm text-slate-500 mt-1">Topology Design</div>
+                        <div class="mt-4 w-full bg-slate-200 rounded-full h-2.5">
+                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 6%"></div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">1/15 Weeks Complete</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Section 1: Roadmap -->
+        <section id="roadmap" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3 text-lg">🗺️</span>
+                    The Semester Roadmap
+                </h2>
+                <p class="mt-2 text-slate-600">
+                    Your project is continuous. Every deliverable feeds into the next. Click on a week to preview future phases, or focus on the current active phase.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-12 gap-6">
+                <!-- Interactive List -->
+                <div class="md:col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-96 overflow-y-auto" id="roadmap-list">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <!-- Details Panel -->
+                <div class="md:col-span-8 bg-slate-800 rounded-xl shadow-lg p-8 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 opacity-10">
+                        <span class="text-9xl font-bold">#01</span>
+                    </div>
+                    <div id="roadmap-details" class="fade-in z-10">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Theory Core (The 3-Tier Model) -->
+        <section id="theory" class="scroll-mt-24">
+            <div class="mb-8 max-w-3xl">
+                <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+                    <span class="bg-teal-100 text-teal-600 p-2 rounded-lg mr-3 text-lg">🏗️</span>
+                    Theory Core: The 3-Tier Model
+                </h2>
+                <p class="mt-2 text-slate-600">
+                    Understanding the Cisco Hierarchical Model is critical for Learning Objective #10. Hover over (or tap) the layers in the diagram below to understand their specific roles in your design.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <!-- Interactive Diagram (HTML/CSS) -->
+                <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center select-none">
+                    
+                    <!-- CORE LAYER -->
+                    <div class="w-full flex justify-center mb-2">
+                        <div class="tier-node cursor-pointer w-48 h-20 bg-rose-50 border-2 border-rose-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-rose-400 transition transform hover:-translate-y-1" data-tier="core">
+                            <div class="text-center">
+                                <div class="font-bold text-rose-700">Core Layer</div>
+                                <div class="text-xs text-rose-500">Fast Transport</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connectors -->
+                    <div class="w-full flex justify-center h-8 relative">
+                        <div class="connector-vertical h-full"></div>
+                    </div>
+                    
+                    <!-- DISTRIBUTION LAYER -->
+                    <div class="w-full flex justify-center gap-8 mb-2">
+                        <div class="tier-node cursor-pointer w-40 h-20 bg-amber-50 border-2 border-amber-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-amber-400 transition transform hover:-translate-y-1" data-tier="dist">
+                            <div class="text-center">
+                                <div class="font-bold text-amber-700">Distribution</div>
+                                <div class="text-xs text-amber-500">Policy & Routing</div>
+                            </div>
+                        </div>
+                        <div class="tier-node cursor-pointer w-40 h-20 bg-amber-50 border-2 border-amber-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-amber-400 transition transform hover:-translate-y-1" data-tier="dist">
+                            <div class="text-center">
+                                <div class="font-bold text-amber-700">Distribution</div>
+                                <div class="text-xs text-amber-500">Aggregation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connectors -->
+                    <div class="w-full h-8 relative flex justify-center">
+                         <div class="connector-vertical h-full absolute left-1/2 transform -translate-x-1/2"></div>
+                         <div class="connector-horizontal w-1/2 absolute top-1/2"></div>
+                         <div class="connector-vertical h-1/2 absolute left-1/4 top-1/2"></div>
+                         <div class="connector-vertical h-1/2 absolute right-1/4 top-1/2"></div>
+                    </div>
+
+                    <!-- ACCESS LAYER -->
+                    <div class="w-full flex justify-center gap-4">
+                        <div class="tier-node cursor-pointer w-32 h-20 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-blue-400 transition transform hover:-translate-y-1" data-tier="access">
+                            <div class="text-center">
+                                <div class="font-bold text-blue-700">Access</div>
+                                <div class="text-xs text-blue-500">End Users</div>
+                            </div>
+                        </div>
+                        <div class="tier-node cursor-pointer w-32 h-20 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-blue-400 transition transform hover:-translate-y-1" data-tier="access">
+                            <div class="text-center">
+                                <div class="font-bold text-blue-700">Access</div>
+                                <div class="text-xs text-blue-500">End Users</div>
+                            </div>
+                        </div>
+                        <div class="tier-node cursor-pointer w-32 h-20 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md hover:border-blue-400 transition transform hover:-translate-y-1" data-tier="access">
+                            <div class="text-center">
+                                <div class="font-bold text-blue-700">Access</div>
+                                <div class="text-xs text-blue-500">End Users</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Definition Panel -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 h-full">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Selected Layer Details</h3>
+                    <div id="layer-details" class="transition-all duration-300">
+                        <div class="bg-white p-6 rounded-lg border border-slate-100 shadow-sm">
+                            <h4 class="text-xl font-bold text-slate-800 mb-2">Instructions</h4>
+                            <p class="text-slate-600">Hover over any box in the diagram to see the detailed definition and role of that layer in your topology design.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-8 border-t border-slate-200">
+                        <h4 class="font-bold text-slate-700 mb-2">Additional Concepts</h4>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-white rounded border border-slate-200">
+                                <span class="font-semibold text-slate-900 block">☁️ Cloud vs. On-Premise</span>
+                                <p class="text-sm text-slate-600 mt-1">Modern networks are hybrid. While we build on-prem (simulated), understand that services often live in AWS/Azure (Public Cloud) or Private Clouds.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Enterprise Scenario -->
+        <section id="scenario" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg mr-3 text-lg">🏢</span>
+                    The Enterprise Scenario
+                </h2>
+                <p class="mt-2 text-slate-600">
+                    You are the lead engineer for a medium-sized company. Review the requirements below. You must invent the company name and industry.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <!-- HQ Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group hover:border-indigo-300 transition">
+                    <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex justify-between items-center">
+                        <h3 class="font-bold text-indigo-900">Headquarters (HQ)</h3>
+                        <span class="text-xs bg-white text-indigo-600 px-2 py-1 rounded border border-indigo-200">Main Site</span>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-4 text-sm text-slate-600">
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-indigo-500">👥</span>
+                                <div>
+                                    <strong class="text-slate-900">Departments:</strong><br>
+                                    Human Resources (HR), Engineering, Guest Network.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-indigo-500">🖥️</span>
+                                <div>
+                                    <strong class="text-slate-900">Services:</strong><br>
+                                    Internal Server Farm (File Server, Web Server, DNS).
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-indigo-500">⚙️</span>
+                                <div>
+                                    <strong class="text-slate-900">Infrastructure:</strong><br>
+                                    Full 3-Tier Model (Core, Distribution, Access).
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Branch Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group hover:border-emerald-300 transition">
+                    <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
+                        <h3 class="font-bold text-emerald-900">Branch Office</h3>
+                        <span class="text-xs bg-white text-emerald-600 px-2 py-1 rounded border border-emerald-200">Remote Site</span>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-4 text-sm text-slate-600">
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-emerald-500">👥</span>
+                                <div>
+                                    <strong class="text-slate-900">Users:</strong><br>
+                                    Approx. 15-20 users (Mixed Use LAN).
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-emerald-500">🔗</span>
+                                <div>
+                                    <strong class="text-slate-900">Connectivity:</strong><br>
+                                    Connected to HQ via WAN Link (Serial connection for now).
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-0.5 text-emerald-500">📦</span>
+                                <div>
+                                    <strong class="text-slate-900">Hardware:</strong><br>
+                                    1 Edge Router, 1 Access Switch.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Requirements Draft Pad -->
+            <div class="bg-slate-800 rounded-xl p-6 text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold flex items-center">
+                        <span>📝 Requirements Drafter</span>
+                        <span class="ml-2 text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">Tool</span>
+                    </h3>
+                    <button id="copy-btn" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded transition">Copy to Clipboard</button>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">Use this space to draft Section 1 & 2 of your report. Answer: Purpose, User Counts, Growth Plans, Security Needs.</p>
+                <textarea id="draft-area" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 h-48" placeholder="Start typing your requirements here...
+Example:
+Company: TechFlow Solutions
+HQ Users: ~50 (Engineering: 30, HR: 10, Guests: Variable)
+Branch Users: 15
+Growth: Expecting 20% headcount increase next year..."></textarea>
+            </div>
+        </section>
+
+        <!-- Section 4: Lab Guide (Tabs) -->
+        <section id="lab" class="scroll-mt-24">
+             <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+                    <span class="bg-amber-100 text-amber-600 p-2 rounded-lg mr-3 text-lg">🛠️</span>
+                    Lab Workbench
+                </h2>
+                <p class="mt-2 text-slate-600">
+                    Follow these steps to build your topology in your chosen simulator (Packet Tracer, GNS3, or EVE-NG).
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row min-h-[500px]">
+                <!-- Tab Nav -->
+                <div class="md:w-64 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50 rounded-l-xl p-2 flex flex-row md:flex-col overflow-x-auto gap-2">
+                    <button class="lab-tab-btn active text-left px-4 py-3 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200" data-step="1">1. Setup Environment</button>
+                    <button class="lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900" data-step="2">2. Define Scenario</button>
+                    <button class="lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900" data-step="3">3. Draft HQ</button>
+                    <button class="lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900" data-step="4">4. Draft Branch</button>
+                    <button class="lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900" data-step="5">5. Review</button>
+                    <button class="lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900" data-step="6">6. Documentation</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="flex-1 p-8" id="lab-content">
+                    <!-- Content injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Evaluation & Deliverables -->
+        <section id="evaluation" class="scroll-mt-24 mb-24">
+            <div class="grid md:grid-cols-2 gap-12">
+                
+                <!-- Deliverables List -->
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-6">📄 The Deliverable</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Format: PDF (Max 4 Pages)</h3>
+                        <ul class="space-y-4">
+                            <li class="flex">
+                                <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center mr-3 font-bold">1</span>
+                                <div>
+                                    <span class="font-semibold text-slate-700">Page 1: Context</span>
+                                    <p class="text-sm text-slate-500">Cover info + Business Context (Sec 1).</p>
+                                </div>
+                            </li>
+                            <li class="flex">
+                                <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center mr-3 font-bold">2</span>
+                                <div>
+                                    <span class="font-semibold text-slate-700">Pages 2-3: Topology & Rationale</span>
+                                    <p class="text-sm text-slate-500">Site descriptions, Design Rationale, and the **Diagram** (make it legible!).</p>
+                                </div>
+                            </li>
+                            <li class="flex">
+                                <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center mr-3 font-bold">4</span>
+                                <div>
+                                    <span class="font-semibold text-slate-700">Page 4: Analysis</span>
+                                    <p class="text-sm text-slate-500">Preliminary considerations (Security/Scale), Tools used, References.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-6">🎯 Grading Criteria</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center">
+                         <!-- Chart Container with strict Tailwind sizing/constraints -->
+                        <div class="chart-container">
+                            <canvas id="gradingChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-slate-500 mt-4 max-w-sm">
+                            Focus heavily on the <strong>Practical Implementation</strong> (Topology accuracy) as it carries half the weight.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-white font-bold mb-4">Recommended Resources</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-blue-400">Cisco Networking Academy</a></li>
+                        <li><a href="#" class="hover:text-blue-400">GNS3 Documentation</a></li>
+                        <li><a href="#" class="hover:text-blue-400">IETF (RFC Standards)</a></li>
+                        <li><a href="#" class="hover:text-blue-400">diagrams.net (draw.io)</a></li>
+                    </ul>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs">
+                        This is a simulated dashboard for educational purposes.<br>
+                        Please adhere to the Code of Ethics regarding security tools.<br>
+                        Budapest Convention on Cybercrime applies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Definitions ---
+
+        const roadmapData = [
+            { week: 1, phase: "Phase 1", title: "Topology Design", active: true, detail: "Design the 3-Tier hierarchy (HQ + Branch). Define requirements." },
+            { week: 2, phase: "Phase 2", title: "IP Planning (VLSM)", active: false, detail: "Develop a complete addressing scheme (Subnets, Masks, Gateways)." },
+            { week: 3, phase: "Phase 3", title: "Initial Device Config", active: false, detail: "CLI basics: Hostnames, Passwords, Banners, Interfaces." },
+            { week: 4, phase: "Phase 4", title: "Layer 2 Segmentation", active: false, detail: "VLANs, Trunks, and switchport security." },
+            { week: 5, phase: "Phase 5", title: "Inter-VLAN Routing", active: false, detail: "Router-on-a-Stick (ROAS) and Layer 3 Switching." },
+            { week: 6, phase: "Phase 6", title: "Connectivity Verification", active: false, detail: "ARP, ICMP, Packet Analysis using Wireshark." },
+            { week: 7, phase: "-", title: "Mid-Term Review", active: false, detail: "Review Phases 1-6." },
+            { week: 10, phase: "Phase 7", title: "Automating Addressing", active: false, detail: "DHCP and DNS configuration." },
+            { week: 12, phase: "Phase 9", title: "Expansion (WAN)", active: false, detail: "Connecting the Branch Office over a WAN link." },
+            { week: 14, phase: "Phase 11", title: "Final Integration", active: false, detail: "End-to-end testing and optimization." }
+        ];
+
+        const layerInfo = {
+            core: {
+                title: "Core Layer (The Backbone)",
+                desc: "Provides high-speed, reliable transport between different parts of the network (e.g., HQ to WAN). It should be fast and resilient. <strong>Never</strong> burden the Core with complex policies or filtering.",
+                devices: "High-speed Routers or L3 Switches."
+            },
+            dist: {
+                title: "Distribution Layer (The Aggregator)",
+                desc: "Sits between Access and Core. It aggregates traffic, enforces policies (ACLs), and handles Inter-VLAN routing. Think of it as the 'Decision-Making' layer.",
+                devices: "L3 Switches or Routers."
+            },
+            access: {
+                title: "Access Layer (The Edge)",
+                desc: "Closest to end users. Provides direct connectivity to PCs, Phones, and Printers. Typically comprises switches in wiring closets.",
+                devices: "L2 Switches."
+            }
+        };
+
+        const labSteps = {
+            1: {
+                title: "Choose Environment",
+                content: `<h4 class="font-bold text-lg mb-2">Step 1: Setup Simulation</h4>
+                          <p class="mb-4">Select your tool. Options:</p>
+                          <ul class="list-disc pl-5 space-y-2 mb-4">
+                              <li><strong>Packet Tracer:</strong> Recommended for beginners. Free via NetAcad.</li>
+                              <li><strong>GNS3:</strong> Advanced, emulates real IOS images.</li>
+                              <li><strong>Draw.io:</strong> Acceptable if you only want to diagram for now (but you'll need simulation later).</li>
+                          </ul>
+                          <div class="bg-blue-50 p-3 rounded border border-blue-200 text-sm text-blue-800">
+                              <strong>Task:</strong> Install tool, verify it launches, and locate basic devices (Router, Switch, PC).
+                          </div>`
+            },
+            2: {
+                title: "Define Scenario",
+                content: `<h4 class="font-bold text-lg mb-2">Step 2: Business Context</h4>
+                          <p class="mb-4">Before drawing, define WHAT you are building. Write down:</p>
+                          <ul class="list-disc pl-5 space-y-2 mb-4">
+                              <li>Company Name & Industry (Invent this).</li>
+                              <li>User counts for HQ and Branch.</li>
+                              <li>Required Services (DNS, Web, File).</li>
+                              <li>Growth considerations (Next 2-3 years).</li>
+                          </ul>
+                          <div class="bg-indigo-50 p-3 rounded border border-indigo-100 text-sm text-indigo-800">
+                              <strong>Tip:</strong> Use the "Requirements Drafter" tool in the Scenario section above to write this out.
+                          </div>`
+            },
+            3: {
+                title: "Draft HQ",
+                content: `<h4 class="font-bold text-lg mb-2">Step 3: The HQ Topology</h4>
+                          <p class="mb-4">Build from the top down:</p>
+                          <ol class="list-decimal pl-5 space-y-2 mb-4">
+                              <li><strong>Core:</strong> Place 1-2 Core Routers.</li>
+                              <li><strong>Distribution:</strong> Place 1-2 Dist Switches. Connect to Core (Gigabit).</li>
+                              <li><strong>Access:</strong> Place switches for HR, Engineering, Guest. Connect to Distribution.</li>
+                              <li><strong>Servers:</strong> Add a switch + servers for DNS/Web/File.</li>
+                          </ol>
+                          <div class="bg-red-50 p-3 rounded border border-red-100 text-sm text-red-800">
+                              <strong>Critical:</strong> Label every link (e.g., Gi0/0 connects to Gi0/1). You will need this for Phase 3 configuration.
+                          </div>`
+            },
+            4: {
+                title: "Draft Branch",
+                content: `<h4 class="font-bold text-lg mb-2">Step 4: The Branch Office</h4>
+                          <p class="mb-4">Keep it simple for the remote site:</p>
+                          <ul class="list-disc pl-5 space-y-2 mb-4">
+                              <li>1 Branch Router.</li>
+                              <li>1 Access Switch.</li>
+                              <li>15-20 End Devices (PCs/Laptops).</li>
+                          </ul>
+                          <p>Draw a <strong>WAN Link</strong> (Serial) connecting Branch Router to HQ Core Router. Label it "WAN Link - To be Configured Phase 9".</p>`
+            },
+            5: {
+                title: "Review",
+                content: `<h4 class="font-bold text-lg mb-2">Step 5: Quality Assurance</h4>
+                          <p class="mb-4">Ask yourself these questions:</p>
+                          <ul class="list-disc pl-5 space-y-2 mb-4">
+                              <li>Are hostname labels unique and meaningful? (e.g., HQ-CORE-01)</li>
+                              <li>Are layers clearly visible?</li>
+                              <li>Could a stranger understand this in 2 minutes?</li>
+                          </ul>
+                          <div class="bg-amber-50 p-3 rounded border border-amber-200 text-sm text-amber-800">
+                              <strong>Check:</strong> Is the Server Farm visible and labeled?
+                          </div>`
+            },
+            6: {
+                title: "Documentation",
+                content: `<h4 class="font-bold text-lg mb-2">Step 6: The Report</h4>
+                          <p class="mb-4">Compile your 4-page PDF.</p>
+                          <ul class="list-disc pl-5 space-y-2 mb-4">
+                              <li><strong>Sec 1:</strong> Business Context.</li>
+                              <li><strong>Sec 2:</strong> Site Descriptions.</li>
+                              <li><strong>Sec 3:</strong> Design Rationale (Why 3-Tier?).</li>
+                              <li><strong>Sec 4:</strong> Screenshot of your Diagram.</li>
+                              <li><strong>Sec 5:</strong> Preliminary Considerations (Security/Scale).</li>
+                          </ul>
+                          <p class="text-sm italic">Cite your sources (even vendor docs).</p>`
+            }
+        };
+
+        // --- Functions ---
+
+        function renderRoadmap() {
+            const container = document.getElementById('roadmap-list');
+            const details = document.getElementById('roadmap-details');
+            
+            container.innerHTML = '';
+            
+            roadmapData.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = `p-4 border-b border-slate-100 cursor-pointer transition hover:bg-slate-50 flex items-center justify-between ${item.active ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`;
+                row.innerHTML = `
+                    <div>
+                        <span class="text-xs font-bold ${item.active ? 'text-blue-600' : 'text-slate-400'} uppercase">${item.week < 10 ? '0'+item.week : item.week} | ${item.phase}</span>
+                        <div class="font-medium text-slate-800">${item.title}</div>
+                    </div>
+                    ${item.active ? '<span class="text-blue-600 font-bold">Current</span>' : ''}
+                `;
+                
+                row.addEventListener('click', () => {
+                    // Update Active State Visuals
+                    document.querySelectorAll('#roadmap-list > div').forEach(d => {
+                        d.className = "p-4 border-b border-slate-100 cursor-pointer transition hover:bg-slate-50 flex items-center justify-between";
+                    });
+                    row.className = "p-4 border-b border-slate-100 cursor-pointer transition bg-blue-50 border-l-4 border-l-blue-600 flex items-center justify-between";
+                    
+                    // Update Details Panel
+                    details.innerHTML = `
+                        <h3 class="text-2xl font-bold mb-2">${item.title}</h3>
+                        <div class="text-blue-200 font-mono text-sm mb-6">Week ${item.week} // ${item.phase}</div>
+                        <p class="text-lg leading-relaxed">${item.detail}</p>
+                        ${item.week === 1 ? '<div class="mt-6 bg-white/10 p-4 rounded border border-white/20">👉 This is your current focus.</div>' : ''}
+                    `;
+                });
+
+                container.appendChild(row);
+
+                // Initialize with active item
+                if(item.active) row.click();
+            });
+        }
+
+        function initHierarchyInteraction() {
+            const nodes = document.querySelectorAll('.tier-node');
+            const detailPanel = document.getElementById('layer-details');
+
+            nodes.forEach(node => {
+                node.addEventListener('mouseenter', () => {
+                    const type = node.getAttribute('data-tier');
+                    const info = layerInfo[type];
+                    
+                    // Visual feedback on the node
+                    nodes.forEach(n => n.classList.add('opacity-50'));
+                    node.classList.remove('opacity-50');
+                    document.querySelectorAll(`[data-tier="${type}"]`).forEach(n => n.classList.remove('opacity-50'));
+
+                    // Update Panel
+                    detailPanel.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg border border-blue-100 shadow-md fade-in">
+                            <h4 class="text-xl font-bold text-blue-800 mb-2">${info.title}</h4>
+                            <p class="text-slate-600 mb-4">${info.desc}</p>
+                            <div class="text-xs font-mono bg-slate-100 p-2 rounded text-slate-600">
+                                <strong>Typical HW:</strong> ${info.devices}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Reset on container leave (optional, but let's keep the last selection for readability)
+            });
+            
+            // Restore opacity on mouse leave of the diagram area
+            document.querySelector('#theory').addEventListener('mouseleave', () => {
+                nodes.forEach(n => n.classList.remove('opacity-50'));
+            });
+        }
+
+        function initLabTabs() {
+            const buttons = document.querySelectorAll('.lab-tab-btn');
+            const contentArea = document.getElementById('lab-content');
+
+            // Render Step 1 initially
+            contentArea.innerHTML = `<div class="fade-in">${labSteps[1].content}</div>`;
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Reset buttons
+                    buttons.forEach(b => {
+                        b.className = "lab-tab-btn text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-900";
+                    });
+                    
+                    // Activate clicked
+                    btn.className = "lab-tab-btn active text-left px-4 py-3 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 shadow-sm";
+                    
+                    // Update Content
+                    const step = btn.getAttribute('data-step');
+                    contentArea.innerHTML = `<div class="fade-in">${labSteps[step].content}</div>`;
+                });
+            });
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('gradingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Theoretical Understanding', 'Practical Implementation', 'Independent Reflection'],
+                    datasets: [{
+                        data: [25, 50, 25],
+                        backgroundColor: [
+                            '#e2e8f0', // slate-200
+                            '#2563eb', // blue-600
+                            '#0f172a'  // slate-900
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Copy to Clipboard Logic
+        document.getElementById('copy-btn').addEventListener('click', () => {
+             const text = document.getElementById('draft-area').value;
+             navigator.clipboard.writeText(text).then(() => {
+                 const btn = document.getElementById('copy-btn');
+                 const original = btn.innerText;
+                 btn.innerText = "Copied!";
+                 btn.classList.add('bg-green-600');
+                 setTimeout(() => {
+                     btn.innerText = original;
+                     btn.classList.remove('bg-green-600');
+                 }, 2000);
+             });
+        });
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoadmap();
+            initHierarchyInteraction();
+            initLabTabs();
+            initChart();
+        });
+
+    </script>
+</body>
+</html>
+
+
+

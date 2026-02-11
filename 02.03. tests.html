@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Fundamentals | Flashcards & Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for rendering LaTeX equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+
+        /* Card Flip Animation Styles */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Hide/Show utility */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { 
+            border-bottom: 2px solid #4f46e5; 
+            color: #4f46e5; 
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 flex-none z-10">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🎓</span>
+                <h1 class="text-lg font-bold text-slate-800">Network Fundamentals</h1>
+            </div>
+            <!-- Tab Navigation -->
+            <nav class="flex gap-6 h-full items-end">
+                <button onclick="switchTab('flashcards')" id="tab-flashcards" class="tab-btn active pb-4 px-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                    Flashcards
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn pb-4 px-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                    Quiz Practice
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto relative">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+
+            <!-- ================= FLASHCARDS TAB ================= -->
+            <div id="content-flashcards" class="tab-content active h-full">
+                
+                <!-- Progress Bar -->
+                <div class="mb-6 flex justify-between items-center text-sm text-slate-500">
+                    <span id="fc-progress-text">Card 1 of 25</span>
+                    <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="fc-progress-bar" class="h-full bg-indigo-600 transition-all duration-300" style="width: 4%"></div>
+                    </div>
+                </div>
+
+                <!-- Card Scene -->
+                <div class="perspective-1000 w-full h-[400px] cursor-pointer group" onclick="flipCard()">
+                    <div id="flashcard-inner" class="relative w-full h-full text-center transition-transform duration-500 transform-style-3d shadow-xl rounded-2xl">
+                        
+                        <!-- Front -->
+                        <div class="absolute w-full h-full backface-hidden bg-white border border-slate-200 rounded-2xl flex flex-col justify-center items-center p-8">
+                            <span class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-4">Term / Question</span>
+                            <h2 id="fc-front" class="text-2xl md:text-3xl font-bold text-slate-800 leading-snug">
+                                <!-- JS Populated -->
+                            </h2>
+                            <p class="mt-8 text-sm text-indigo-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">Click to Flip ↻</p>
+                        </div>
+
+                        <!-- Back -->
+                        <div class="absolute w-full h-full backface-hidden bg-indigo-600 rounded-2xl rotate-y-180 flex flex-col justify-center items-center p-8 text-white">
+                            <span class="text-xs uppercase tracking-widest text-indigo-200 font-bold mb-4">Definition / Answer</span>
+                            <p id="fc-back" class="text-xl md:text-2xl leading-relaxed">
+                                <!-- JS Populated -->
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="mt-8 flex justify-center gap-4">
+                    <button onclick="prevCard(event)" class="px-6 py-3 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-indigo-300 font-medium shadow-sm transition-all flex items-center gap-2">
+                        ← Previous
+                    </button>
+                    <button onclick="flipCard()" class="px-6 py-3 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 font-medium shadow-sm transition-all">
+                        Flip Card
+                    </button>
+                    <button onclick="nextCard(event)" class="px-6 py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= QUIZ TAB ================= -->
+            <div id="content-quiz" class="tab-content">
+                
+                <!-- Quiz Container -->
+                <div id="quiz-active-container" class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                    <!-- Quiz Header -->
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Question <span id="qz-current-num">1</span>/10</span>
+                        <span class="text-sm font-bold text-indigo-600">Score: <span id="qz-score">0</span></span>
+                    </div>
+
+                    <!-- Question Body -->
+                    <div class="p-6 md:p-8">
+                        <h3 id="qz-question" class="text-xl font-bold text-slate-800 mb-2">
+                            <!-- Question Text -->
+                        </h3>
+                        <!-- Hint (Initially Hidden) -->
+                        <div id="qz-hint-box" class="hidden mb-6 mt-2">
+                            <p class="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200 inline-block">
+                                💡 <span class="font-bold">Hint:</span> <span id="qz-hint-text"></span>
+                            </p>
+                        </div>
+                        <button onclick="toggleHint()" id="btn-hint" class="text-xs text-slate-400 underline hover:text-indigo-500 mb-6 block">Show Hint</button>
+
+                        <!-- Options -->
+                        <div id="qz-options" class="space-y-3">
+                            <!-- Buttons generated by JS -->
+                        </div>
+
+                        <!-- Feedback Area (Rationale) -->
+                        <div id="qz-feedback" class="mt-6 hidden">
+                            <div id="qz-feedback-box" class="p-4 rounded-lg border">
+                                <h4 id="qz-feedback-title" class="font-bold text-sm uppercase mb-1"></h4>
+                                <p id="qz-feedback-text" class="text-sm"></p>
+                            </div>
+                            <button onclick="nextQuestion()" class="mt-4 w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-md transition-all">
+                                Next Question →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Summary (Hidden by default) -->
+                <div id="quiz-summary-container" class="hidden bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center">
+                    <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+                        🏆
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Quiz Complete!</h2>
+                    <p class="text-slate-600 mb-8">You have completed the Network Fundamentals practice.</p>
+                    
+                    <div class="text-5xl font-bold text-indigo-600 mb-2" id="qz-final-score">0%</div>
+                    <p class="text-sm text-slate-400 mb-8">Final Score</p>
+
+                    <button onclick="restartQuiz()" class="px-8 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-all font-semibold">
+                        Retake Quiz
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- DATA & LOGIC -->
+    <script>
+        // ================== DATA ==================
+        const flashcardsData = [
+            { front: "Base system of Binary", back: "Base-2 (using only 0 and 1)" },
+            { front: "Decimal value of the 8th bit position ($2^7$)", back: "128" },
+            { front: "Base system of Hexadecimal", back: "Base-16 (using 0-9 and A-F)" },
+            { front: "Number of bits in one Hexadecimal digit", back: "4 bits (also known as a \"nibble\")" },
+            { front: "Total length of a MAC address", back: "48 bits (represented as 12 hex digits)" },
+            { front: "OUI (Organizationally Unique Identifier)", back: "The first 24 bits (3 bytes) of a MAC address that identify the manufacturer." },
+            { front: "Bitwise AND operation result of 1 AND 0", back: "0" },
+            { front: "Primary function of Bitwise AND in routing", back: "To extract the Network ID by combining the IP address and Subnet Mask." },
+            { front: "Total length of an IPv4 address", back: "32 bits" },
+            { front: "Two logical parts of an IP address", back: "Network ID (City) and Host ID (Street Address)" },
+            { front: "First Octet Range for Class A", back: "1 – 126" },
+            { front: "First Octet Range for Class B", back: "128 – 191" },
+            { front: "First Octet Range for Class C", back: "192 – 223" },
+            { front: "Purpose of the 127.x.x.x range (Loopback)", back: "Testing the local TCP/IP stack; traffic sent here never leaves the device." },
+            { front: "Definition of Subnet Mask", back: "A 32-bit number with contiguous 1s (network) and 0s (host) used to distinguish the Network ID." },
+            { front: "Formula for Usable Hosts", back: "$2^h - 2$ (where h is the number of host bits)" },
+            { front: "Reason for subtracting 2 in the Usable Hosts formula", back: "To account for the reserved Network Address (all 0s) and Broadcast Address (all 1s)." },
+            { front: "CIDR notation for Subnet Mask 255.255.255.0", back: "/24" },
+            { front: "RFC 1918 Private Range for Class A", back: "10.0.0.0 – 10.255.255.255" },
+            { front: "RFC 1918 Private Range for Class C", back: "192.168.0.0 – 192.168.255.255" },
+            { front: "NAT (Network Address Translation)", back: "A process that translates private internal IP addresses to a public IP address at the network boundary." },
+            { front: "Primary use of Class D addresses", back: "Multicast (one sender to many receivers simultaneously)" },
+            { front: "Number of usable hosts in a /24 network", back: "254 ($2^8 - 2$)" },
+            { front: "Decimal value of binary 11000000", back: "192" },
+            { front: "Hexadecimal equivalent of Binary 1111", back: "F" }
+        ];
+
+        const quizQuestions = [
+            {
+                question: "Convert the binary byte 10101000 to its decimal equivalent.",
+                hint: "Use the 8-bit power table (128, 64, 32, 16, 8, 4, 2, 1) and sum the values where the bit is 1.",
+                answerOptions: [
+                    { text: "168", rationale: "Calculating the active bits ($1 \\cdot 128 + 0 \\cdot 64 + 1 \\cdot 32 + 0 \\cdot 16 + 1 \\cdot 8$) results in $128 + 32 + 8 = 168$.", isCorrect: true },
+                    { text: "192", rationale: "This value corresponds to the binary sequence 11000000 ($128 + 64$), which implies the first two bits are high rather than the first and third.", isCorrect: false },
+                    { text: "160", rationale: "This calculation accounts for the 128 and 32 bits ($128 + 32 = 160$) but misses the 8 bit ($2^3$).", isCorrect: false },
+                    { text: "172", rationale: "This sum suggests an additional 4 bit was included ($168 + 4$), which is a 0 in the given sequence.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Which binary sequence represents the Hexadecimal digit 'C'?",
+                hint: "Remember that A=10, B=11, and so on. Find the decimal value of C and convert it to 4-bit binary.",
+                answerOptions: [
+                    { text: "1100", rationale: "Hexadecimal 'C' equals decimal 12. In binary, $8 + 4 = 12$, which is represented as 1100.", isCorrect: true },
+                    { text: "1011", rationale: "This binary sequence equals decimal 11 ($8 + 2 + 1$), which corresponds to Hexadecimal 'B'.", isCorrect: false },
+                    { text: "1110", rationale: "This binary sequence equals decimal 14 ($8 + 4 + 2$), which corresponds to Hexadecimal 'E'.", isCorrect: false },
+                    { text: "1010", rationale: "This binary sequence equals decimal 10 ($8 + 2$), which corresponds to Hexadecimal 'A'.", isCorrect: false }
+                ]
+            },
+            {
+                question: "In the MAC address 00:1A:2B:3C:4D:5E, which segment represents the OUI (Organizationally Unique Identifier)?",
+                hint: "The manufacturer ID is always the first half of the 48-bit address.",
+                answerOptions: [
+                    { text: "00:1A:2B", rationale: "The OUI consists of the first 24 bits (the first three hex pairs) of the MAC address, identifying the manufacturer.", isCorrect: true },
+                    { text: "3C:4D:5E", rationale: "This segment is the Network Interface Controller (NIC) specific identifier, which is the second half of the address.", isCorrect: false },
+                    { text: "4D:5E", rationale: "This represents only the last two bytes, which are part of the device-unique identifier, not the manufacturer ID.", isCorrect: false },
+                    { text: "00:1A", rationale: "While this is part of the OUI, the OUI standard requires the full first three bytes (six digits), not just two.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Perform a bitwise AND operation on these two binary nibbles: 1101 AND 1011.",
+                hint: "Imagine two security guards; a visitor enters (result is 1) only if BOTH guards say yes (both inputs are 1).",
+                answerOptions: [
+                    { text: "1001", rationale: "The AND operation yields 1 only when both input bits are 1. Comparing bit by bit (1&1=1, 1&0=0, 0&1=0, 1&1=1) results in 1001.", isCorrect: true },
+                    { text: "1111", rationale: "This result resembles a bitwise OR operation, where the result is 1 if *either* input bit is 1.", isCorrect: false },
+                    { text: "1000", rationale: "This result misses the last bit, where both inputs are 1, resulting in an incomplete calculation.", isCorrect: false },
+                    { text: "1110", rationale: "This result suggests the third bit was calculated as 1, but since the first number had a 0 in that position, the AND result must be 0.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Based on the standard Classful architecture, which Class does the IP address 172.32.1.1 belong to?",
+                hint: "Look at the first octet range: 1-126 is A, 128-191 is B, 192-223 is C.",
+                answerOptions: [
+                    { text: "Class B", rationale: "Class B addresses range from 128 to 191 in the first octet. Since 172 falls within this range, it is a Class B address.", isCorrect: true },
+                    { text: "Class A", rationale: "Class A addresses are defined by a first octet range of 1 to 126.", isCorrect: false },
+                    { text: "Class C", rationale: "Class C addresses begin at 192 and end at 223 in the first octet.", isCorrect: false },
+                    { text: "Class D", rationale: "Class D is reserved for multicast and ranges from 224 to 239.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Which of the following IP addresses is NOT part of the private ranges defined in RFC 1918?",
+                hint: "Check the second octet of the Class B addresses carefully against the 16-31 range.",
+                answerOptions: [
+                    { text: "172.32.0.1", rationale: "The Class B private range is strictly 172.16.0.0 to 172.31.255.255. This address falls just outside that block, making it a public IP.", isCorrect: true },
+                    { text: "192.168.100.5", rationale: "This falls within the 192.168.0.0/16 block, which is the standard private range for Class C.", isCorrect: false },
+                    { text: "10.0.0.1", rationale: "This falls within the 10.0.0.0/8 block, which is the single large private range for Class A.", isCorrect: false },
+                    { text: "172.16.5.5", rationale: "This falls within the 172.16.0.0 to 172.31.255.255 block, which is the private range for Class B.", isCorrect: false }
+                ]
+            },
+            {
+                question: "How many usable host addresses are available in a /30 subnet?",
+                hint: "Calculate $2^h - 2$, where $h$ is the number of remaining host bits (32 minus the prefix).",
+                answerOptions: [
+                    { text: "2", rationale: "A /30 leaves 2 bits for hosts ($32 - 30 = 2$). The formula $2^2 - 2$ results in exactly 2 usable addresses.", isCorrect: true },
+                    { text: "4", rationale: "This is the total number of addresses ($2^2$), but it fails to subtract the network and broadcast addresses.", isCorrect: false },
+                    { text: "6", rationale: "This would correspond to a /29 subnet ($2^3 - 2 = 6$), which has 3 host bits available.", isCorrect: false },
+                    { text: "30", rationale: "This confuses the CIDR prefix (network bits) with the number of hosts.", isCorrect: false }
+                ]
+            },
+            {
+                question: "What is the dotted-decimal equivalent of a /24 subnet mask?",
+                hint: "A /24 means the first three octets are completely full of 1s.",
+                answerOptions: [
+                    { text: "255.255.255.0", rationale: "A /24 means the first 24 bits are 1s. This fills the first three octets (8+8+8), resulting in 255.255.255.0.", isCorrect: true },
+                    { text: "255.255.0.0", rationale: "This mask has 16 bits of 1s (8+8), which corresponds to a /16 prefix.", isCorrect: false },
+                    { text: "255.0.0.0", rationale: "This mask has only 8 bits of 1s, which corresponds to a /8 prefix.", isCorrect: false },
+                    { text: "255.255.255.255", rationale: "This is a /32 mask, used to identify a single specific host, not a standard Class C network.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Why can you not assign the IP address 192.168.1.255/24 to a specific computer?",
+                hint: "In any subnet, the address where all host bits are set to 1 has a special function.",
+                answerOptions: [
+                    { text: "It is the broadcast address for that subnet.", rationale: "In a /24 subnet, the last address (where all host bits are 1) is reserved for broadcasting to all devices on that network.", isCorrect: true },
+                    { text: "It is the Network ID.", rationale: "The Network ID is the first address in the block (where all host bits are 0), which would be 192.168.1.0.", isCorrect: false },
+                    { text: "It is a Class E experimental address.", rationale: "Class E addresses start at 240. This address is within the Class C range, it is just a special reserved address within that range.", isCorrect: false },
+                    { text: "It is a public IP address.", rationale: "192.168.x.x is a private range, but being private is not the reason it cannot be assigned; specific private IPs are assigned to hosts all the time.", isCorrect: false }
+                ]
+            },
+            {
+                question: "What happens to a network packet sent to 127.0.0.1?",
+                hint: "This address is often referred to as 'localhost'.",
+                answerOptions: [
+                    { text: "It never leaves the device and loops back to the sender.", rationale: "This is the loopback address. The TCP/IP stack recognizes it and processes the packet internally without sending it to the network card.", isCorrect: true },
+                    { text: "It is broadcast to the local subnet.", rationale: "Broadcasting requires the specific broadcast address (e.g., 255.255.255.255); loopback is strictly internal.", isCorrect: false },
+                    { text: "It is sent to the default gateway.", rationale: "The router/gateway never sees loopback traffic because the operating system intercepts it before it hits the wire.", isCorrect: false },
+                    { text: "It is dropped immediately by the firewall.", rationale: "While a firewall could block it, standard behavior is for the OS to accept and process loopback traffic for testing and internal communication.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // ================== STATE MANAGEMENT ==================
+        let currentTab = 'flashcards';
+        
+        // Flashcard State
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        // Quiz State
+        let currentQuizIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+        let shuffledOptions = [];
+
+        // ================== TAB LOGIC ==================
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // UI Toggle
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            if (tabName === 'quiz' && currentQuizIndex === 0 && !isAnswered) {
+                renderQuiz();
+            }
+        }
+
+        // ================== FLASHCARD LOGIC ==================
+        function renderCard() {
+            const data = flashcardsData[currentCardIndex];
+            const frontEl = document.getElementById('fc-front');
+            const backEl = document.getElementById('fc-back');
+            const innerEl = document.getElementById('flashcard-inner');
+            
+            // Reset state
+            isFlipped = false;
+            innerEl.classList.remove('rotate-y-180');
+            
+            // Populate content (allow some small delay for content swap if flipping back)
+            setTimeout(() => {
+                frontEl.innerHTML = data.front;
+                backEl.innerHTML = data.back;
+                
+                // Re-render MathJax
+                if (window.MathJax) {
+                    MathJax.typesetPromise([frontEl, backEl]);
+                }
+            }, 150);
+
+            // Update Progress
+            document.getElementById('fc-progress-text').innerText = `Card ${currentCardIndex + 1} of ${flashcardsData.length}`;
+            document.getElementById('fc-progress-bar').style.width = `${((currentCardIndex + 1) / flashcardsData.length) * 100}%`;
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            const innerEl = document.getElementById('flashcard-inner');
+            if(isFlipped) {
+                innerEl.classList.add('rotate-y-180');
+            } else {
+                innerEl.classList.remove('rotate-y-180');
+            }
+        }
+
+        function nextCard(e) {
+            e.stopPropagation(); // prevent flip
+            if (currentCardIndex < flashcardsData.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            }
+        }
+
+        function prevCard(e) {
+            e.stopPropagation();
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCard();
+            }
+        }
+
+        // ================== QUIZ LOGIC ==================
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function renderQuiz() {
+            // Reset for new question
+            isAnswered = false;
+            const qData = quizQuestions[currentQuizIndex];
+            
+            // Update Headers
+            document.getElementById('qz-current-num').innerText = currentQuizIndex + 1;
+            document.getElementById('qz-question').innerHTML = qData.question;
+            
+            // Hint Logic
+            document.getElementById('qz-hint-box').classList.add('hidden');
+            document.getElementById('qz-hint-text').innerText = qData.hint;
+            document.getElementById('btn-hint').innerText = "Show Hint";
+            
+            // Feedback Hide
+            document.getElementById('qz-feedback').classList.add('hidden');
+
+            // Options
+            const optionsContainer = document.getElementById('qz-options');
+            optionsContainer.innerHTML = '';
+            
+            // Clone options to shuffle without mutating original data reference permanently for this session
+            // (Though strict shuffling isn't required by prompt, it's good practice. 
+            // The prompt said "The answer options will be shuffled", so we shuffle).
+            shuffledOptions = [...qData.answerOptions];
+            shuffleArray(shuffledOptions);
+
+            shuffledOptions.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-4 rounded-xl border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all group`;
+                btn.onclick = () => checkAnswer(index, btn);
+                btn.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center group-hover:border-indigo-400">
+                            <div class="w-3 h-3 rounded-full bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" id="opt-dot-${index}"></div>
+                        </div>
+                        <span class="text-slate-700 font-medium">${opt.text}</span>
+                    </div>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Re-render MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('qz-question'), optionsContainer]);
+            }
+        }
+
+        function toggleHint() {
+            const hintBox = document.getElementById('qz-hint-box');
+            const btn = document.getElementById('btn-hint');
+            if (hintBox.classList.contains('hidden')) {
+                hintBox.classList.remove('hidden');
+                btn.innerText = "Hide Hint";
+            } else {
+                hintBox.classList.add('hidden');
+                btn.innerText = "Show Hint";
+            }
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const selectedOpt = shuffledOptions[selectedIndex];
+            const feedbackBox = document.getElementById('qz-feedback');
+            const feedbackTitle = document.getElementById('qz-feedback-title');
+            const feedbackText = document.getElementById('qz-feedback-text');
+            const feedbackContainer = document.getElementById('qz-feedback-box');
+
+            feedbackBox.classList.remove('hidden');
+            
+            // Disable all buttons
+            const allBtns = document.getElementById('qz-options').children;
+            for (let btn of allBtns) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+
+            if (selectedOpt.isCorrect) {
+                score++;
+                document.getElementById('qz-score').innerText = score;
+                
+                // UI Success
+                btnElement.classList.remove('border-slate-200', 'hover:bg-indigo-50');
+                btnElement.classList.add('bg-emerald-50', 'border-emerald-500', 'ring-1', 'ring-emerald-500');
+                
+                feedbackContainer.className = "p-4 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-800";
+                feedbackTitle.innerText = "Correct!";
+            } else {
+                // UI Error
+                btnElement.classList.remove('border-slate-200', 'hover:bg-indigo-50');
+                btnElement.classList.add('bg-rose-50', 'border-rose-500');
+                
+                feedbackContainer.className = "p-4 rounded-lg border bg-rose-50 border-rose-200 text-rose-800";
+                feedbackTitle.innerText = "Incorrect";
+
+                // Highlight correct one
+                shuffledOptions.forEach((opt, idx) => {
+                    if (opt.isCorrect) {
+                        allBtns[idx].classList.add('bg-emerald-50', 'border-emerald-500');
+                    }
+                });
+            }
+
+            // Set Rationale
+            feedbackText.innerHTML = selectedOpt.rationale;
+            
+            // MathJax Rationale
+            if (window.MathJax) {
+                MathJax.typesetPromise([feedbackText]);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuizIndex < quizQuestions.length - 1) {
+                currentQuizIndex++;
+                renderQuiz();
+            } else {
+                showQuizSummary();
+            }
+        }
+
+        function showQuizSummary() {
+            document.getElementById('quiz-active-container').classList.add('hidden');
+            document.getElementById('quiz-summary-container').classList.remove('hidden');
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            document.getElementById('qz-final-score').innerText = `${percentage}%`;
+        }
+
+        function restartQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            document.getElementById('qz-score').innerText = '0';
+            document.getElementById('quiz-summary-container').classList.add('hidden');
+            document.getElementById('quiz-active-container').classList.remove('hidden');
+            renderQuiz();
+        }
+
+        // Initialize
+        renderCard();
+
+    </script>
+</body>
+</html>
+
+
+

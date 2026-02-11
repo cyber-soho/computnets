@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: The Language of Networks - VLSM Planning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            height: 300px; 
+            max-height: 400px; 
+        }
+        .step-card { transition: all 0.3s ease; }
+        .step-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .interactive-row:hover { background-color: #F1F5F9; }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Professional Blues (Slate, Blue-Gray, Teal accents) -->
+    <!-- Application Structure Plan: 
+         1. Header & Roadmap: Contextualizes Phase 2 within the 14-week semester.
+         2. Foundation (RFC 1918): Interactive cards to select the "Major Network Block".
+         3. The VLSM Workbench: The core interactive section. Users see the example segments, can modify host counts, and see the logical "Tree" calculation update in real-time.
+         4. Visualization: A Chart.js Stacked Bar chart representing the binary allocation of the address space (visualizing fragmentation and efficiency).
+         5. Deliverables: A generated preview of the IP Address Table required for the report.
+         This structure moves from Theory -> Planning -> Visualization -> Documentation, mirroring the student's workflow.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Comparison (Project Roadmap): HTML Flexbox timeline. Goal: Show progress.
+         2. Inform (RFC 1918): Interactive Cards. Goal: Explain private ranges.
+         3. Analyze (VLSM Calculator): Custom JS Logic + Dynamic HTML Table. Goal: Demonstrate "Largest First" sorting and bit-boundary math.
+         4. Relate (Subnet Usage): Chart.js Horizontal Bar (Stacked). Goal: Visually demonstrate how subnets carve up the parent block and show remaining space.
+         5. Confirm: NO SVG used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Navigation / Header -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-slate-700">NetDesign<span class="text-teal-600">Lab</span></span>
+                    <span class="ml-4 px-3 py-1 bg-slate-100 text-xs font-semibold text-slate-500 rounded-full uppercase tracking-wide">Phase 2: IP Planning</span>
+                </div>
+                <div class="flex items-center space-x-4 text-sm font-medium text-slate-600">
+                    <a href="#roadmap" class="hover:text-teal-600 transition">Roadmap</a>
+                    <a href="#standards" class="hover:text-teal-600 transition">Standards</a>
+                    <a href="#vlsm-lab" class="hover:text-teal-600 transition">VLSM Lab</a>
+                    <a href="#deliverables" class="hover:text-teal-600 transition">Deliverables</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+            <div class="lg:flex lg:items-center lg:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-base font-semibold text-teal-600 tracking-wide uppercase">Week 2 Module</h2>
+                    <h1 class="mt-2 text-3xl font-extrabold text-slate-900 sm:text-4xl">The Language of Networks</h1>
+                    <p class="mt-4 text-lg text-slate-500 max-w-3xl">
+                        Design a robust VLSM addressing scheme for your Multi-Branch Campus Network. 
+                        Decisions made this week will determine the scalability of your network for the rest of the semester.
+                    </p>
+                </div>
+                <div class="mt-5 flex lg:mt-0 lg:ml-4">
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                        <span class="block text-3xl font-bold text-slate-800">≈ 6h</span>
+                        <span class="text-sm text-slate-500">Est. Time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- SECTION 1: Project Context -->
+        <section id="roadmap" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-900">Project Roadmap</h2>
+                <p class="mt-2 text-slate-600">
+                    You are currently in <strong>Phase 2</strong>. Your IP scheme is the foundation for Phase 3 (Config) through Phase 11 (Integration).
+                </p>
+            </div>
+            
+            <!-- Context Visual: Project Timeline -->
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div class="w-full border-t border-slate-200"></div>
+                </div>
+                <div class="relative flex justify-between overflow-x-auto pb-4">
+                    <!-- Past -->
+                    <div class="flex flex-col items-center min-w-[100px] opacity-60">
+                        <div class="h-8 w-8 rounded-full bg-slate-300 flex items-center justify-center ring-8 ring-white">
+                            <span class="text-white text-xs font-bold">1</span>
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-slate-500 text-center">Topology</div>
+                    </div>
+                    <!-- Current -->
+                    <div class="flex flex-col items-center min-w-[100px]">
+                        <div class="h-10 w-10 rounded-full bg-teal-600 flex items-center justify-center ring-8 ring-white shadow-lg z-10">
+                            <span class="text-white text-sm font-bold">2</span>
+                        </div>
+                        <div class="mt-2 text-sm font-bold text-teal-700 text-center">IP Planning</div>
+                        <div class="mt-1 px-2 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 font-medium">YOU ARE HERE</div>
+                    </div>
+                    <!-- Future -->
+                    <div class="flex flex-col items-center min-w-[100px]">
+                        <div class="h-8 w-8 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center ring-8 ring-white">
+                            <span class="text-slate-400 text-xs font-bold">3</span>
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-slate-500 text-center">Config</div>
+                    </div>
+                    <div class="flex flex-col items-center min-w-[100px]">
+                        <div class="h-8 w-8 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center ring-8 ring-white">
+                            <span class="text-slate-400 text-xs font-bold">4</span>
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-slate-500 text-center">L2 Seg</div>
+                    </div>
+                    <div class="flex flex-col items-center min-w-[100px]">
+                        <div class="h-8 w-8 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center ring-8 ring-white">
+                            <span class="text-slate-400 text-xs font-bold">5</span>
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-slate-500 text-center">L3 Routing</div>
+                    </div>
+                    <div class="flex flex-col items-center min-w-[100px]">
+                        <div class="h-8 w-8 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center ring-8 ring-white">
+                            <span class="text-slate-400 text-xs font-bold">7</span>
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-slate-500 text-center">DHCP/DNS</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Standards & Selection -->
+        <section id="standards" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-4">
+                <h2 class="text-2xl font-bold text-slate-900">Step 1: Choose Your Block</h2>
+                <p class="text-slate-600">
+                    According to RFC 1918, you must use private addressing. Select a block below to see its characteristics and when to use it.
+                </p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <p class="text-sm text-blue-700">
+                        <strong>Tip:</strong> For this project, if you have < 250 hosts, Class C is fine. For hundreds of hosts across branches, Class A or B offers more flexibility.
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4" id="rfc-cards">
+                <!-- Class A -->
+                <button onclick="selectRFC('classA')" id="btn-classA" class="step-card bg-white p-6 rounded-xl border border-slate-200 text-left focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Large Enterprise</div>
+                    <div class="mt-2 text-xl font-bold text-slate-800">10.0.0.0</div>
+                    <div class="text-sm font-mono text-slate-500">/8 Prefix</div>
+                    <div class="mt-4 text-xs text-slate-600">16.7 Million IPs. Maximum flexibility for complex hierarchies.</div>
+                </button>
+
+                <!-- Class B -->
+                <button onclick="selectRFC('classB')" id="btn-classB" class="step-card bg-white p-6 rounded-xl border-2 border-teal-500 shadow-md text-left focus:outline-none focus:ring-2 focus:ring-teal-500 relative">
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white px-2 py-0.5 rounded text-xs font-bold">RECOMMENDED</div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Medium Business</div>
+                    <div class="mt-2 text-xl font-bold text-slate-800">172.16.0.0</div>
+                    <div class="text-sm font-mono text-slate-500">/12 Range</div>
+                    <div class="mt-4 text-xs text-slate-600">1 Million IPs. Balanced choice for campus networks.</div>
+                </button>
+
+                <!-- Class C -->
+                <button onclick="selectRFC('classC')" id="btn-classC" class="step-card bg-white p-6 rounded-xl border border-slate-200 text-left focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Small Office / Home</div>
+                    <div class="mt-2 text-xl font-bold text-slate-800">192.168.0.0</div>
+                    <div class="text-sm font-mono text-slate-500">/16 Range</div>
+                    <div class="mt-4 text-xs text-slate-600">65k IPs. Simple, strictly defined 24-bit boundaries.</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION 3: VLSM Lab (The Core) -->
+        <section id="vlsm-lab" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Step 2: VLSM Calculation Lab</h2>
+                        <p class="mt-2 text-slate-600 max-w-2xl">
+                            Enter your requirements below. The system will apply the <strong>"Largest First"</strong> rule to allocate subnets from your chosen summary block (<span id="current-block" class="font-mono bg-slate-100 px-1 rounded">172.16.0.0/22</span>).
+                        </p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <button onclick="resetToExample()" class="text-sm text-teal-600 hover:text-teal-700 font-medium bg-teal-50 px-4 py-2 rounded-lg transition">Load Report Example</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2">
+                <!-- LEFT: Input Area -->
+                <div class="p-6 sm:p-8 bg-slate-50 border-r border-slate-100">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Network Segments & Hosts</h3>
+                    <p class="text-sm text-slate-500 mb-6">
+                        Estimated hosts should include 20-30% growth buffer. <br>
+                        <em>Note: The calculator automatically adds +2 for Network/Broadcast addresses.</em>
+                    </p>
+                    
+                    <div id="segment-inputs" class="space-y-3">
+                        <!-- Dynamic Input Rows generated by JS -->
+                    </div>
+
+                    <div class="mt-6 flex space-x-3">
+                        <button onclick="addSegment()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded hover:bg-slate-50 transition shadow-sm">
+                            + Add Segment
+                        </button>
+                        <button onclick="calculateVLSM()" class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded hover:bg-slate-900 transition shadow-sm">
+                            Recalculate Scheme
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Visualization & Result -->
+                <div class="p-6 sm:p-8 flex flex-col">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Allocation Visualization</h3>
+                    <p class="text-sm text-slate-500 mb-4">
+                        Visualizing the <span class="font-mono">172.16.0.0/22</span> address block. Notice how larger subnets consume the space first.
+                    </p>
+                    
+                    <!-- Chart Container -->
+                    <div class="chart-container mb-8">
+                        <canvas id="vlsmChart"></canvas>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h4 class="text-sm font-bold text-blue-900">VLSM Logic Explained</h4>
+                            <ul class="mt-2 text-xs text-blue-800 list-disc list-inside space-y-1">
+                                <li><strong>Sort:</strong> Segments are sorted descending by host count.</li>
+                                <li><strong>Fit:</strong> Smallest power of 2 that fits (Hosts + 2).</li>
+                                <li><strong>Allocate:</strong> Subnets are placed contiguously. No gaps (except reserved space at the end).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULT TABLE -->
+            <div class="border-t border-slate-200">
+                <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-slate-800">Calculated Address Scheme</h3>
+                    <span class="text-xs text-slate-500 uppercase tracking-wide">Output for Documentation</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">VLAN ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Segment Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hosts Needed</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Allocated Size</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Network Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Broadcast</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body" class="bg-white divide-y divide-slate-200">
+                            <!-- JS Generated Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Deliverables -->
+        <section id="deliverables" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h2 class="text-xl font-bold text-slate-900 mb-4">Deliverable Checklist</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center mt-0.5"></div>
+                        <p class="ml-3 text-sm text-slate-600"><strong>Requirements Table:</strong> List of segments with host counts + growth.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center mt-0.5"></div>
+                        <p class="ml-3 text-sm text-slate-600"><strong>VLSM Calculation Sheet:</strong> Show the sorting and math (screenshot the table above).</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center mt-0.5"></div>
+                        <p class="ml-3 text-sm text-slate-600"><strong>IP Address Table:</strong> Map subnets to specific device interfaces (Router G0/0, Switch VLAN SVI).</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-5 w-5 rounded-full border border-slate-300 flex items-center justify-center mt-0.5"></div>
+                        <p class="ml-3 text-sm text-slate-600"><strong>Diagram:</strong> Update Phase 1 topology with new labels.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl shadow-lg p-6 sm:p-8 text-white">
+                <h2 class="text-xl font-bold text-white mb-4">Common Pitfalls</h2>
+                <div class="space-y-4">
+                    <details class="group">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                            <span>Overlap Errors</span>
+                            <span class="transition group-open:rotate-180">
+                                <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                            </span>
+                        </summary>
+                        <p class="text-slate-300 mt-3 text-sm leading-relaxed">
+                            Always ensure the Broadcast address of one subnet is numerically lower than the Network address of the next. 
+                        </p>
+                    </details>
+                    <div class="border-t border-slate-700 my-2"></div>
+                    <details class="group">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                            <span>The "Lost 2" Rule</span>
+                            <span class="transition group-open:rotate-180">
+                                <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                            </span>
+                        </summary>
+                        <p class="text-slate-300 mt-3 text-sm leading-relaxed">
+                            A /30 has 4 addresses, but only 2 are usable for hosts (1 Network + 1 Broadcast). Do not try to fit 3 hosts in a /30.
+                        </p>
+                    </details>
+                    <div class="border-t border-slate-700 my-2"></div>
+                    <details class="group">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                            <span>WAN Links</span>
+                            <span class="transition group-open:rotate-180">
+                                <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                            </span>
+                        </summary>
+                        <p class="text-slate-300 mt-3 text-sm leading-relaxed">
+                            Don't forget point-to-point links between routers! They usually need a /30 subnet.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p>Computer Networks | Project Phase 2 &copy; Cyber.SoHo, 2026</p>
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script>
+        // --- DATA & STATE ---
+        let currentSegments = [
+            { name: "HQ-Engineering", hosts: 65, vlan: 10 },
+            { name: "HQ-HR", hosts: 26, vlan: 20 },
+            { name: "HQ-Guest", hosts: 33, vlan: 30 },
+            { name: "HQ-Servers", hosts: 14, vlan: 40 },
+            { name: "HQ-Management", hosts: 10, vlan: 99 },
+            { name: "WAN HQ-Branch1", hosts: 2, vlan: "N/A" },
+            { name: "Branch1-LAN", hosts: 40, vlan: 10 }
+        ];
+
+        let vlsmChartInstance = null;
+        let baseNetwork = [172, 16, 0, 0]; // 172.16.0.0
+        let baseCIDR = 22; // /22 = 1024 addresses
+
+        // --- DOM ELEMENTS ---
+        const segmentsContainer = document.getElementById('segment-inputs');
+        const resultsBody = document.getElementById('results-body');
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderInputs();
+            calculateVLSM();
+        });
+
+        // --- INTERACTION FUNCTIONS ---
+        function selectRFC(type) {
+            // Visual toggle only for this demo, focusing on Class B as per example
+            document.querySelectorAll('.step-card').forEach(el => {
+                el.classList.remove('border-teal-500', 'ring-2', 'ring-teal-500', 'shadow-md');
+                el.classList.add('border-slate-200');
+                // Remove recommended badge if exists from others
+                if(el.id !== 'btn-classB') {
+                    const badge = el.querySelector('.absolute');
+                    if(badge) badge.style.display = 'none';
+                }
+            });
+
+            const selected = document.getElementById('btn-' + type);
+            selected.classList.remove('border-slate-200');
+            selected.classList.add('border-teal-500', 'ring-2', 'ring-teal-500', 'shadow-md');
+            
+            // Note: For this educational tool, we stick to the 172.16.0.0/22 example 
+            // to ensure the math visualization remains consistent with the course text.
+            if(type !== 'classB') {
+                alert("For this tutorial phase, we will proceed with the recommended 172.16.0.0 range to match the course example.");
+                selectRFC('classB');
+            }
+        }
+
+        function resetToExample() {
+            currentSegments = [
+                { name: "HQ-Engineering", hosts: 65, vlan: 10 },
+                { name: "HQ-HR", hosts: 26, vlan: 20 },
+                { name: "HQ-Guest", hosts: 33, vlan: 30 },
+                { name: "HQ-Servers", hosts: 14, vlan: 40 },
+                { name: "HQ-Management", hosts: 10, vlan: 99 },
+                { name: "WAN HQ-Branch1", hosts: 2, vlan: "N/A" },
+                { name: "Branch1-LAN", hosts: 40, vlan: 10 }
+            ];
+            renderInputs();
+            calculateVLSM();
+        }
+
+        function addSegment() {
+            currentSegments.push({ name: "New Segment", hosts: 10, vlan: 0 });
+            renderInputs();
+        }
+
+        function removeSegment(index) {
+            currentSegments.splice(index, 1);
+            renderInputs();
+            calculateVLSM();
+        }
+
+        function updateSegment(index, field, value) {
+            if (field === 'hosts') value = parseInt(value) || 0;
+            currentSegments[index][field] = value;
+        }
+
+        // --- RENDERING UI ---
+        function renderInputs() {
+            segmentsContainer.innerHTML = '';
+            currentSegments.forEach((seg, index) => {
+                const row = document.createElement('div');
+                row.className = "interactive-row flex items-center space-x-2 p-2 rounded border border-transparent hover:border-slate-200";
+                row.innerHTML = `
+                    <div class="w-1/4">
+                        <label class="block text-xs text-slate-400 font-medium">Name</label>
+                        <input type="text" value="${seg.name}" onchange="updateSegment(${index}, 'name', this.value)" class="w-full text-sm border-b border-slate-300 bg-transparent focus:border-teal-500 focus:outline-none py-1">
+                    </div>
+                    <div class="w-1/5">
+                        <label class="block text-xs text-slate-400 font-medium">VLAN</label>
+                        <input type="text" value="${seg.vlan}" onchange="updateSegment(${index}, 'vlan', this.value)" class="w-full text-sm border-b border-slate-300 bg-transparent focus:border-teal-500 focus:outline-none py-1">
+                    </div>
+                    <div class="w-1/4">
+                        <label class="block text-xs text-slate-400 font-medium">Hosts (+Growth)</label>
+                        <input type="number" min="2" value="${seg.hosts}" onchange="updateSegment(${index}, 'hosts', this.value)" class="w-full text-sm border-b border-slate-300 bg-transparent focus:border-teal-500 focus:outline-none py-1 font-mono">
+                    </div>
+                    <button onclick="removeSegment(${index})" class="ml-auto text-slate-400 hover:text-red-500 px-2">
+                        &times;
+                    </button>
+                `;
+                segmentsContainer.appendChild(row);
+            });
+        }
+
+        // --- CORE VLSM LOGIC ---
+        function calculateVLSM() {
+            // 1. Sort Descending (Critical VLSM Rule)
+            const sortedSegments = [...currentSegments].sort((a, b) => b.hosts - a.hosts);
+
+            // 2. Calculation Vars
+            let currentIp = ipToInt(baseNetwork); // Start at 172.16.0.0
+            const results = [];
+            const chartData = [];
+
+            sortedSegments.forEach(seg => {
+                // Calculate size needed
+                const needed = seg.hosts + 2; // + Net + Broadcast
+                const power = Math.ceil(Math.log2(needed));
+                const size = Math.pow(2, power);
+                const prefix = 32 - power;
+
+                // Calculate addresses
+                const networkInt = currentIp;
+                const broadcastInt = currentIp + size - 1;
+                
+                // Format for display
+                const networkStr = intToIp(networkInt);
+                const broadcastStr = intToIp(broadcastInt);
+                const rangeStr = `${intToIp(networkInt + 1)} - ${intToIp(broadcastInt - 1)}`;
+
+                results.push({
+                    vlan: seg.vlan,
+                    name: seg.name,
+                    needed: seg.hosts,
+                    size: size,
+                    prefix: "/" + prefix,
+                    network: networkStr,
+                    broadcast: broadcastStr,
+                    range: rangeStr
+                });
+
+                chartData.push({
+                    label: seg.name,
+                    data: [size],
+                    backgroundColor: getColor(seg.vlan) // Helper for colors
+                });
+
+                // Advance pointer
+                currentIp += size;
+            });
+
+            // Calculate Remaining Space in the /22 block (1024 addresses total)
+            const totalUsed = currentIp - ipToInt(baseNetwork);
+            const totalAvailable = 1024; // /22
+            const remaining = totalAvailable - totalUsed;
+
+            if(remaining > 0) {
+                chartData.push({
+                    label: "Reserved / Future Growth",
+                    data: [remaining],
+                    backgroundColor: "#CBD5E1" // Slate 300
+                });
+            }
+
+            renderTable(results);
+            updateChart(chartData);
+        }
+
+        function renderTable(data) {
+            resultsBody.innerHTML = "";
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${row.vlan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${row.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">${row.needed}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${row.prefix}</span> (${row.size})</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">${row.network}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">${row.broadcast}</td>
+                `;
+                resultsBody.appendChild(tr);
+            });
+        }
+
+        // --- CHART JS ---
+        function updateChart(datasets) {
+            const ctx = document.getElementById('vlsmChart').getContext('2d');
+            
+            // Format data for a single stacked bar
+            // Chart.js expects dataset objects. For a single stacked bar, we need multiple datasets with 1 value each.
+            
+            const formattedDatasets = datasets.map(d => ({
+                label: d.label,
+                data: [d.data[0]], // Single value array for the one bar
+                backgroundColor: d.backgroundColor,
+                barPercentage: 0.6
+            }));
+
+            if (vlsmChartInstance) {
+                vlsmChartInstance.destroy();
+            }
+
+            vlsmChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['172.16.0.0/22 Address Block (1024 IPs)'],
+                    datasets: formattedDatasets
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bar
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    label += context.parsed.x + ' Addresses';
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Subnet Allocation Efficiency' }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            max: 1024,
+                            title: { display: true, text: 'Address Count' }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- HELPER FUNCTIONS ---
+        function ipToInt(ipArray) {
+            return (ipArray[0] << 24) | (ipArray[1] << 16) | (ipArray[2] << 8) | ipArray[3];
+        }
+
+        function intToIp(int) {
+            return [
+                (int >>> 24) & 0xFF,
+                (int >>> 16) & 0xFF,
+                (int >>> 8) & 0xFF,
+                int & 0xFF
+            ].join('.');
+        }
+
+        function getColor(vlan) {
+            // Uniqueish colors for demo
+            if (vlan == 10) return '#0D9488'; // Teal 600
+            if (vlan == 20) return '#2563EB'; // Blue 600
+            if (vlan == 30) return '#7C3AED'; // Violet 600
+            if (vlan == 40) return '#DB2777'; // Pink 600
+            if (vlan == 99) return '#EA580C'; // Orange 600
+            if (vlan === 'N/A') return '#475569'; // Slate 600
+            return '#64748B';
+        }
+
+    </script>
+</body>
+</html>
+
+
+

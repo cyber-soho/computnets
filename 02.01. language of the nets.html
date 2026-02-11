@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Language of Networks | Interactive Module</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: "Warm Academic" -->
+    <!-- Background: Stone-50 (Warm Neutral) -->
+    <!-- Cards: White -->
+    <!-- Primary Action: Indigo-600 -->
+    <!-- Secondary/Success: Emerald-600 -->
+    <!-- Alerts/Highlights: Amber-500 -->
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafaf9; /* stone-50 */
+            color: #1c1917; /* stone-900 */
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Toggle Switch Styling */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4f46e5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
+
+        /* Bit Switch Styling */
+        .bit-btn {
+            transition: all 0.2s ease;
+        }
+        .bit-btn.active {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Chart Container Best Practices */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+
+    <!-- Application Structure Plan: 
+         Designed as a "concept ladder" structure.
+         1. Hero: Context setting.
+         2. Foundation (Binary/Hex): Interactive tools to "feel" the math (Bit toggles).
+         3. Logic (AND): A visual calculator to demonstrate the router's decision process.
+         4. Architecture (Classes): Visualization of the scale differences between classes.
+         5. Subnetting (CIDR): A slider-based explorer to see how masks change host availability dynamically.
+         6. Review: Summary card.
+         
+         Why this structure? The report builds knowledge linearly. The app reflects this but allows non-linear exploration within sections. The "Bit Switcher" is placed first because understanding binary is a prerequisite for understanding Subnet Masks later.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Bit Switcher (Interactive Custom UI): Goal: Inform/Teach. Allows users to toggle bits and see the decimal/hex sum instantly. Justification: Static tables are hard to memorize; interaction builds intuition.
+         2. IPv4 Class Architecture (Chart.js Bar Chart): Goal: Compare. Visualizes the massive difference in "Hosts per Network" between Class A, B, and C. Justification: Numbers like 16 million vs 254 are abstract; bars make the scale obvious.
+         3. Router Logic (Interactive AND Gate): Goal: Logic/Process. Simulation of bitwise operations. Justification: The text describes it as a "gate"; the UI should function like one.
+         4. CIDR Slider (Custom UI): Goal: Change/Explore. Slider from /8 to /32 updates mask and host count. Justification: Shows the trade-off between network bits and host bits dynamically.
+         NO SVG/Mermaid used. Unicode icons used for visuals.
+    -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">🌐</span>
+                    <span class="font-bold text-xl tracking-tight text-stone-800">NetLogic<span class="text-indigo-600">Explorer</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#binary" class="text-stone-500 hover:text-indigo-600 transition-colors">Binary & Hex</a>
+                    <a href="#ipv4" class="text-stone-500 hover:text-indigo-600 transition-colors">IPv4 Classes</a>
+                    <a href="#subnetting" class="text-stone-500 hover:text-indigo-600 transition-colors">Subnetting</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white border-b border-stone-200">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-extrabold text-stone-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+                The Language of Networks
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-stone-500">
+                Explore the binary foundation, IP architecture, and subnetting logic that powers the internet. Based on Module 2 concepts.
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <button onclick="document.getElementById('binary').scrollIntoView({behavior: 'smooth'})" class="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg shadow-lg hover:shadow-xl transition-all">
+                    Start Decoding
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- SECTION 1: Binary & Hex -->
+        <section id="binary" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-900">1. Binary & Hexadecimal Logic</h2>
+                <div class="w-16 h-1 bg-indigo-600 mx-auto mt-4 mb-6 rounded"></div>
+                <p class="max-w-3xl mx-auto text-lg text-stone-600 leading-relaxed">
+                    Digital signals are strictly <strong>on</strong> (1) or <strong>off</strong> (0). Before understanding addresses, you must understand the <strong>common alphabet</strong> of all devices. Use the interactive <strong>8-Bit Byte Builder</strong> below to see how binary positions translate to the decimal numbers we use every day and the Hexadecimal shorthand used for MAC addresses.
+                </p>
+            </div>
+
+            <!-- Interactive Bit Switcher -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-100">
+                <div class="p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-stone-800 flex items-center">
+                            <span class="mr-2">🎛️</span> The 8-Bit Byte Builder
+                        </h3>
+                        <div class="text-sm text-stone-500 bg-stone-100 px-3 py-1 rounded-full mt-2 md:mt-0">
+                            Click bits to toggle voltage
+                        </div>
+                    </div>
+
+                    <!-- Bit Visualizer -->
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-4 mb-8">
+                        <!-- Generated by JS loop ideally, but hardcoded for clarity/layout control -->
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2⁷</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="128" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">128</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2⁶</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="64" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">64</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2⁵</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="32" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">32</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2⁴</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="16" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">16</div>
+                        </div>
+                        <!-- Divider for Nibble visual -->
+                        <div class="hidden md:block absolute left-1/2 w-px h-20 bg-stone-200 border-l border-dashed border-stone-300"></div> 
+                        
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2³</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="8" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">8</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2²</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="4" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">4</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2¹</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="2" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">2</div>
+                        </div>
+                        <div class="flex flex-col items-center group">
+                            <div class="text-xs text-stone-400 mb-1 font-mono">2⁰</div>
+                            <button class="bit-btn w-12 h-16 md:w-16 md:h-20 border-2 border-stone-200 rounded-lg flex items-center justify-center text-2xl font-bold text-stone-300 font-mono hover:border-indigo-300" data-val="1" onclick="toggleBit(this)">0</button>
+                            <div class="text-xs font-bold text-indigo-600 mt-2">1</div>
+                        </div>
+                    </div>
+
+                    <!-- Results Dashboard -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-stone-50 rounded-xl p-6 border border-stone-200">
+                        <div class="text-center">
+                            <div class="text-sm font-semibold text-stone-500 uppercase tracking-wider">Decimal</div>
+                            <div id="decimal-result" class="text-4xl font-bold text-stone-800 font-mono mt-2">0</div>
+                            <div class="text-xs text-stone-400 mt-1">Base-10</div>
+                        </div>
+                        <div class="text-center border-t md:border-t-0 md:border-l border-stone-200 pt-4 md:pt-0">
+                            <div class="text-sm font-semibold text-stone-500 uppercase tracking-wider">Binary</div>
+                            <div id="binary-result" class="text-4xl font-bold text-indigo-600 font-mono mt-2">00000000</div>
+                            <div class="text-xs text-stone-400 mt-1">Base-2</div>
+                        </div>
+                        <div class="text-center border-t md:border-t-0 md:border-l border-stone-200 pt-4 md:pt-0">
+                            <div class="text-sm font-semibold text-stone-500 uppercase tracking-wider">Hexadecimal</div>
+                            <div id="hex-result" class="text-4xl font-bold text-emerald-600 font-mono mt-2">00</div>
+                            <div class="text-xs text-stone-400 mt-1">Base-16 (Compressed)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-6 py-4 border-t border-indigo-100 flex items-start">
+                    <span class="text-indigo-500 text-xl mr-3">💡</span>
+                    <div>
+                        <h4 class="font-bold text-indigo-900 text-sm">Key Insight: MAC Addresses</h4>
+                        <p class="text-indigo-800 text-sm mt-1">
+                            Hexadecimal is used to compress long binary strings. A MAC address (e.g., A4:5E...) is 48 bits long. Writing that in binary would take 48 digits! In Hex, it's just 12 digits.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bitwise AND Logic -->
+            <div class="grid md:grid-cols-2 gap-8 mt-12">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-100">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center">
+                        <span class="mr-2">🔌</span> The "Bitwise AND" Rule
+                    </h3>
+                    <p class="text-stone-600 mb-6">
+                        Routers use this operation millions of times per second to separate the <strong>Network ID</strong> from the <strong>Host ID</strong>.
+                    </p>
+                    <div class="bg-stone-900 text-white p-6 rounded-xl font-mono text-center space-y-4">
+                        <div class="flex justify-between items-center border-b border-stone-700 pb-2">
+                            <span>Bit A</span>
+                            <span class="text-stone-500">+</span>
+                            <span>Bit B</span>
+                            <span class="text-stone-500">=</span>
+                            <span class="text-amber-400">Result</span>
+                        </div>
+                        <div class="flex justify-between opacity-50">
+                            <span>0</span><span>0</span><span>0</span>
+                        </div>
+                        <div class="flex justify-between opacity-50">
+                            <span>0</span><span>1</span><span>0</span>
+                        </div>
+                        <div class="flex justify-between opacity-50">
+                            <span>1</span><span>0</span><span>0</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg bg-stone-800 rounded p-1">
+                            <span>1</span><span>1</span><span class="text-amber-400">1</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-stone-500 mt-4 italic text-center">"Both guards must say YES for the visitor to enter."</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-100 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Try It: Router Simulation</h3>
+                    <p class="text-sm text-stone-500 mb-4">Click inputs to toggle 1/0.</p>
+                    
+                    <div class="space-y-2 font-mono text-lg">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-400 w-20">IP Bit:</span>
+                            <button id="and-input-a" class="w-12 h-12 bg-stone-100 rounded text-stone-400 font-bold hover:bg-stone-200" onclick="toggleAndInput('a')">0</button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-400 w-20">Mask:</span>
+                            <button id="and-input-b" class="w-12 h-12 bg-stone-100 rounded text-stone-400 font-bold hover:bg-stone-200" onclick="toggleAndInput('b')">0</button>
+                        </div>
+                        <div class="h-px bg-stone-300 my-2"></div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-800 font-bold w-20">Result:</span>
+                            <div id="and-output" class="w-12 h-12 bg-indigo-600 rounded text-white font-bold flex items-center justify-center shadow-lg">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: IPv4 Classes -->
+        <section id="ipv4" class="scroll-mt-24 border-t border-stone-200 pt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-900">2. IPv4 Architecture</h2>
+                <div class="w-16 h-1 bg-emerald-500 mx-auto mt-4 mb-6 rounded"></div>
+                <p class="max-w-3xl mx-auto text-lg text-stone-600 leading-relaxed">
+                    IPv4 addresses are 32-bit numbers divided into five "Classes". The class determines how much of the address is for the <strong>Network</strong> (City) and how much is for the <strong>Host</strong> (Street Address). Use the chart to compare the scale of these classes.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-10 items-center">
+                
+                <!-- Visualization -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl border border-stone-100">
+                    <h3 class="text-lg font-bold text-stone-800 mb-2">Max Hosts per Network</h3>
+                    <p class="text-xs text-stone-500 mb-4">Comparing the scale of Class A, B, and C networks.</p>
+                    
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <canvas id="classChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="space-y-4">
+                    <!-- Class A -->
+                    <div class="group bg-white hover:bg-emerald-50 p-5 rounded-xl border border-stone-200 hover:border-emerald-300 transition-all cursor-default shadow-sm hover:shadow-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center">
+                                    <span class="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm mr-3">A</span>
+                                    <h4 class="text-lg font-bold text-stone-900">The "Countries"</h4>
+                                </div>
+                                <p class="text-stone-600 text-sm mt-2 ml-11">
+                                    Range: <span class="font-mono bg-stone-100 px-1 rounded">1 - 126</span><br>
+                                    Massive networks. Few exist, but each holds 16M+ hosts.
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-stone-400 uppercase">Default Mask</span>
+                                <div class="font-mono text-emerald-600 font-bold">/8</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class B -->
+                    <div class="group bg-white hover:bg-blue-50 p-5 rounded-xl border border-stone-200 hover:border-blue-300 transition-all cursor-default shadow-sm hover:shadow-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center">
+                                    <span class="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm mr-3">B</span>
+                                    <h4 class="text-lg font-bold text-stone-900">The "Cities"</h4>
+                                </div>
+                                <p class="text-stone-600 text-sm mt-2 ml-11">
+                                    Range: <span class="font-mono bg-stone-100 px-1 rounded">128 - 191</span><br>
+                                    Medium networks. Thousands exist, each holding ~65k hosts.
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-stone-400 uppercase">Default Mask</span>
+                                <div class="font-mono text-blue-600 font-bold">/16</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class C -->
+                    <div class="group bg-white hover:bg-amber-50 p-5 rounded-xl border border-stone-200 hover:border-amber-300 transition-all cursor-default shadow-sm hover:shadow-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center">
+                                    <span class="h-8 w-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm mr-3">C</span>
+                                    <h4 class="text-lg font-bold text-stone-900">The "Buildings"</h4>
+                                </div>
+                                <p class="text-stone-600 text-sm mt-2 ml-11">
+                                    Range: <span class="font-mono bg-stone-100 px-1 rounded">192 - 223</span><br>
+                                    Small networks. Millions exist, but each holds only 254 hosts.
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-stone-400 uppercase">Default Mask</span>
+                                <div class="font-mono text-amber-600 font-bold">/24</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loopback Alert -->
+            <div class="mt-8 bg-stone-800 rounded-lg p-4 flex items-center text-stone-200 max-w-3xl mx-auto shadow-lg">
+                <span class="text-2xl mr-4">🚧</span>
+                <div>
+                    <span class="font-bold text-white">Where is 127?</span>
+                    <span class="ml-2 text-sm">The 127.x.x.x block is reserved for <strong>Loopback</strong>. Traffic sent to 127.0.0.1 (localhost) never leaves your device.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Subnetting & CIDR -->
+        <section id="subnetting" class="scroll-mt-24 border-t border-stone-200 pt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-900">3. Subnet Masks & CIDR</h2>
+                <div class="w-16 h-1 bg-amber-500 mx-auto mt-4 mb-6 rounded"></div>
+                <p class="max-w-3xl mx-auto text-lg text-stone-600 leading-relaxed">
+                    A Subnet Mask draws the line between network and host. Modern networks use <strong>CIDR</strong> (Classless Inter-Domain Routing) to move this line flexibly. Use the slider to see how changing the "slash notation" affects the mask and the number of usable hosts.
+                </p>
+            </div>
+
+            <!-- CIDR Calculator Tool -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-100">
+                <div class="p-8">
+                    <!-- Slider Control -->
+                    <div class="mb-10">
+                        <div class="flex justify-between items-end mb-4">
+                            <label for="cidr-slider" class="text-lg font-bold text-stone-700">CIDR Notation /<span id="cidr-display">24</span></label>
+                            <span class="text-xs text-stone-400 bg-stone-100 px-2 py-1 rounded">Slide to adjust</span>
+                        </div>
+                        <input type="range" id="cidr-slider" min="8" max="30" value="24" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                        <div class="flex justify-between text-xs text-stone-400 mt-2 font-mono">
+                            <span>/8 (Class A)</span>
+                            <span>/16 (Class B)</span>
+                            <span>/24 (Class C)</span>
+                            <span>/30 (P2P)</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Results Grid -->
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Mask Details -->
+                        <div class="space-y-6">
+                            <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <div class="text-xs font-bold text-stone-400 uppercase mb-1">Subnet Mask (Decimal)</div>
+                                <div id="mask-decimal" class="text-2xl font-mono text-stone-800 font-bold">255.255.255.0</div>
+                            </div>
+                            <div class="bg-stone-900 p-4 rounded-lg border border-stone-700 overflow-x-auto">
+                                <div class="text-xs font-bold text-stone-500 uppercase mb-1">Subnet Mask (Binary)</div>
+                                <div id="mask-binary" class="text-lg font-mono text-emerald-400 tracking-widest whitespace-nowrap">
+                                    11111111.11111111.11111111.00000000
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Host Calculation -->
+                        <div class="flex flex-col justify-center bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                            <div class="text-sm text-indigo-800 font-medium mb-2">Usable Hosts Calculation</div>
+                            <div class="text-4xl font-bold text-indigo-900 mb-1">
+                                <span id="host-count">254</span>
+                            </div>
+                            <div class="text-xs text-indigo-400 font-mono mb-4">
+                                Formula: 2^(<span id="host-bits">8</span>) - 2
+                            </div>
+                            <p class="text-sm text-indigo-700 leading-snug">
+                                Why minus 2? One address is for the <strong>Network ID</strong>, one is for the <strong>Broadcast IP</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Private Range Reference Footer -->
+                <div class="bg-stone-100 px-8 py-6 border-t border-stone-200">
+                    <h4 class="font-bold text-stone-700 mb-3 text-sm uppercase tracking-wide">RFC 1918 Private Ranges (Non-Routable)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-mono">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></span>
+                            <span>10.0.0.0/8</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                            <span>172.16.0.0/12</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                            <span>192.168.0.0/16</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary / Footer -->
+        <footer class="mt-20 border-t border-stone-200 pt-10 pb-20 text-center">
+            <h3 class="text-2xl font-bold text-stone-800 mb-6">Quick Review</h3>
+            <div class="grid md:grid-cols-3 gap-6 text-left max-w-5xl mx-auto">
+                <div class="bg-white p-6 shadow-sm rounded-lg border border-stone-200">
+                    <div class="font-bold text-indigo-600 mb-2">Bitwise AND</div>
+                    <p class="text-sm text-stone-600">The operation routers use to check destination IPs against subnet masks. If mask bit is 1, IP bit is preserved.</p>
+                </div>
+                <div class="bg-white p-6 shadow-sm rounded-lg border border-stone-200">
+                    <div class="font-bold text-indigo-600 mb-2">CIDR (/24)</div>
+                    <p class="text-sm text-stone-600">Modern shorthand for subnet masks. The number represents how many bits are "1" in the mask.</p>
+                </div>
+                <div class="bg-white p-6 shadow-sm rounded-lg border border-stone-200">
+                    <div class="font-bold text-indigo-600 mb-2">NAT</div>
+                    <p class="text-sm text-stone-600">Network Address Translation. Allows private IPs (RFC 1918) to access the internet via a single public IP.</p>
+                </div>
+            </div>
+            <p class="text-stone-400 text-sm mt-12">Language of the Networks | Computer Networks | Week 2, Module 2</p>
+        </footer>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Bit Switcher Logic ---
+        
+        // Initial state of bits (0 = off, 1 = on)
+        let bits = [0, 0, 0, 0, 0, 0, 0, 0];
+        
+        function toggleBit(btn) {
+            const val = parseInt(btn.getAttribute('data-val'));
+            // Find index based on value (128 is index 0, 1 is index 7)
+            // Power values: 128, 64, 32, 16, 8, 4, 2, 1
+            const powers = [128, 64, 32, 16, 8, 4, 2, 1];
+            const index = powers.indexOf(val);
+            
+            // Toggle state
+            bits[index] = bits[index] === 0 ? 1 : 0;
+            
+            // Update UI Button
+            if (bits[index] === 1) {
+                btn.classList.add('active');
+                btn.classList.remove('text-stone-300');
+                btn.innerText = '1';
+            } else {
+                btn.classList.remove('active');
+                btn.classList.add('text-stone-300');
+                btn.innerText = '0';
+            }
+            
+            updateCalculations();
+        }
+        
+        function updateCalculations() {
+            // 1. Calculate Decimal
+            let decimal = 0;
+            const powers = [128, 64, 32, 16, 8, 4, 2, 1];
+            bits.forEach((bit, i) => {
+                if(bit === 1) decimal += powers[i];
+            });
+            
+            // 2. Calculate Binary String
+            const binaryStr = bits.join('');
+            
+            // 3. Calculate Hex
+            let hex = decimal.toString(16).toUpperCase();
+            if (hex.length < 2) hex = '0' + hex;
+            
+            // Update DOM
+            document.getElementById('decimal-result').innerText = decimal;
+            document.getElementById('binary-result').innerText = binaryStr;
+            document.getElementById('hex-result').innerText = hex;
+        }
+
+        // --- 2. Bitwise AND Logic (Router Simulation) ---
+        
+        let andBitA = 0;
+        let andBitB = 0;
+        
+        function toggleAndInput(type) {
+            const btn = document.getElementById(`and-input-${type}`);
+            if (type === 'a') {
+                andBitA = andBitA === 0 ? 1 : 0;
+                btn.innerText = andBitA;
+            } else {
+                andBitB = andBitB === 0 ? 1 : 0;
+                btn.innerText = andBitB;
+            }
+            
+            // Style active state
+            if (btn.innerText === '1') {
+                btn.classList.remove('bg-stone-100', 'text-stone-400');
+                btn.classList.add('bg-indigo-100', 'text-indigo-600');
+            } else {
+                btn.classList.add('bg-stone-100', 'text-stone-400');
+                btn.classList.remove('bg-indigo-100', 'text-indigo-600');
+            }
+            
+            // Calculate AND
+            const result = andBitA & andBitB;
+            const output = document.getElementById('and-output');
+            output.innerText = result;
+            
+            // Visual feedback on result
+            if (result === 1) {
+                output.classList.remove('bg-stone-800');
+                output.classList.add('bg-amber-500');
+            } else {
+                output.classList.add('bg-indigo-600'); // Return to default color
+                output.classList.remove('bg-amber-500');
+            }
+        }
+
+        // --- 3. CIDR Logic ---
+        
+        const cidrSlider = document.getElementById('cidr-slider');
+        
+        cidrSlider.addEventListener('input', function() {
+            const cidr = parseInt(this.value);
+            updateCidrDisplay(cidr);
+        });
+        
+        function updateCidrDisplay(cidr) {
+            // Update Header
+            document.getElementById('cidr-display').innerText = cidr;
+            
+            // Calculate Host Bits (32 - CIDR)
+            const hostBits = 32 - cidr;
+            document.getElementById('host-bits').innerText = hostBits;
+            
+            // Calculate Usable Hosts (2^h - 2)
+            // Handle edge case for /31 and /32 where standard formula breaks for usability context (usually 0 usable)
+            let hosts = Math.pow(2, hostBits) - 2;
+            if (hosts < 0) hosts = 0; 
+            document.getElementById('host-count').innerText = hosts.toLocaleString();
+            
+            // Create Binary Mask String
+            let binaryString = '';
+            for (let i = 0; i < 32; i++) {
+                if (i < cidr) binaryString += '<span class="text-emerald-400">1</span>';
+                else binaryString += '<span class="text-stone-600">0</span>';
+                
+                if ((i + 1) % 8 === 0 && i !== 31) binaryString += '.';
+            }
+            document.getElementById('mask-binary').innerHTML = binaryString;
+            
+            // Calculate Decimal Mask
+            // Create 4 octets
+            let octets = [0, 0, 0, 0];
+            for (let i = 0; i < cidr; i++) {
+                const octetIndex = Math.floor(i / 8);
+                const bitIndex = 7 - (i % 8);
+                octets[octetIndex] += Math.pow(2, bitIndex);
+            }
+            document.getElementById('mask-decimal').innerText = octets.join('.');
+        }
+
+        // --- 4. Chart.js Implementation (Class Comparisons) ---
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('classChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Class A', 'Class B', 'Class C'],
+                    datasets: [{
+                        label: 'Max Usable Hosts per Network',
+                        data: [16777214, 65534, 254],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)', // Emerald (Class A)
+                            'rgba(59, 130, 246, 0.7)', // Blue (Class B)
+                            'rgba(245, 158, 11, 0.7)'  // Amber (Class C)
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(59, 130, 246)',
+                            'rgb(245, 158, 11)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'logarithmic', // Logarithmic scale is crucial here due to massive diff
+                            title: {
+                                display: true,
+                                text: 'Number of Hosts (Log Scale)'
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Make log ticks readable
+                                    if (value === 100 || value === 10000 || value === 1000000 || value === 10000000) {
+                                        return value.toLocaleString();
+                                    }
+                                    return null;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toLocaleString();
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Initialize CIDR visualizer
+            updateCidrDisplay(24);
+        });
+
+    </script>
+</body>
+</html>
+
+
+

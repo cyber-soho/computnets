@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cisco IOS Foundation | Interactive Trainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfbf9; /* Warm neutral light */
+            color: #1f2937;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Custom scrollbar for terminal windows */
+        .terminal-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #1f2937; 
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #4b5563; 
+            border-radius: 4px;
+        }
+
+        /* Chart Container Styling per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Max width constraint */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .active-tab {
+            border-bottom: 2px solid #d97706; /* Amber-600 */
+            color: #d97706;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutral & Technical Slate. Background: #fcfbf9 (Isabelline). Text: Dark Slate. Accents: Cisco Amber/Orange (#d97706) and Server Blue. -->
+    
+    <!-- Application Structure Plan: 
+         1. Hero Section: Sets the context (Cisco IOS importance) with key stats.
+         2. Tabbed Navigation: Allows linear or non-linear exploration of the 4 main modules (CLI, Modes, Memory, Hardening).
+         3. Module 1 (CLI): Features an interactive "Virtual Terminal" that simulates command outputs safely, teaching navigation without needing a real router.
+         4. Module 2 (Modes): Uses a nested visual hierarchy (Russian Doll concept) to explain the confusing mode structure visually.
+         5. Module 3 (Memory): An interactive "Data Flow" simulation where users must "Save" before "Rebooting" to understand volatility.
+         6. Module 4 (Hardening): Gamified security checklist. Users toggle security settings to increase a "Device Security Score" visualized by a chart.
+         7. Lab & Summary: Practical checklist and key takeaways.
+         
+         Reasoning: The report is technical and process-heavy. A tabbed SPA structure prevents information overload. Interactive simulations (Terminal, Reboot logic) reinforce the "hands-on" nature of the skill better than static text.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. CLI Usage Chart (Intro): Goal -> Inform importance. Method -> Doughnut Chart. Shows ubiquity of IOS.
+         2. Virtual Terminal (CLI): Goal -> Inform/Simulate. Method -> HTML/JS Dynamic Text. Best way to show CLI behavior without WebGL overhead.
+         3. Memory Lifecycle (Memory): Goal -> Change/Process. Method -> Interactive Diagram (HTML Blocks + JS logic). Shows flow from RAM to NVRAM.
+         4. Security Score (Hardening): Goal -> Gamify/Status. Method -> Chart.js Gauge/Doughnut. Provides immediate feedback on hardening actions.
+         5. Mode Hierarchy (Modes): Goal -> Organize/Relationships. Method -> Nested HTML Flex/Grid structures. Visually represents the "Russian Doll" concept perfectly.
+         
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-sm border-b border-stone-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold tracking-tight text-slate-900">CS Networks <span class="text-amber-600">:: IOS Foundation</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center" id="nav-links">
+                    <button onclick="switchTab('intro')" class="nav-btn active-tab px-3 py-2 text-sm font-medium transition-colors hover:text-amber-600">Overview</button>
+                    <button onclick="switchTab('cli')" class="nav-btn px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-600">The CLI</button>
+                    <button onclick="switchTab('modes')" class="nav-btn px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-600">Modes</button>
+                    <button onclick="switchTab('memory')" class="nav-btn px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-600">Memory & Saving</button>
+                    <button onclick="switchTab('hardening')" class="nav-btn px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-600">Security</button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Nav Menu (Simplified for SPA) -->
+        <div class="md:hidden flex justify-around bg-stone-100 py-2 border-t border-stone-200">
+            <button onclick="switchTab('intro')" class="text-xs font-bold text-amber-600">Home</button>
+            <button onclick="switchTab('cli')" class="text-xs text-slate-600">CLI</button>
+            <button onclick="switchTab('modes')" class="text-xs text-slate-600">Modes</button>
+            <button onclick="switchTab('hardening')" class="text-xs text-slate-600">Secure</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+
+        <!-- SECTION: INTRO -->
+        <div id="intro" class="tab-content fade-in block space-y-8">
+            <div class="text-center space-y-4 max-w-3xl mx-auto">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wide">Module 3 | Week 3</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">The Operating System: <span class="text-amber-600">Cisco IOS</span></h1>
+                <p class="text-lg text-slate-600">Mastering the language of the internet infrastructure. From basic navigation to securing the device against attacks.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-12">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">Why This Matters</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">🌍</span>
+                            <div>
+                                <strong class="block text-slate-900">Global Backbone</strong>
+                                <p class="text-sm text-slate-500">Powering networks since 1984. It is to networking what Linux is to servers.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">💼</span>
+                            <div>
+                                <strong class="block text-slate-900">Essential Skill</strong>
+                                <p class="text-sm text-slate-500">Every enterprise network engineer interacts with IOS daily. It's non-negotiable.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">🛡️</span>
+                            <div>
+                                <strong class="block text-slate-900">Critical Security</strong>
+                                <p class="text-sm text-slate-500">A misconfigured router can bring down an entire organization. Security starts here.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+                    <h3 class="text-lg font-bold mb-2 text-slate-800 w-full text-left">Module Roadmap</h3>
+                    <p class="text-sm text-slate-500 mb-6 w-full text-left">Estimated time: ~60 mins</p>
+                    <div class="chart-container">
+                        <canvas id="roadmapChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-stone-400 mt-2">Visual breakdown of module focus areas</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <button onclick="switchTab('cli')" class="bg-slate-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-slate-700 transition-all transform hover:scale-105 shadow-lg">Start Lesson 1: Navigation &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SECTION: CLI NAVIGATION -->
+        <div id="cli" class="tab-content hidden space-y-8 fade-in">
+            <div class="bg-slate-50 border-l-4 border-amber-500 p-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Lesson 1: Navigating the CLI</h2>
+                <p class="text-slate-600 mt-2">The CLI is a text-based interface. The prompt is your compass—it tells you exactly where you are and what you can do.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Interactive Terminal Simulator -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end">
+                        <h3 class="text-lg font-semibold">Virtual Terminal Simulator</h3>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Interactive</span>
+                    </div>
+                    <div class="bg-slate-900 rounded-lg shadow-2xl overflow-hidden font-mono text-sm h-96 flex flex-col relative">
+                        <div class="bg-slate-800 px-4 py-2 flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span class="text-slate-400 text-xs ml-2">Console Connection - 9600 baud</span>
+                        </div>
+                        <div id="terminal-screen" class="p-4 text-green-400 flex-1 overflow-y-auto terminal-scroll whitespace-pre-wrap">
+Cisco IOS Software, C2900 Software (C2900-UNIVERSALK9-M), Version 15.1(4)M4
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2025 by Cisco Systems, Inc.
+
+Press RETURN to get started!
+                        </div>
+                        <div class="p-2 bg-slate-800 border-t border-slate-700 grid grid-cols-4 gap-2">
+                            <button onclick="runCommand('enter')" class="bg-slate-700 text-white p-2 rounded hover:bg-slate-600 text-xs">Press Enter</button>
+                            <button onclick="runCommand('?')" class="bg-slate-700 text-white p-2 rounded hover:bg-slate-600 text-xs">Type '?'</button>
+                            <button onclick="runCommand('enable')" class="bg-slate-700 text-white p-2 rounded hover:bg-slate-600 text-xs">Type 'enable'</button>
+                            <button onclick="runCommand('show ver')" class="bg-slate-700 text-white p-2 rounded hover:bg-slate-600 text-xs">Type 'sh ver'</button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 italic">Try interacting with the buttons to simulate typing commands.</p>
+                </div>
+
+                <!-- Explainer & Key Concepts -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <h3 class="text-lg font-bold mb-4">Prompt Decoder</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 uppercase bg-stone-50">
+                                    <tr>
+                                        <th class="px-4 py-2">Prompt</th>
+                                        <th class="px-4 py-2">Mode Name</th>
+                                        <th class="px-4 py-2">Power Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-stone-100">
+                                    <tr class="hover:bg-amber-50 cursor-pointer transition-colors">
+                                        <td class="px-4 py-3 font-mono font-bold text-slate-700">Router></td>
+                                        <td class="px-4 py-3">User EXEC</td>
+                                        <td class="px-4 py-3"><span class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-xs">Read-Only (Limited)</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-amber-50 cursor-pointer transition-colors">
+                                        <td class="px-4 py-3 font-mono font-bold text-slate-700">Router#</td>
+                                        <td class="px-4 py-3">Privileged EXEC</td>
+                                        <td class="px-4 py-3"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">Full Visibility</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-amber-50 cursor-pointer transition-colors">
+                                        <td class="px-4 py-3 font-mono font-bold text-slate-700">(config)#</td>
+                                        <td class="px-4 py-3">Global Config</td>
+                                        <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Device Changes</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                        <h3 class="text-md font-bold text-amber-900 mb-2">💡 Pro Tip: Shortcuts</h3>
+                        <ul class="list-disc list-inside text-sm text-amber-800 space-y-2">
+                            <li><span class="font-bold">Tab:</span> Autocompletes commands (Type `sh ver` + Tab).</li>
+                            <li><span class="font-bold">Ctrl+Z:</span> Emergency exit! Jumps straight back to Privileged EXEC (`Router#`) from anywhere.</li>
+                            <li><span class="font-bold">?:</span> Context-sensitive help. Shows you what you can type next.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end mt-8">
+                <button onclick="switchTab('modes')" class="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-700 transition-colors">Next: Config Modes &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SECTION: CONFIGURATION MODES -->
+        <div id="modes" class="tab-content hidden space-y-8 fade-in">
+            <div class="bg-slate-50 border-l-4 border-amber-500 p-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Lesson 2: The "Russian Doll" Model</h2>
+                <p class="text-slate-600 mt-2">IOS uses a hierarchical structure. You must dive deeper into specific modes to change specific components, and exit back out to save or view status.</p>
+            </div>
+
+            <!-- Visualization of Hierarchy -->
+            <div class="p-6 bg-white rounded-xl shadow-lg border border-stone-200">
+                <h3 class="text-center text-lg font-bold mb-6 text-slate-700">Visualizing the Hierarchy</h3>
+                
+                <!-- Level 1 -->
+                <div class="border-2 border-slate-300 rounded-lg p-4 bg-slate-50 relative mb-4 transition hover:shadow-md">
+                    <span class="absolute top-0 left-0 bg-slate-300 text-slate-800 px-2 py-1 text-xs font-bold rounded-br">User EXEC Mode (Router>)</span>
+                    <div class="mt-6 flex justify-between items-center">
+                        <p class="text-sm text-slate-600">Lobby area. Connect here first. Type <code class="bg-slate-200 px-1 rounded">enable</code> to enter the next level.</p>
+                    </div>
+
+                    <!-- Level 2 -->
+                    <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50/50 mt-4 relative mx-4 transition hover:shadow-md hover:border-blue-400">
+                        <span class="absolute top-0 left-0 bg-blue-200 text-blue-900 px-2 py-1 text-xs font-bold rounded-br">Privileged EXEC Mode (Router#)</span>
+                        <div class="mt-6">
+                            <p class="text-sm text-slate-600 mb-4">Manager view. Full visibility. Type <code class="bg-blue-100 px-1 rounded">conf t</code> to configure.</p>
+                            
+                            <!-- Level 3 -->
+                            <div class="border-2 border-red-200 rounded-lg p-4 bg-red-50/50 relative mx-4 transition hover:shadow-md hover:border-red-400">
+                                <span class="absolute top-0 left-0 bg-red-200 text-red-900 px-2 py-1 text-xs font-bold rounded-br">Global Config (Router(config)#)</span>
+                                <div class="mt-6">
+                                    <p class="text-sm text-slate-600 mb-4">Change hostname, security. Branch out to specific sub-modes:</p>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Level 4a -->
+                                        <div class="border border-green-300 bg-green-50 p-3 rounded text-center">
+                                            <div class="font-mono text-xs font-bold text-green-800">Interface Config</div>
+                                            <div class="text-xs text-green-600 mt-1">config-if</div>
+                                            <div class="text-xs mt-2 italic">IPs, Ports</div>
+                                        </div>
+                                        <!-- Level 4b -->
+                                        <div class="border border-purple-300 bg-purple-50 p-3 rounded text-center">
+                                            <div class="font-mono text-xs font-bold text-purple-800">Line Config</div>
+                                            <div class="text-xs text-purple-600 mt-1">config-line</div>
+                                            <div class="text-xs mt-2 italic">Console, SSH</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Cheatsheet -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-lg border border-stone-200">
+                    <h3 class="font-bold text-slate-800 mb-3">Entering Modes</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>To Privileged:</span> <code class="text-amber-600">enable</code></li>
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>To Global Config:</span> <code class="text-amber-600">configure terminal</code></li>
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>To Interface:</span> <code class="text-amber-600">interface Gi0/0</code></li>
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>To Console Line:</span> <code class="text-amber-600">line console 0</code></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-stone-200">
+                    <h3 class="font-bold text-slate-800 mb-3">Exiting Modes</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>Go Up One Level:</span> <code class="text-blue-600">exit</code></li>
+                        <li class="flex justify-between border-b border-stone-100 pb-1"><span>Jump to Router#:</span> <code class="text-blue-600">end</code> or <code class="text-blue-600">Ctrl+Z</code></li>
+                        <li class="flex justify-between pt-2 text-slate-500 italic">Tip: Don't type 'exit' 3 times. Just use 'end'.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button onclick="switchTab('cli')" class="text-slate-500 hover:text-slate-800">&larr; Back to CLI</button>
+                <button onclick="switchTab('memory')" class="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-700 transition-colors">Next: Memory & Saving &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SECTION: MEMORY & SAVING -->
+        <div id="memory" class="tab-content hidden space-y-8 fade-in">
+            <div class="bg-slate-50 border-l-4 border-amber-500 p-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Lesson 3: The Memory Trinity</h2>
+                <p class="text-slate-600 mt-2">Cisco routers have three brains. Understanding which one is active is the difference between a successful config and a disastrous reboot.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Memory Card 1 -->
+                <div class="bg-white p-6 rounded-xl border-t-4 border-red-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg">RAM</h3>
+                        <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Volatile</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mb-4">running-config</div>
+                    <p class="text-sm text-slate-600">The whiteboard. Holds changes happening <strong>right now</strong>. Wipe the board (reboot), and it's all gone.</p>
+                </div>
+                <!-- Memory Card 2 -->
+                <div class="bg-white p-6 rounded-xl border-t-4 border-green-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg">NVRAM</h3>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Non-Volatile</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mb-4">startup-config</div>
+                    <p class="text-sm text-slate-600">The notebook. Permanent storage for configurations. Loaded into RAM at boot.</p>
+                </div>
+                <!-- Memory Card 3 -->
+                <div class="bg-white p-6 rounded-xl border-t-4 border-blue-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg">Flash</h3>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Non-Volatile</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mb-4">.bin (IOS Image)</div>
+                    <p class="text-sm text-slate-600">The hard drive. Stores the operating system files itself.</p>
+                </div>
+            </div>
+
+            <!-- Interactive Save Simulation -->
+            <div class="bg-stone-900 rounded-xl p-8 text-center relative overflow-hidden">
+                <h3 class="text-white text-xl font-bold mb-6">Simulation: The Cost of Forgetting</h3>
+                
+                <div class="flex justify-center items-center space-x-4 md:space-x-12 mb-8">
+                    <div id="ram-block" class="w-32 h-32 bg-red-600 rounded-lg flex flex-col items-center justify-center text-white transition-all duration-500 border-2 border-transparent">
+                        <span class="text-2xl mb-2">⚡</span>
+                        <span class="font-bold">RAM</span>
+                        <span id="ram-status" class="text-xs mt-1 bg-black/20 px-2 rounded">Unsaved Changes</span>
+                    </div>
+                    
+                    <div class="flex flex-col items-center text-stone-500">
+                        <span class="text-2xl">&rarr;</span>
+                        <span class="text-xs uppercase tracking-wide my-1">Save Command</span>
+                        <span class="text-2xl">&rarr;</span>
+                    </div>
+
+                    <div id="nvram-block" class="w-32 h-32 bg-green-700 rounded-lg flex flex-col items-center justify-center text-white transition-all duration-500">
+                        <span class="text-2xl mb-2">💾</span>
+                        <span class="font-bold">NVRAM</span>
+                        <span id="nvram-status" class="text-xs mt-1 bg-black/20 px-2 rounded">Old Config</span>
+                    </div>
+                </div>
+
+                <div class="space-x-4">
+                    <button onclick="simSave()" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-500 font-mono shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">copy run start</button>
+                    <button onclick="simReboot()" class="bg-red-600 text-white px-6 py-3 rounded hover:bg-red-500 font-mono shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1">reload (reboot)</button>
+                </div>
+                
+                <div id="sim-feedback" class="mt-6 text-stone-400 font-mono text-sm h-6">
+                    Current Status: Making changes in RAM...
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button onclick="switchTab('modes')" class="text-slate-500 hover:text-slate-800">&larr; Back to Modes</button>
+                <button onclick="switchTab('hardening')" class="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-700 transition-colors">Next: Device Hardening &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SECTION: HARDENING -->
+        <div id="hardening" class="tab-content hidden space-y-8 fade-in">
+            <div class="bg-slate-50 border-l-4 border-amber-500 p-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Lesson 4: Device Hardening</h2>
+                <p class="text-slate-600 mt-2">A default router is an open door. Apply the layers of security to protect the device management plane. Never use `enable password` (plaintext); always use `enable secret` (encrypted).</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Hardening Checklist -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">Security Checklist</h3>
+                    <p class="text-sm text-slate-500 mb-6">Apply controls to secure the device. Watch the security score update.</p>
+                    
+                    <div class="space-y-4">
+                        <label class="flex items-center justify-between p-3 bg-stone-50 rounded hover:bg-stone-100 cursor-pointer">
+                            <div>
+                                <span class="font-mono text-sm font-bold block text-slate-700">enable secret</span>
+                                <span class="text-xs text-slate-500">Protect Privileged EXEC (MD5 Hash)</span>
+                            </div>
+                            <input type="checkbox" onchange="updateSecurityScore(this, 30)" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 bg-stone-50 rounded hover:bg-stone-100 cursor-pointer">
+                            <div>
+                                <span class="font-mono text-sm font-bold block text-slate-700">service password-encryption</span>
+                                <span class="text-xs text-slate-500">Obfuscate plaintext passwords</span>
+                            </div>
+                            <input type="checkbox" onchange="updateSecurityScore(this, 10)" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 bg-stone-50 rounded hover:bg-stone-100 cursor-pointer">
+                            <div>
+                                <span class="font-mono text-sm font-bold block text-slate-700">line vty 0 4 (password + login)</span>
+                                <span class="text-xs text-slate-500">Secure remote access lines</span>
+                            </div>
+                            <input type="checkbox" onchange="updateSecurityScore(this, 20)" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 bg-stone-50 rounded hover:bg-stone-100 cursor-pointer">
+                            <div>
+                                <span class="font-mono text-sm font-bold block text-slate-700">transport input ssh</span>
+                                <span class="text-xs text-slate-500">Disable Telnet, Enforce SSH</span>
+                            </div>
+                            <input type="checkbox" onchange="updateSecurityScore(this, 30)" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 bg-stone-50 rounded hover:bg-stone-100 cursor-pointer">
+                            <div>
+                                <span class="font-mono text-sm font-bold block text-slate-700">banner motd #...#</span>
+                                <span class="text-xs text-slate-500">Legal warning banner</span>
+                            </div>
+                            <input type="checkbox" onchange="updateSecurityScore(this, 10)" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Security Score Visualization -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm flex flex-col items-center justify-center">
+                    <h3 class="text-lg font-bold mb-2 text-slate-800">Device Security Score</h3>
+                    <div class="chart-container">
+                        <canvas id="securityChart"></canvas>
+                    </div>
+                    <div id="security-message" class="text-center mt-4 font-bold text-red-600">
+                        CRITICAL VULNERABILITY: Factory Defaults
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Lab Review -->
+            <div class="mt-8 bg-amber-50 p-6 rounded-xl border border-amber-200">
+                <h3 class="text-xl font-bold text-amber-900 mb-4">🧪 Lab Challenge Recap</h3>
+                <p class="text-amber-800 mb-4">Before finishing, ensure you can do the following in Packet Tracer:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-amber-900">
+                    <div class="flex items-center"><span class="mr-2">✅</span> Set Hostname to STUDENT-RTR-XX</div>
+                    <div class="flex items-center"><span class="mr-2">✅</span> Config Enable Secret (Not Password)</div>
+                    <div class="flex items-center"><span class="mr-2">✅</span> Secure Console & VTY Lines</div>
+                    <div class="flex items-center"><span class="mr-2">✅</span> Generate RSA Keys & Enable SSHv2</div>
+                    <div class="flex items-center"><span class="mr-2">✅</span> Set Banner MOTD</div>
+                    <div class="flex items-center"><span class="mr-2">✅</span> <strong>Save to NVRAM!</strong></div>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button onclick="switchTab('memory')" class="text-slate-500 hover:text-slate-800">&larr; Back to Memory</button>
+                <button onclick="switchTab('intro')" class="text-slate-400 hover:text-slate-600">Back to Overview</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-stone-200 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+            <p>Module 3 — Cisco IOS | Computer Networks | Cyber.SoHo, Education Division</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- State Management ---
+        const state = {
+            currentTab: 'intro',
+            terminalStep: 0,
+            isSaved: false,
+            securityScore: 0
+        };
+
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            // Show selected tab
+            const target = document.getElementById(tabId);
+            target.classList.remove('hidden');
+            target.classList.add('block');
+            
+            // Update Nav Styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active-tab', 'text-amber-600');
+                btn.classList.add('text-slate-500');
+            });
+            // Find the button that called this (rough heuristic for SPA)
+            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.textContent.toLowerCase().includes(tabId === 'intro' ? 'overview' : tabId));
+            if(activeBtn) {
+                activeBtn.classList.add('active-tab', 'text-amber-600');
+                activeBtn.classList.remove('text-slate-500');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            // Re-render charts if hidden (Chart.js canvas sizing fix)
+            if(tabId === 'intro') renderRoadmapChart();
+            if(tabId === 'hardening') renderSecurityChart();
+        }
+
+        // --- Chart.js Implementations ---
+        let roadmapChartInstance = null;
+        let securityChartInstance = null;
+
+        function renderRoadmapChart() {
+            const ctx = document.getElementById('roadmapChart').getContext('2d');
+            if (roadmapChartInstance) roadmapChartInstance.destroy();
+
+            roadmapChartInstance = new Chart(ctx, {
+                type: 'bar', // Using bar for clear comparison of effort/focus
+                data: {
+                    labels: ['CLI Basics', 'Modes', 'Saving', 'Hardening'],
+                    datasets: [{
+                        label: 'Focus Intensity',
+                        data: [20, 25, 15, 40], // Estimated weight based on content length
+                        backgroundColor: [
+                            '#cbd5e1', // Slate 300
+                            '#94a3b8', // Slate 400
+                            '#64748b', // Slate 500
+                            '#d97706'  // Amber 600 (Key focus)
+                        ],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, display: false },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderSecurityChart() {
+            const ctx = document.getElementById('securityChart').getContext('2d');
+            if (securityChartInstance) securityChartInstance.destroy();
+
+            securityChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Secured', 'Vulnerable'],
+                    datasets: [{
+                        data: [state.securityScore, 100 - state.securityScore],
+                        backgroundColor: [
+                            '#d97706', // Amber 600 (Secured)
+                            '#e2e8f0'  // Slate 200 (Empty)
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+            
+            // Draw text in center
+            Chart.register({
+                id: 'centerText',
+                beforeDraw: function(chart) {
+                    if (chart.canvas.id !== 'securityChart') return;
+                    var width = chart.width,
+                        height = chart.height,
+                        ctx = chart.ctx;
+            
+                    ctx.restore();
+                    var fontSize = (height / 114).toFixed(2);
+                    ctx.font = "bold " + fontSize + "em sans-serif";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#1f2937";
+            
+                    var text = state.securityScore + "%",
+                        textX = Math.round((width - ctx.measureText(text).width) / 2),
+                        textY = height / 2;
+            
+                    ctx.fillText(text, textX, textY);
+                    ctx.save();
+                }
+            });
+        }
+
+        function updateSecurityScore(checkbox, value) {
+            if (checkbox.checked) {
+                state.securityScore += value;
+            } else {
+                state.securityScore -= value;
+            }
+            // Clamp
+            if(state.securityScore > 100) state.securityScore = 100;
+            if(state.securityScore < 0) state.securityScore = 0;
+
+            renderSecurityChart();
+            
+            const msgEl = document.getElementById('security-message');
+            if (state.securityScore === 0) {
+                msgEl.textContent = "CRITICAL VULNERABILITY: Factory Defaults";
+                msgEl.className = "text-center mt-4 font-bold text-red-600";
+            } else if (state.securityScore < 100) {
+                msgEl.textContent = "Hardening in Progress...";
+                msgEl.className = "text-center mt-4 font-bold text-amber-600";
+            } else {
+                msgEl.textContent = "SYSTEM HARDENED: Ready for Production";
+                msgEl.className = "text-center mt-4 font-bold text-green-600";
+            }
+        }
+
+        // --- Terminal Logic ---
+        function runCommand(cmd) {
+            const screen = document.getElementById('terminal-screen');
+            let output = "";
+            
+            // Simple simulation logic
+            switch(cmd) {
+                case 'enter':
+                    output = "\nRouter>";
+                    break;
+                case '?':
+                    output = "\nRouter> ?\nExec commands:\n  <1-99>      Session number to resume\n  connect     Open a terminal connection\n  disable     Turn off privileged commands\n  disconnect  Disconnect an existing network connection\n  enable      Turn on privileged commands\n  exit        Exit from the EXEC\n  logout      Exit from the EXEC\n  ping        Send echo messages\n  resume      Resume an active network connection\n  show        Show running system information\n  ssh         Open a secure shell client connection\n  telnet      Open a telnet connection\n  terminal    Set terminal line parameters\n  traceroute  Trace route to destination\n\nRouter>";
+                    break;
+                case 'enable':
+                    output = "\nRouter> enable\nRouter#";
+                    break;
+                case 'show ver':
+                    output = "\nRouter# show ver\nCisco IOS Software, C2900 Software (C2900-UNIVERSALK9-M), Version 15.1(4)M4\nROM: System Bootstrap, Version 15.0(1r)M16\n\nRouter uptime is 4 minutes\nSystem returned to ROM by power-on\nSystem image file is \"flash0:c2900-universalk9-mz.SPA.151-4.M4.bin\"\n\nRouter#";
+                    break;
+            }
+            
+            screen.innerText += output;
+            screen.scrollTop = screen.scrollHeight;
+        }
+
+        // --- Memory Logic ---
+        function simSave() {
+            state.isSaved = true;
+            document.getElementById('ram-block').classList.remove('border-red-500', 'animate-pulse');
+            document.getElementById('ram-status').textContent = "Synced";
+            document.getElementById('ram-status').classList.remove('bg-black/20');
+            document.getElementById('ram-status').classList.add('bg-green-500');
+            
+            document.getElementById('nvram-block').classList.add('scale-110');
+            setTimeout(() => document.getElementById('nvram-block').classList.remove('scale-110'), 300);
+            
+            document.getElementById('nvram-status').textContent = "Updated Config";
+            document.getElementById('sim-feedback').textContent = "Configuration saved from RAM to NVRAM.";
+            document.getElementById('sim-feedback').className = "mt-6 font-mono text-sm h-6 text-green-600";
+        }
+
+        function simReboot() {
+            // Visual reboot effect
+            const screen = document.getElementById('terminal-screen'); // Re-use terminal style logic if needed elsewhere
+            const feedback = document.getElementById('sim-feedback');
+            
+            feedback.textContent = "System Rebooting...";
+            
+            setTimeout(() => {
+                if (state.isSaved) {
+                    feedback.textContent = "Boot Success: Config loaded from NVRAM.";
+                    feedback.className = "mt-6 font-mono text-sm h-6 text-green-600";
+                } else {
+                    feedback.textContent = "DISASTER: RAM lost! Booting empty/old config.";
+                    feedback.className = "mt-6 font-mono text-sm h-6 text-red-600 font-bold";
+                    // Visual cues for failure
+                    document.getElementById('ram-block').classList.add('bg-stone-300');
+                    document.getElementById('ram-block').classList.remove('bg-red-600');
+                    setTimeout(() => {
+                        document.getElementById('ram-block').classList.add('bg-red-600');
+                        document.getElementById('ram-block').classList.remove('bg-stone-300');
+                    }, 1000);
+                }
+                
+                // Reset State
+                state.isSaved = false;
+                document.getElementById('ram-status').textContent = "Unsaved Changes";
+                document.getElementById('ram-status').classList.remove('bg-green-500');
+                document.getElementById('ram-status').classList.add('bg-black/20');
+            }, 1500);
+        }
+
+        // Initialize Intro Chart on Load
+        window.onload = function() {
+            renderRoadmapChart();
+        }
+
+    </script>
+</body>
+</html>
+
+
+

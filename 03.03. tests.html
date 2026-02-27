@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cisco IOS Foundation Study App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the 3D flip card effect */
+        .flip-card {
+            perspective: 1000px;
+            min-height: 300px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .flip-card-front {
+            background-color: #ffffff;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+        .flip-card-back {
+            background-color: #f8fafc;
+            color: #0f172a;
+            border: 2px solid #cbd5e1;
+            transform: rotateY(180deg);
+        }
+        
+        /* Smooth transitions for quiz options */
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Hide scrollbar for clean look but keep functionality */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Cisco IOS Foundation
+            </h1>
+            
+            <!-- Tab Navigation -->
+            <nav class="mt-4 sm:mt-0 flex space-x-2 bg-indigo-700 p-1 rounded-lg">
+                <button id="tab-flashcards" onclick="switchTab('flashcards')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-white text-indigo-700 shadow">
+                    Flashcards
+                </button>
+                <button id="tab-quiz" onclick="switchTab('quiz')" class="px-4 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 transition-colors">
+                    Practice Quiz
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ================= FLASHCARDS TAB ================= -->
+        <section id="section-flashcards" class="block animate-fade-in">
+            <div class="max-w-2xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-700">Study Flashcards</h2>
+                    <span id="flashcard-counter" class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full">
+                        Card 1 of 25
+                    </span>
+                </div>
+
+                <!-- Card Container -->
+                <div class="relative w-full cursor-pointer group" onclick="toggleFlip()">
+                    <div id="flashcard" class="flip-card w-full h-80">
+                        <div class="flip-card-inner" id="flashcard-inner">
+                            <!-- Front -->
+                            <div class="flip-card-front">
+                                <span class="uppercase tracking-wider text-xs font-bold text-slate-400 mb-4">Term / Concept</span>
+                                <h3 id="card-front-text" class="text-2xl sm:text-3xl font-bold text-indigo-900"></h3>
+                                <p class="text-sm text-slate-400 mt-auto flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                                    Click to flip
+                                </p>
+                            </div>
+                            <!-- Back -->
+                            <div class="flip-card-back">
+                                <span class="uppercase tracking-wider text-xs font-bold text-slate-400 mb-4">Definition / Answer</span>
+                                <p id="card-back-text" class="text-xl sm:text-2xl text-slate-700 font-medium"></p>
+                                <p class="text-sm text-slate-400 mt-auto flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                                    Click to flip back
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-between items-center mt-8">
+                    <button onclick="prevCard()" class="flex items-center gap-2 px-6 py-3 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        Previous
+                    </button>
+                    <button onclick="nextCard()" class="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-colors font-medium">
+                        Next
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-200 rounded-full h-2 mt-8">
+                    <div id="flashcard-progress" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 4%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= QUIZ TAB ================= -->
+        <section id="section-quiz" class="hidden animate-fade-in">
+            <div class="mb-6 pb-4 border-b border-slate-200 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Knowledge Check</h2>
+                    <p class="text-slate-500 mt-1">Test your understanding of Cisco IOS configuration and concepts.</p>
+                </div>
+                <div class="text-right">
+                    <span id="quiz-score-display" class="hidden text-lg font-bold text-indigo-700 bg-indigo-100 px-4 py-2 rounded-lg"></span>
+                </div>
+            </div>
+
+            <div id="quiz-container" class="space-y-8">
+                <!-- Quiz questions will be dynamically injected here -->
+            </div>
+            
+            <div class="mt-10 flex justify-center">
+                <button id="reset-quiz-btn" onclick="resetQuiz()" class="hidden px-6 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 font-medium transition-colors">
+                    Retry Quiz
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- Data Definitions ---
+
+        const flashcardsData = [
+            { front: "CLI (Command-Line Interface)", back: "The text-based interface used to interact with Cisco routers and switches" },
+            { front: "User EXEC Mode Prompt", back: "Router>" },
+            { front: "Privileged EXEC Mode Prompt", back: "Router#" },
+            { front: "Global Configuration Mode Prompt", back: "Router(config)#" },
+            { front: "Command to enter Privileged EXEC mode", back: "enable" },
+            { front: "Command to enter Global Configuration mode", back: "configure terminal (or conf t)" },
+            { front: "Function of the '?' key", back: "Displays available commands or command arguments (Context-sensitive help)" },
+            { front: "Function of the Tab key", back: "Auto-completes a partially typed command" },
+            { front: "Shortcut to return to Privileged EXEC from any sub-mode", back: "Ctrl+Z (or end)" },
+            { front: "show version", back: "Displays IOS version, system uptime, and hardware information" },
+            { front: "show ip interface brief", back: "Displays a summary of all interfaces, their IP addresses, and status" },
+            { front: "RAM (Random Access Memory) function in IOS", back: "Stores the volatile running-config; data is lost on reboot" },
+            { front: "NVRAM (Non-Volatile RAM) function in IOS", back: "Stores the persistent startup-config; data survives reboot" },
+            { front: "Flash Memory function in IOS", back: "Stores the IOS operating system image file" },
+            { front: "Command to save configuration to NVRAM", back: "copy running-config startup-config" },
+            { front: "running-config", back: "The active configuration file currently stored in RAM" },
+            { front: "startup-config", back: "The saved configuration file stored in NVRAM" },
+            { front: "Device Hardening", back: "The process of securing a device (passwords, banners, SSH) before deployment" },
+            { front: "enable secret", back: "Configures an encrypted password for Privileged EXEC mode (preferred over enable password)" },
+            { front: "service password-encryption", back: "Applies weak encryption to plaintext passwords in the configuration file" },
+            { front: "MOTD Banner", back: "Message of the Day; displays a legal warning to users before login" },
+            { front: "SSH (Secure Shell)", back: "Encrypted protocol for remote device management (replaces Telnet)" },
+            { front: "Three requirements for SSH configuration", back: "Hostname, Domain Name, and RSA Crypto Keys" },
+            { front: "Line Console 0", back: "The configuration mode for the physical console port" },
+            { front: "Line VTY 0 4", back: "The configuration mode for virtual terminal lines (remote access)" }
+        ];
+
+        const quizData = [
+            {
+                question: "You are currently at the prompt `Router>`. You need to assign an IP address to an interface. What is the correct sequence of commands to reach the necessary mode?",
+                options: [
+                    { text: "Type `enable`, then `configure terminal`, then `interface [name]`", isCorrect: true, rationale: "You must first escalate to Privileged EXEC (`enable`), then enter Global Configuration (`configure terminal`), and finally select the specific interface." },
+                    { text: "Type `configure terminal`, then `interface [name]`", isCorrect: false, rationale: "The `configure terminal` command is not available in User EXEC mode (`>`); you must be in Privileged EXEC mode (`#`) first." },
+                    { text: "Type `enable`, then `interface [name]`", isCorrect: false, rationale: "You cannot jump directly from Privileged EXEC (`#`) to Interface Configuration; you must pass through Global Configuration first." },
+                    { text: "Type `ip address [address]` immediately", isCorrect: false, rationale: "Configuration commands cannot be run from User EXEC mode (`>`), which is read-only for basic diagnostics." }
+                ],
+                hint: "Think of the 'Russian Doll' model: you cannot enter the smallest doll (interface) without opening the larger dolls (Privileged and Global) first."
+            },
+            {
+                question: "A network administrator configures a new hostname and IP address on a router but forgets to run the copy command. The building suffers a power outage and the router reboots. What is the result?",
+                options: [
+                    { text: "The changes are lost because they were stored in RAM (running-config).", isCorrect: true, rationale: "RAM is volatile memory, meaning the `running-config` is erased when power is lost unless it is saved to NVRAM." },
+                    { text: "The changes are saved automatically to Flash memory.", isCorrect: false, rationale: "Flash memory stores the IOS image, not the configuration, and IOS does not auto-save configuration changes." },
+                    { text: "The changes are retained because they were written to NVRAM immediately.", isCorrect: false, rationale: "Changes are applied to the `running-config` in RAM instantly, but they are not written to NVRAM until explicitly saved." },
+                    { text: "The router boots into ROM monitor mode because the config is missing.", isCorrect: false, rationale: "The router will simply boot using the previous `startup-config` from NVRAM (or a blank config), not necessarily drop to ROM monitor mode." }
+                ],
+                hint: "Consider which of the 'Memory Trinity' components is volatile and holds the active configuration."
+            },
+            {
+                question: "You are troubleshooting a connection and need to see the router's uptime and the filename of the IOS image currently running. Which command provides this details?",
+                options: [
+                    { text: "show version", isCorrect: true, rationale: "This command displays system hardware info, uptime, the IOS version, and the image filename location." },
+                    { text: "show running-config", isCorrect: false, rationale: "This command displays the current active configuration, not system statistics like uptime or the image source." },
+                    { text: "show ip interface brief", isCorrect: false, rationale: "This command provides a summary of interface IP addresses and status, not system uptime or software version." },
+                    { text: "show flash", isCorrect: false, rationale: "While this lists files in Flash storage, it does not explicitly confirm which image is currently running or the system uptime." }
+                ],
+                hint: "This command is often the first one run on a new device to verify hardware and software status."
+            },
+            {
+                question: "Which of the following commands effectively secures the Privileged EXEC mode (`enable`) using a strong hashing algorithm (MD5 or Scrypt)?",
+                options: [
+                    { text: "enable secret [password]", isCorrect: true, rationale: "This command stores the password as a hash (MD5 or stronger) in the configuration, making it secure against casual viewing." },
+                    { text: "enable password [password]", isCorrect: false, rationale: "This command stores the password in plaintext, making it visible to anyone viewing the configuration file." },
+                    { text: "service password-encryption", isCorrect: false, rationale: "This command applies weak Type 7 encryption to existing plaintext passwords but does not set the privileged mode password itself." },
+                    { text: "line vty 0 4 login", isCorrect: false, rationale: "This command secures remote access lines (VTY) but does not secure the escalation to Privileged EXEC mode." }
+                ],
+                hint: "Between the two options for setting this password, one stores it as plaintext and one stores it as a secure hash. Choose the secure one."
+            },
+            {
+                question: "You are currently in Interface Configuration mode (`Router(config-if)#`). You type `exit` and press Enter. Which prompt do you see next?",
+                options: [
+                    { text: "Router(config)#", isCorrect: true, rationale: "The `exit` command moves you one level up in the hierarchy, from Interface Config back to Global Config." },
+                    { text: "Router#", isCorrect: false, rationale: "To jump all the way back to Privileged EXEC (`Router#`), you would need to use `end` or `Ctrl+Z`." },
+                    { text: "Router>", isCorrect: false, rationale: "You generally cannot jump directly to User EXEC mode (`>`) from a configuration sub-mode without exiting Privileged mode first." },
+                    { text: "Router(config-line)#", isCorrect: false, rationale: "You cannot move laterally between sub-modes (like Interface to Line) without going back to Global Config first." }
+                ],
+                hint: "The command you typed moves you up exactly one step in the 'Russian Doll' hierarchy."
+            },
+            {
+                question: "Why is `service password-encryption` considered a weak security control, despite being a best practice?",
+                options: [
+                    { text: "It uses a reversible algorithm (Type 7) that can be easily cracked, intended only to stop over-the-shoulder reading.", isCorrect: true, rationale: "This command obfuscates passwords to prevent casual reading, but the encryption is weak and easily reversed by software tools." },
+                    { text: "It only encrypts the `enable secret` password, leaving line passwords in plaintext.", isCorrect: false, rationale: "Actually, `enable secret` is already hashed; this command is specifically used to encrypt the other plaintext line passwords." },
+                    { text: "It prevents the administrator from recovering lost passwords.", isCorrect: false, rationale: "Because the encryption is reversible, recovering these passwords is actually trivial, not impossible." },
+                    { text: "It requires an external RADIUS server to function.", isCorrect: false, rationale: "This command is a local device feature and does not require external servers." }
+                ],
+                hint: "Think about the difference between 'obfuscation' (hiding from view) and true 'encryption' (mathematically secure)."
+            },
+            {
+                question: "You attempt to generate RSA keys for SSH using `crypto key generate rsa`, but the router rejects the command. What configuration step did you likely miss?",
+                options: [
+                    { text: "Defining a domain name (ip domain-name)", isCorrect: true, rationale: "The router uses the combination of the hostname and domain name to generate the unique RSA key pair." },
+                    { text: "Setting the Enable Secret password", isCorrect: false, rationale: "While a best practice, the enable secret password is not a cryptographic prerequisite for generating RSA keys." },
+                    { text: "Configuring the VTY lines", isCorrect: false, rationale: "RSA keys are generated globally before being applied to VTY lines; VTY config is not a prerequisite for key generation." },
+                    { text: "Saving the running-config", isCorrect: false, rationale: "You can generate keys with an unsaved config; the error is due to missing identity parameters." }
+                ],
+                hint: "RSA keys are tied to the device's full identity (FQDN). You probably set the hostname, but missed the second part."
+            },
+            {
+                question: "Which command correctly saves the current active configuration to the file loaded at startup?",
+                options: [
+                    { text: "copy running-config startup-config", isCorrect: true, rationale: "This command explicitly copies the active config in RAM (`running-config`) to the persistent NVRAM storage (`startup-config`)." },
+                    { text: "copy startup-config running-config", isCorrect: false, rationale: "This command does the reverse: it overwrites your current work with the old saved file, effectively undoing your changes." },
+                    { text: "copy running-config flash", isCorrect: false, rationale: "This saves the config to a file in Flash memory, but the router looks to NVRAM (`startup-config`) for boot settings by default." },
+                    { text: "save configuration", isCorrect: false, rationale: "This is not a valid IOS command syntax." }
+                ],
+                hint: "You are copying FROM the volatile memory (RAM) TO the non-volatile memory (NVRAM)."
+            },
+            {
+                question: "What is the primary function of the `banner motd` command?",
+                options: [
+                    { text: "To provide a legal warning prohibiting unauthorized access.", isCorrect: true, rationale: "In a hardening context, the MOTD is used to warn potential attackers that access is restricted, which is legally required for prosecution in some jurisdictions." },
+                    { text: "To welcome users and provide contact information for the admin.", isCorrect: false, rationale: "Using words like 'Welcome' is a security risk as it can be interpreted legally as an invitation to access the system." },
+                    { text: "To display the router's hostname and IP address.", isCorrect: false, rationale: "Advertising internal details like IPs in a pre-login banner is a security risk (information disclosure)." },
+                    { text: "To authenticate users before they log in.", isCorrect: false, rationale: "The banner is just a text display; it does not perform authentication." }
+                ],
+                hint: "This text appears before a user logs in. From a security perspective, it should act as a 'Do Not Enter' sign."
+            },
+            {
+                question: "If you type `show ip int brief` at the `Router#` prompt, what are you relying on IOS to do?",
+                options: [
+                    { text: "Recognize the abbreviated command as unique.", isCorrect: true, rationale: "IOS allows command abbreviations (like `int` for `interface`) as long as the abbreviation is unique enough to distinguish it from other commands." },
+                    { text: "Automatically correct your spelling error.", isCorrect: false, rationale: "IOS does not spell-check; if an abbreviation is ambiguous or wrong, it rejects the command." },
+                    { text: "Run a script stored in Flash.", isCorrect: false, rationale: "This is a native command feature, not a stored script." },
+                    { text: "Switch to Interface Configuration mode automatically.", isCorrect: false, rationale: "This is a `show` command (verification), not a configuration command, and does not change modes." }
+                ],
+                hint: "You didn't type the full words 'interface' or 'brief', but the router understood you anyway."
+            }
+        ];
+
+        // --- Tab State Management ---
+        
+        function switchTab(tabId) {
+            const btnFlash = document.getElementById('tab-flashcards');
+            const btnQuiz = document.getElementById('tab-quiz');
+            const secFlash = document.getElementById('section-flashcards');
+            const secQuiz = document.getElementById('section-quiz');
+
+            if (tabId === 'flashcards') {
+                secFlash.classList.remove('hidden');
+                secQuiz.classList.add('hidden');
+                
+                btnFlash.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors bg-white text-indigo-700 shadow";
+                btnQuiz.className = "px-4 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 transition-colors";
+            } else {
+                secFlash.classList.add('hidden');
+                secQuiz.classList.remove('hidden');
+                
+                btnQuiz.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors bg-white text-indigo-700 shadow";
+                btnFlash.className = "px-4 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 transition-colors";
+            }
+        }
+
+        // --- Flashcard Logic ---
+
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function renderFlashcard() {
+            const card = flashcardsData[currentCardIndex];
+            document.getElementById('card-front-text').innerText = card.front;
+            document.getElementById('card-back-text').innerText = card.back;
+            document.getElementById('flashcard-counter').innerText = `Card ${currentCardIndex + 1} of ${flashcardsData.length}`;
+            
+            // Update progress bar
+            const percentage = ((currentCardIndex + 1) / flashcardsData.length) * 100;
+            document.getElementById('flashcard-progress').style.width = `${percentage}%`;
+            
+            // Ensure card starts on front face when rendering new card
+            const flashcardElement = document.getElementById('flashcard');
+            if (isFlipped) {
+                flashcardElement.classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+
+        function toggleFlip() {
+            const flashcardElement = document.getElementById('flashcard');
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcardElement.classList.add('flipped');
+            } else {
+                flashcardElement.classList.remove('flipped');
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcardsData.length - 1) {
+                currentCardIndex++;
+                renderFlashcard();
+            } else {
+                currentCardIndex = 0; // Loop back
+                renderFlashcard();
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                renderFlashcard();
+            } else {
+                currentCardIndex = flashcardsData.length - 1; // Loop to end
+                renderFlashcard();
+            }
+        }
+
+        // --- Quiz Logic ---
+        
+        let quizState = {}; // Tracks answered questions { qIndex: { selectedOptionIndex, isCorrect } }
+        let score = 0;
+
+        function formatInlineCode(text) {
+            // Replaces markdown-style backticks with HTML code tags
+            return text.replace(/`([^`]+)`/g, '<code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded text-sm">$1</code>');
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            quizData.forEach((q, qIndex) => {
+                // Shuffle options
+                const shuffledOptions = q.options.map((opt, index) => ({...opt, originalIndex: index}))
+                                               .sort(() => Math.random() - 0.5);
+
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'bg-white p-6 rounded-xl shadow-sm border border-slate-200';
+                questionDiv.id = `question-container-${qIndex}`;
+
+                let html = `
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                            ${qIndex + 1}
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-slate-800">${formatInlineCode(q.question)}</h3>
+                            <button onclick="toggleHint(${qIndex})" class="text-xs text-indigo-500 hover:text-indigo-700 mt-1 flex items-center gap-1 font-medium transition-colors focus:outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Need a hint?
+                            </button>
+                            <div id="hint-${qIndex}" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-800">
+                                💡 <strong>Hint:</strong> ${q.hint}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 mt-4 ml-12" id="options-${qIndex}">
+                `;
+
+                shuffledOptions.forEach((opt, oIndex) => {
+                    html += `
+                        <button id="btn-${qIndex}-${opt.originalIndex}" 
+                                onclick="handleAnswer(${qIndex}, ${opt.originalIndex}, ${opt.isCorrect}, '${opt.rationale.replace(/'/g, "\\'")}')" 
+                                class="quiz-option w-full text-left p-4 rounded-lg border-2 border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 group">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 w-5 h-5 border-2 border-slate-300 rounded-full mr-3 group-hover:border-indigo-500 flex items-center justify-center transition-colors" id="radio-${qIndex}-${opt.originalIndex}">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-transparent"></div>
+                                </div>
+                                <span class="text-slate-700">${formatInlineCode(opt.text)}</span>
+                            </div>
+                        </button>
+                    `;
+                });
+
+                html += `
+                    </div>
+                    <div id="feedback-${qIndex}" class="hidden ml-12 mt-4 p-4 rounded-lg">
+                        <div id="feedback-header-${qIndex}" class="font-bold flex items-center gap-2 mb-1"></div>
+                        <p id="feedback-rationale-${qIndex}" class="text-sm"></p>
+                    </div>
+                `;
+
+                questionDiv.innerHTML = html;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function toggleHint(qIndex) {
+            const hintDiv = document.getElementById(`hint-${qIndex}`);
+            if (hintDiv.classList.contains('hidden')) {
+                hintDiv.classList.remove('hidden');
+            } else {
+                hintDiv.classList.add('hidden');
+            }
+        }
+
+        function handleAnswer(qIndex, selectedOriginalIndex, isCorrect, rationale) {
+            if (quizState[qIndex]) return; // Prevent answering again
+
+            quizState[qIndex] = { selected: selectedOriginalIndex, isCorrect: isCorrect };
+
+            const optionsContainer = document.getElementById(`options-${qIndex}`);
+            const buttons = optionsContainer.querySelectorAll('button');
+            
+            // Disable all buttons for this question
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50', 'cursor-pointer');
+                btn.classList.add('cursor-default', 'opacity-60');
+            });
+
+            // Highlight selected button
+            const selectedBtn = document.getElementById(`btn-${qIndex}-${selectedOriginalIndex}`);
+            const radioInner = document.getElementById(`radio-${qIndex}-${selectedOriginalIndex}`).querySelector('div');
+            
+            selectedBtn.classList.remove('border-slate-100', 'opacity-60');
+            
+            const feedbackContainer = document.getElementById(`feedback-${qIndex}`);
+            const feedbackHeader = document.getElementById(`feedback-header-${qIndex}`);
+            const feedbackRationale = document.getElementById(`feedback-rationale-${qIndex}`);
+            
+            if (isCorrect) {
+                score++;
+                selectedBtn.classList.add('border-green-500', 'bg-green-50', 'opacity-100');
+                radioInner.classList.replace('bg-transparent', 'bg-green-500');
+                document.getElementById(`radio-${qIndex}-${selectedOriginalIndex}`).classList.add('border-green-500');
+                
+                feedbackContainer.classList.remove('hidden');
+                feedbackContainer.classList.add('bg-green-100', 'text-green-800');
+                feedbackHeader.innerHTML = `<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Correct!`;
+            } else {
+                selectedBtn.classList.add('border-red-500', 'bg-red-50', 'opacity-100');
+                radioInner.classList.replace('bg-transparent', 'bg-red-500');
+                document.getElementById(`radio-${qIndex}-${selectedOriginalIndex}`).classList.add('border-red-500');
+
+                // Find and highlight the correct one faintly
+                const correctOptionIndex = quizData[qIndex].options.findIndex(o => o.isCorrect);
+                const correctBtn = document.getElementById(`btn-${qIndex}-${correctOptionIndex}`);
+                if(correctBtn) {
+                     correctBtn.classList.remove('opacity-60');
+                     correctBtn.classList.add('border-green-300', 'bg-green-50/50', 'opacity-80');
+                }
+
+                feedbackContainer.classList.remove('hidden');
+                feedbackContainer.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-200');
+                feedbackHeader.innerHTML = `<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Incorrect`;
+            }
+
+            feedbackRationale.innerHTML = formatInlineCode(rationale);
+
+            checkQuizCompletion();
+        }
+
+        function checkQuizCompletion() {
+            if (Object.keys(quizState).length === quizData.length) {
+                const scoreDisplay = document.getElementById('quiz-score-display');
+                const resetBtn = document.getElementById('reset-quiz-btn');
+                
+                scoreDisplay.innerText = `Final Score: ${score} / ${quizData.length}`;
+                scoreDisplay.classList.remove('hidden');
+                resetBtn.classList.remove('hidden');
+                
+                // Scroll to bottom slightly to show reset button
+                setTimeout(() => {
+                    resetBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 300);
+            }
+        }
+
+        function resetQuiz() {
+            quizState = {};
+            score = 0;
+            document.getElementById('quiz-score-display').classList.add('hidden');
+            document.getElementById('reset-quiz-btn').classList.add('hidden');
+            renderQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFlashcard();
+            renderQuiz();
+        });
+
+    </script>
+</body>
+</html>
+
+

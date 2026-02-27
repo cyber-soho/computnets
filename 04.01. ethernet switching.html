@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethernet Switching: Interactive Learning Module</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Backgrounds: Warm Off-Whites (#fafaf9, #f5f5f4) -->
+    <!-- Text: Deep Warm Grays (#44403c, #292524) -->
+    <!-- Accents: Muted Earth Tones (Sage, Terracotta, Slate Blue) for visualization -->
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#fafaf9',
+                        panel: '#ffffff',
+                        primary: '#57534e', // Warm Gray 700
+                        secondary: '#78716c', // Warm Gray 500
+                        accent: '#d97706', // Amber 600
+                        'eng-blue': '#64748b', // Slate 500
+                        'fin-red': '#ef4444', // Red 500 (muted in use)
+                        'hr-green': '#22c55e', // Green 500 (muted in use)
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #fafaf9;
+            color: #292524;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        .nav-active {
+            border-bottom: 2px solid #d97706;
+            color: #d97706;
+            font-weight: 600;
+        }
+        /* Custom scrollbar for data tables */
+        .scroller::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scroller::-webkit-scrollbar-thumb {
+            background-color: #d6d3d1;
+            border-radius: 4px;
+        }
+        /* Frame field styling */
+        .frame-field {
+            transition: all 0.3s ease;
+        }
+        .frame-field:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .hidden-section {
+            display: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+    
+    <!-- Application Structure Plan: 
+         1. Hero/Intro: Establishes the "Manager" analogy.
+         2. Tabbed Navigation: Allows non-linear exploration of the 4 key lessons.
+         3. "Switching Logic" Module: Interactive Simulator where users route packets manually to see logic.
+         4. "MAC Table" Module: Dynamic dashboard showing a table populating and a Chart.js viz of port activity.
+         5. "VLAN" Module: Interactive office map. Toggle VLANs to see broadcast domains change.
+         6. "Trunking" Module: Visual packet inspector showing the insertion of the 802.1Q tag.
+         Why: This structure breaks complex networking theory into isolated, interactive experiments.
+    -->
+    
+    <!-- Visualization & Content Choices:
+         - Charts: Chart.js Bar chart in MAC module to show Port Utilization (simulating traffic stats).
+         - Visuals: CSS Grid/Flex based diagrams for Frame structures and Office layouts.
+         - Interactions: Button clicks to simulate packet transmission, Toggles for modes (VLAN on/off), Hover effects for definitions.
+         - Justification: Hands-on "sending" of packets helps internalize the invisible logic of switching.
+         
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="font-sans antialiased selection:bg-orange-200 selection:text-orange-900">
+
+    <!-- Navigation -->
+    <nav class="bg-panel shadow-sm sticky top-0 z-50 border-b border-stone-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-xl font-bold text-stone-800">Cyber.SoHo <span class="text-stone-400 font-light">| Switching</span></span>
+                    </div>
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-8" id="main-nav">
+                        <button onclick="switchTab('intro')" class="nav-btn nav-active border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors" data-target="intro">Introduction</button>
+                        <button onclick="switchTab('logic')" class="nav-btn border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors" data-target="logic">Frame Logic</button>
+                        <button onclick="switchTab('mac')" class="nav-btn border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors" data-target="mac">MAC Table</button>
+                        <button onclick="switchTab('vlan')" class="nav-btn border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors" data-target="vlan">VLANs</button>
+                        <button onclick="switchTab('trunk')" class="nav-btn border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors" data-target="trunk">802.1Q Trunking</button>
+                    </div>
+                </div>
+                <!-- Mobile menu button placeholder -->
+                <div class="flex items-center sm:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md text-stone-400 hover:text-stone-500 hover:bg-stone-100">
+                        <span class="text-2xl">☰</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Nav Panel -->
+        <div id="mobile-nav" class="hidden sm:hidden bg-white border-b border-stone-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="switchTab('intro')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-stone-700 hover:bg-stone-50">Introduction</button>
+                <button onclick="switchTab('logic')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-stone-700 hover:bg-stone-50">Frame Logic</button>
+                <button onclick="switchTab('mac')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-stone-700 hover:bg-stone-50">MAC Table</button>
+                <button onclick="switchTab('vlan')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-stone-700 hover:bg-stone-50">VLANs</button>
+                <button onclick="switchTab('trunk')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-stone-700 hover:bg-stone-50">802.1Q Trunking</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+
+        <!-- SECTION: INTRODUCTION -->
+        <div id="intro" class="section-content fade-in">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-extrabold tracking-tight text-stone-900 sm:text-5xl mb-4">The Intelligent Switch</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-xl text-stone-500">From Chaos to Order: Understanding Module 4 of Ethernet Switching</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-4">The Problem: The Cafeteria Chaos</h2>
+                    <p class="text-stone-600 mb-6 leading-relaxed">
+                        Imagine 500 students in a cafeteria shouting orders at once. That's a legacy network (Hub). 
+                        Everyone hears everything. Collisions occur. It's a security and performance nightmare.
+                    </p>
+                    <div class="bg-stone-100 p-6 rounded-lg text-center">
+                        <div class="text-6xl mb-2">📢 📢 📢</div>
+                        <p class="font-mono text-sm text-stone-500">Broadcast Domain Explosion</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-amber-100 rounded-full opacity-50"></div>
+                    <h2 class="text-2xl font-bold text-stone-800 mb-4">The Solution: The Polite Manager</h2>
+                    <p class="text-stone-600 mb-6 leading-relaxed">
+                        A <span class="font-bold text-amber-600">Switch</span> is the manager who knows exactly where everyone sits. 
+                        It takes an order and delivers it precisely to the right table. No shouting. No collisions.
+                    </p>
+                    <div class="bg-amber-50 p-6 rounded-lg text-center border border-amber-100">
+                        <div class="text-6xl mb-2">✉️ ➡️ 👤</div>
+                        <p class="font-mono text-sm text-stone-500">Targeted Delivery (Unicast)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-white rounded-xl shadow-sm border border-stone-200 p-8">
+                <h3 class="text-lg font-bold text-stone-800 mb-4">What We Will Explore</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button onclick="switchTab('logic')" class="p-4 rounded-lg bg-stone-50 hover:bg-stone-100 transition-colors text-left group">
+                        <span class="block text-amber-600 font-bold mb-1 group-hover:translate-x-1 transition-transform">Lesson 1 &rarr;</span>
+                        <span class="block font-semibold text-stone-800">Switching Logic</span>
+                        <span class="text-sm text-stone-500">How decisions are made.</span>
+                    </button>
+                    <button onclick="switchTab('mac')" class="p-4 rounded-lg bg-stone-50 hover:bg-stone-100 transition-colors text-left group">
+                        <span class="block text-amber-600 font-bold mb-1 group-hover:translate-x-1 transition-transform">Lesson 2 &rarr;</span>
+                        <span class="block font-semibold text-stone-800">MAC Tables</span>
+                        <span class="text-sm text-stone-500">The memory of the switch.</span>
+                    </button>
+                    <button onclick="switchTab('vlan')" class="p-4 rounded-lg bg-stone-50 hover:bg-stone-100 transition-colors text-left group">
+                        <span class="block text-amber-600 font-bold mb-1 group-hover:translate-x-1 transition-transform">Lesson 3 &rarr;</span>
+                        <span class="block font-semibold text-stone-800">VLANs</span>
+                        <span class="text-sm text-stone-500">Segmentation & Security.</span>
+                    </button>
+                    <button onclick="switchTab('trunk')" class="p-4 rounded-lg bg-stone-50 hover:bg-stone-100 transition-colors text-left group">
+                        <span class="block text-amber-600 font-bold mb-1 group-hover:translate-x-1 transition-transform">Lesson 4 &rarr;</span>
+                        <span class="block font-semibold text-stone-800">802.1Q Trunking</span>
+                        <span class="text-sm text-stone-500">Connecting switches.</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: FRAME LOGIC -->
+        <div id="logic" class="section-content hidden-section fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800">Frame Switching Logic</h2>
+                <p class="mt-2 text-stone-600 max-w-3xl">
+                    Every time a frame arrives, the switch performs a rapid decision process. It must decide to 
+                    <span class="font-bold text-blue-600">Forward</span>, 
+                    <span class="font-bold text-red-600">Filter</span>, or 
+                    <span class="font-bold text-amber-600">Flood</span> the frame. 
+                    Use the simulator below to trace this logic path.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Simulation Controls -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="font-bold text-lg mb-4 flex items-center">
+                        <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded mr-2">SIMULATOR</span>
+                        Incoming Frame
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Source MAC (Sender)</label>
+                            <select id="logic-src" class="w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 border bg-stone-50">
+                                <option value="AA:AA">PC A (Port 1)</option>
+                                <option value="BB:BB">PC B (Port 2)</option>
+                                <option value="CC:CC">PC C (Port 3)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Destination MAC (Target)</label>
+                            <select id="logic-dst" class="w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 border bg-stone-50">
+                                <option value="BB:BB">PC B (Known on Port 2)</option>
+                                <option value="UNKNOWN">New Device (Unknown)</option>
+                                <option value="AA:AA">PC A (Self/Same Port)</option>
+                            </select>
+                        </div>
+                        <div class="pt-4">
+                            <button onclick="runLogicSimulation()" class="w-full bg-stone-800 text-white py-2 px-4 rounded-md hover:bg-stone-700 transition-colors shadow-md">
+                                Process Frame
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logic Visualizer -->
+                <div class="lg:col-span-2 bg-stone-50 p-6 rounded-xl border border-stone-200 relative">
+                    <h3 class="font-bold text-lg mb-4 text-center text-stone-700">The Decision Pipeline</h3>
+                    
+                    <div class="flex flex-col space-y-4">
+                        <!-- Step 1: Learn -->
+                        <div id="step-learn" class="bg-white p-4 rounded-lg border border-stone-200 opacity-50 transition-all duration-500">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-stone-800">1. LEARN</span>
+                                <span class="text-xs bg-stone-100 px-2 py-1 rounded text-stone-500">Hardware Action</span>
+                            </div>
+                            <p class="text-sm text-stone-600 mt-1">Check Source MAC. Is it in the table? <br>If no, add it. If yes, reset age timer.</p>
+                        </div>
+
+                        <!-- Step 2: Lookup -->
+                        <div id="step-lookup" class="bg-white p-4 rounded-lg border border-stone-200 opacity-50 transition-all duration-500">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-stone-800">2. LOOKUP</span>
+                                <span class="text-xs bg-stone-100 px-2 py-1 rounded text-stone-500">CAM Table Check</span>
+                            </div>
+                            <p class="text-sm text-stone-600 mt-1">Check Destination MAC. Do we know the output port?</p>
+                        </div>
+
+                        <!-- Step 3: Action -->
+                        <div id="step-action" class="bg-white p-4 rounded-lg border border-stone-200 opacity-50 transition-all duration-500 text-center py-6">
+                            <span class="font-bold text-xl block mb-2" id="action-title">Waiting...</span>
+                            <p class="text-sm text-stone-600" id="action-desc">Select parameters and click Process.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contextual Info -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded border-l-4 border-amber-500 shadow-sm">
+                    <h4 class="font-bold text-amber-700">Flooding</h4>
+                    <p class="text-sm text-stone-600 mt-1">Used when Destination is <strong>Unknown</strong>. Sends to all ports except source. Like asking "Is anyone here Bob?"</p>
+                </div>
+                <div class="bg-white p-4 rounded border-l-4 border-blue-500 shadow-sm">
+                    <h4 class="font-bold text-blue-700">Forwarding</h4>
+                    <p class="text-sm text-stone-600 mt-1">Used when Destination is <strong>Known</strong>. Sends only to the specific port. Efficient and private.</p>
+                </div>
+                <div class="bg-white p-4 rounded border-l-4 border-red-500 shadow-sm">
+                    <h4 class="font-bold text-red-700">Filtering</h4>
+                    <p class="text-sm text-stone-600 mt-1">Used when Source and Destination are on the <strong>Same Port</strong>. Drops the frame. No need to switch.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: MAC TABLE -->
+        <div id="mac" class="section-content hidden-section fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800">MAC Address Table (CAM)</h2>
+                <p class="mt-2 text-stone-600 max-w-3xl">
+                    The switch's brain. It maps MAC addresses to physical ports. Entries are learned dynamically and "age out" after inactivity (default 300s). 
+                    Watch the table below update as you generate traffic.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Control Panel -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="font-bold text-lg mb-4">Traffic Generator</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="simulateMacTraffic('00:0A:95:9D:68:16', 1, 'Device A')" class="bg-stone-100 hover:bg-stone-200 p-3 rounded text-sm text-left transition-colors border border-stone-200">
+                                <span class="font-bold block text-stone-700">Send: Device A</span>
+                                <span class="text-xs text-stone-500">Port 1</span>
+                            </button>
+                            <button onclick="simulateMacTraffic('00:1B:44:11:3A:B7', 2, 'Device B')" class="bg-stone-100 hover:bg-stone-200 p-3 rounded text-sm text-left transition-colors border border-stone-200">
+                                <span class="font-bold block text-stone-700">Send: Device B</span>
+                                <span class="text-xs text-stone-500">Port 2</span>
+                            </button>
+                            <button onclick="simulateMacTraffic('00:E0:F7:22:15:C9', 3, 'Device C')" class="bg-stone-100 hover:bg-stone-200 p-3 rounded text-sm text-left transition-colors border border-stone-200">
+                                <span class="font-bold block text-stone-700">Send: Device C</span>
+                                <span class="text-xs text-stone-500">Port 3</span>
+                            </button>
+                            <button onclick="simulateMacTraffic('00:50:56:C0:00:08', 4, 'Device D')" class="bg-stone-100 hover:bg-stone-200 p-3 rounded text-sm text-left transition-colors border border-stone-200">
+                                <span class="font-bold block text-stone-700">Send: Device D</span>
+                                <span class="text-xs text-stone-500">Port 4</span>
+                            </button>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-stone-100">
+                            <p class="text-xs text-stone-500 mb-2">Aging Simulation (Speed: 10x)</p>
+                            <div class="w-full bg-stone-200 rounded-full h-2.5">
+                                <div id="aging-bar" class="bg-amber-500 h-2.5 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="font-bold text-lg mb-2">Traffic by Port</h3>
+                        <div class="chart-container">
+                            <canvas id="macChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Table -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg">Dynamic MAC Table</h3>
+                        <span class="text-xs font-mono bg-stone-100 px-2 py-1 rounded">cmd: show mac address-table</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left text-sm whitespace-nowrap">
+                            <thead class="uppercase tracking-wider border-b-2 border-stone-100 bg-stone-50 text-stone-500">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4">VLAN</th>
+                                    <th scope="col" class="px-6 py-4">MAC Address</th>
+                                    <th scope="col" class="px-6 py-4">Type</th>
+                                    <th scope="col" class="px-6 py-4">Ports</th>
+                                    <th scope="col" class="px-6 py-4">Age (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mac-table-body" class="divide-y divide-stone-100 font-mono text-stone-700">
+                                <!-- JS Populated -->
+                                <tr class="text-stone-400 italic">
+                                    <td colspan="5" class="px-6 py-4 text-center">Table Empty. Generate traffic to learn addresses.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: VLANS -->
+        <div id="vlan" class="section-content hidden-section fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800">Virtual LANs (VLANs)</h2>
+                <p class="mt-2 text-stone-600 max-w-3xl">
+                    VLANs segment a single physical switch into multiple logical networks. This contains broadcasts and improves security. 
+                    In the visualization below, toggle VLANs ON/OFF to see how broadcast traffic is contained.
+                </p>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="font-bold text-stone-700">Configuration Mode:</span>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="vlan-toggle" class="sr-only peer" onchange="toggleVlanMode()">
+                        <div class="relative w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-stone-800"></div>
+                        <span class="ms-3 text-sm font-medium text-stone-600" id="vlan-status">VLANs DISABLED (Default)</span>
+                    </label>
+                </div>
+                <div>
+                    <button onclick="sendBroadcast('eng')" class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded text-sm mr-2 shadow-sm transition-colors">Broadcast from Engineering</button>
+                    <button onclick="sendBroadcast('fin')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm mr-2 shadow-sm transition-colors">Broadcast from Finance</button>
+                </div>
+            </div>
+
+            <!-- Building Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Engineering VLAN 10 -->
+                <div class="vlan-zone bg-stone-100 p-6 rounded-xl border-2 border-transparent transition-all duration-300" id="zone-eng">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700">Engineering</h3>
+                        <span class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded">VLAN 10</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div id="pc-eng1" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-600">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">Eng Workstation 1</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.10.2</div>
+                            </div>
+                        </div>
+                        <div id="pc-eng2" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-600">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">Eng Workstation 2</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.10.3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finance VLAN 20 -->
+                <div class="vlan-zone bg-stone-100 p-6 rounded-xl border-2 border-transparent transition-all duration-300" id="zone-fin">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-red-700">Finance</h3>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">VLAN 20</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div id="pc-fin1" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center text-red-500">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">Fin Database</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.20.2</div>
+                            </div>
+                        </div>
+                        <div id="pc-fin2" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center text-red-500">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">Fin Workstation</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.20.3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HR VLAN 30 -->
+                <div class="vlan-zone bg-stone-100 p-6 rounded-xl border-2 border-transparent transition-all duration-300" id="zone-hr">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-green-700">HR</h3>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">VLAN 30</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div id="pc-hr1" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-green-50 flex items-center justify-center text-green-600">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">HR Portal</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.30.2</div>
+                            </div>
+                        </div>
+                        <div id="pc-hr2" class="pc-node bg-white p-3 rounded shadow-sm border border-stone-200 flex items-center space-x-3 transition-colors duration-500">
+                            <div class="w-8 h-8 rounded bg-green-50 flex items-center justify-center text-green-600">🖥️</div>
+                            <div>
+                                <div class="text-sm font-bold">HR Manager</div>
+                                <div class="text-xs text-stone-500 font-mono">192.168.30.3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="broadcast-msg" class="mt-4 text-center text-stone-500 h-6 text-sm font-medium"></div>
+        </div>
+
+        <!-- SECTION: TRUNKING -->
+        <div id="trunk" class="section-content hidden-section fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800">802.1Q Trunking</h2>
+                <p class="mt-2 text-stone-600 max-w-3xl">
+                    When frames travel between switches, we need to know which VLAN they belong to. 
+                    A "Trunk" link inserts a 4-byte Tag into the frame header. Inspect the anatomy of a frame below.
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-stone-200">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                    <h3 class="font-bold text-lg text-stone-700">Ethernet Frame Inspector</h3>
+                    <div class="flex space-x-4 mt-4 md:mt-0">
+                        <button onclick="setTrunkMode(false)" class="px-4 py-2 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-medium transition-colors">Access Port (Untagged)</button>
+                        <button onclick="setTrunkMode(true)" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium shadow-md transition-colors">Trunk Port (Tagged)</button>
+                    </div>
+                </div>
+
+                <!-- Frame Visualization -->
+                <div class="flex flex-wrap md:flex-nowrap justify-center items-stretch gap-1 md:gap-2 font-mono text-xs md:text-sm text-center">
+                    
+                    <!-- Preamble -->
+                    <div class="frame-field bg-stone-200 p-4 rounded w-full md:w-20 flex flex-col justify-center">
+                        <span class="font-bold text-stone-500">Pre</span>
+                        <span class="text-[10px] text-stone-400">8B</span>
+                    </div>
+
+                    <!-- DST MAC -->
+                    <div class="frame-field bg-blue-100 p-4 rounded w-full md:w-32 border border-blue-200 flex flex-col justify-center">
+                        <span class="font-bold text-blue-800">DST MAC</span>
+                        <span class="text-[10px] text-blue-600">6 Bytes</span>
+                    </div>
+
+                    <!-- SRC MAC -->
+                    <div class="frame-field bg-indigo-100 p-4 rounded w-full md:w-32 border border-indigo-200 flex flex-col justify-center">
+                        <span class="font-bold text-indigo-800">SRC MAC</span>
+                        <span class="text-[10px] text-indigo-600">6 Bytes</span>
+                    </div>
+
+                    <!-- THE TAG (Hidden by default) -->
+                    <div id="vlan-tag" class="hidden frame-field bg-amber-100 p-2 md:p-4 rounded w-full md:w-40 border-2 border-amber-500 flex-col justify-center shadow-lg transform scale-105">
+                        <span class="font-bold text-amber-800 block">802.1Q Tag</span>
+                        <div class="grid grid-cols-2 gap-1 mt-1 text-[10px]">
+                            <div class="bg-amber-200 rounded px-1" title="Tag Protocol ID: 0x8100">TPID</div>
+                            <div class="bg-amber-200 rounded px-1" title="VLAN ID + Priority">TCI</div>
+                        </div>
+                        <span class="text-[10px] text-amber-600 mt-1">4 Bytes</span>
+                    </div>
+
+                    <!-- EtherType -->
+                    <div class="frame-field bg-stone-100 p-4 rounded w-full md:w-24 border border-stone-200 flex flex-col justify-center">
+                        <span class="font-bold text-stone-600">Type</span>
+                        <span class="text-[10px] text-stone-400">2B</span>
+                    </div>
+
+                    <!-- Payload -->
+                    <div class="frame-field bg-stone-50 p-4 rounded flex-grow border border-stone-200 border-dashed flex flex-col justify-center min-w-[100px]">
+                        <span class="font-bold text-stone-400">Payload (Data)</span>
+                        <span class="text-[10px] text-stone-400">46-1500 Bytes</span>
+                    </div>
+
+                    <!-- FCS -->
+                    <div class="frame-field bg-stone-200 p-4 rounded w-full md:w-20 border border-stone-300 flex flex-col justify-center">
+                        <span class="font-bold text-stone-500">FCS</span>
+                        <span class="text-[10px] text-stone-400">4B</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-stone-50 p-6 rounded-lg border border-stone-200">
+                    <h4 class="font-bold text-stone-800 mb-2">Technical Detail: The 4-Byte Insertion</h4>
+                    <p id="tag-explainer" class="text-stone-600">
+                        In a standard Access Port, frames have no VLAN tags. The switch knows the VLAN based on the physical port configuration.
+                    </p>
+                    <div id="tag-detail" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-3 rounded border border-stone-100">
+                            <span class="block font-bold text-xs text-stone-500 uppercase">TPID (16 bits)</span>
+                            <span class="font-mono text-amber-700">0x8100</span>
+                            <span class="block text-xs text-stone-400 mt-1">Tells the device: "Hey, this is a tagged frame!"</span>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-stone-100">
+                            <span class="block font-bold text-xs text-stone-500 uppercase">TCI (16 bits)</span>
+                            <span class="font-mono text-amber-700">Pri (3) + DEI (1) + VID (12)</span>
+                            <span class="block text-xs text-stone-400 mt-1">Contains the VLAN ID (1-4094).</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-stone-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <p class="text-stone-400 text-sm">Module 4: Ethernet Switching</p>
+            <p class="text-stone-400 text-sm mt-2 md:mt-0">&copy; Cyber.SoHo Educational Series</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.add('hidden-section');
+                el.classList.remove('fade-in'); // Reset animation
+            });
+
+            // Show target section
+            const target = document.getElementById(tabId);
+            target.classList.remove('hidden-section');
+            void target.offsetWidth; // Trigger reflow for animation
+            target.classList.add('fade-in');
+
+            // Update Nav State
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('nav-active', 'text-stone-700', 'border-stone-300');
+                btn.classList.add('border-transparent', 'text-stone-500');
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('nav-active', 'text-stone-700', 'border-stone-300');
+                    btn.classList.remove('border-transparent', 'text-stone-500');
+                }
+            });
+
+            // Mobile menu handling
+            document.getElementById('mobile-nav').classList.add('hidden');
+        }
+
+        // Mobile Nav Toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('hidden');
+        });
+
+        // --- Lesson 1: Frame Logic Simulator ---
+        function runLogicSimulation() {
+            const src = document.getElementById('logic-src').value;
+            const dst = document.getElementById('logic-dst').value;
+            
+            const stepLearn = document.getElementById('step-learn');
+            const stepLookup = document.getElementById('step-lookup');
+            const stepAction = document.getElementById('step-action');
+            const actionTitle = document.getElementById('action-title');
+            const actionDesc = document.getElementById('action-desc');
+
+            // Reset visual state
+            stepLearn.classList.add('opacity-50');
+            stepLookup.classList.add('opacity-50');
+            stepAction.classList.add('opacity-50');
+            stepAction.className = "bg-white p-4 rounded-lg border border-stone-200 opacity-50 transition-all duration-500 text-center py-6";
+
+            // Sequence Animation
+            setTimeout(() => {
+                stepLearn.classList.remove('opacity-50');
+                stepLearn.classList.add('scale-105', 'shadow-md');
+                setTimeout(() => stepLearn.classList.remove('scale-105', 'shadow-md'), 500);
+            }, 100);
+
+            setTimeout(() => {
+                stepLookup.classList.remove('opacity-50');
+                stepLookup.classList.add('scale-105', 'shadow-md');
+                setTimeout(() => stepLookup.classList.remove('scale-105', 'shadow-md'), 500);
+            }, 800);
+
+            setTimeout(() => {
+                stepAction.classList.remove('opacity-50');
+                stepAction.classList.add('scale-105', 'shadow-lg');
+
+                // Determine Result
+                if (src === dst) {
+                    // Filter
+                    actionTitle.innerText = "FILTER";
+                    actionTitle.className = "font-bold text-2xl block mb-2 text-red-600";
+                    actionDesc.innerText = "Source and Destination are on the same port. Frame dropped to save bandwidth.";
+                    stepAction.classList.add('border-red-400', 'bg-red-50');
+                } else if (dst === 'UNKNOWN') {
+                    // Flood
+                    actionTitle.innerText = "FLOOD";
+                    actionTitle.className = "font-bold text-2xl block mb-2 text-amber-600";
+                    actionDesc.innerText = "Destination MAC not in table. Frame sent to ALL ports except source.";
+                    stepAction.classList.add('border-amber-400', 'bg-amber-50');
+                } else {
+                    // Forward
+                    actionTitle.innerText = "FORWARD";
+                    actionTitle.className = "font-bold text-2xl block mb-2 text-blue-600";
+                    actionDesc.innerText = "Destination known. Frame switched directly to the correct port (Unicast).";
+                    stepAction.classList.add('border-blue-400', 'bg-blue-50');
+                }
+                
+                setTimeout(() => stepAction.classList.remove('scale-105'), 500);
+            }, 1600);
+        }
+
+        // --- Lesson 2: MAC Table Logic ---
+        
+        // Initial Data for MAC Table
+        const macTableData = [
+            { vlan: 1, mac: '00:0A:95:9D:68:16', type: 'DYNAMIC', port: 'Fa0/1', age: 10, lastSeen: Date.now() },
+            { vlan: 1, mac: '00:1B:44:11:3A:B7', type: 'DYNAMIC', port: 'Fa0/2', age: 45, lastSeen: Date.now() - 45000 }
+        ];
+
+        let macChart;
+
+        function initMacChart() {
+            const ctx = document.getElementById('macChart').getContext('2d');
+            macChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Port 1', 'Port 2', 'Port 3', 'Port 4'],
+                    datasets: [{
+                        label: 'Frames Processed',
+                        data: [12, 5, 0, 0],
+                        backgroundColor: ['#d97706', '#d97706', '#d97706', '#d97706'],
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Vital for custom container sizing
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function renderMacTable() {
+            const tbody = document.getElementById('mac-table-body');
+            tbody.innerHTML = '';
+            
+            if (macTableData.length === 0) {
+                tbody.innerHTML = `<tr class="text-stone-400 italic"><td colspan="5" class="px-6 py-4 text-center">Table Empty. Generate traffic to learn addresses.</td></tr>`;
+                return;
+            }
+
+            // Sort by port for neatness
+            macTableData.sort((a,b) => a.port.localeCompare(b.port));
+
+            macTableData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-stone-500">${row.vlan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-stone-900">${row.mac}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-stone-500">${row.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-stone-500">${row.port}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-stone-500 relative">
+                        <span class="z-10 relative">${Math.floor(row.age)}</span>
+                        <div class="absolute bottom-1 left-6 h-1 bg-amber-200 transition-all duration-1000" style="width: ${(300-row.age)/3}px"></div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function simulateMacTraffic(mac, portNum, deviceName) {
+            const portName = `Fa0/${portNum}`;
+            const existingIndex = macTableData.findIndex(e => e.mac === mac);
+
+            if (existingIndex > -1) {
+                // Update existing
+                macTableData[existingIndex].age = 0; // Reset age
+                macTableData[existingIndex].lastSeen = Date.now();
+            } else {
+                // Learn new
+                macTableData.push({
+                    vlan: 1,
+                    mac: mac,
+                    type: 'DYNAMIC',
+                    port: portName,
+                    age: 0,
+                    lastSeen: Date.now()
+                });
+            }
+
+            // Update Chart
+            const currentVal = macChart.data.datasets[0].data[portNum-1];
+            macChart.data.datasets[0].data[portNum-1] = currentVal + Math.floor(Math.random() * 5) + 1;
+            macChart.update();
+
+            renderMacTable();
+        }
+
+        // Aging Simulation Loop
+        setInterval(() => {
+            const agingRate = 5; // accelerated aging for demo
+            const maxAge = 300;
+            
+            for (let i = macTableData.length - 1; i >= 0; i--) {
+                macTableData[i].age += agingRate;
+                if (macTableData[i].age >= maxAge) {
+                    macTableData.splice(i, 1); // Age out
+                }
+            }
+            renderMacTable();
+        }, 1000);
+
+        // --- Lesson 3: VLAN Logic ---
+        let vlanEnabled = false;
+
+        function toggleVlanMode() {
+            vlanEnabled = document.getElementById('vlan-toggle').checked;
+            const statusText = document.getElementById('vlan-status');
+            const zoneEng = document.getElementById('zone-eng');
+            const zoneFin = document.getElementById('zone-fin');
+            const zoneHr = document.getElementById('zone-hr');
+
+            if (vlanEnabled) {
+                statusText.innerText = "VLANs ENABLED (Segmented)";
+                statusText.classList.add('text-amber-700');
+                
+                // Visual distinction
+                zoneEng.classList.add('border-slate-300', 'bg-slate-50');
+                zoneFin.classList.add('border-red-300', 'bg-red-50');
+                zoneHr.classList.add('border-green-300', 'bg-green-50');
+                
+                zoneEng.classList.remove('bg-stone-100');
+                zoneFin.classList.remove('bg-stone-100');
+                zoneHr.classList.remove('bg-stone-100');
+            } else {
+                statusText.innerText = "VLANs DISABLED (Default)";
+                statusText.classList.remove('text-amber-700');
+
+                // Reset visual
+                zoneEng.classList.remove('border-slate-300', 'bg-slate-50');
+                zoneFin.classList.remove('border-red-300', 'bg-red-50');
+                zoneHr.classList.remove('border-green-300', 'bg-green-50');
+
+                zoneEng.classList.add('bg-stone-100');
+                zoneFin.classList.add('bg-stone-100');
+                zoneHr.classList.add('bg-stone-100');
+            }
+        }
+
+        function sendBroadcast(dept) {
+            const allNodes = document.querySelectorAll('.pc-node');
+            const msgBox = document.getElementById('broadcast-msg');
+            
+            // Reset previous highlights
+            allNodes.forEach(node => node.classList.remove('ring-4', 'ring-amber-400', 'scale-105'));
+            
+            let targetClassPrefix = '';
+            if (dept === 'eng') targetClassPrefix = 'pc-eng';
+            if (dept === 'fin') targetClassPrefix = 'pc-fin';
+
+            // Simulate Broadcast
+            if (vlanEnabled) {
+                // Only light up nodes in same department
+                msgBox.innerText = `Broadcast sent by ${dept.toUpperCase()}. VLANs prevent leakage to other departments.`;
+                allNodes.forEach(node => {
+                    if(node.id.includes(dept)) {
+                        node.classList.add('ring-4', 'ring-amber-400', 'scale-105');
+                    }
+                });
+            } else {
+                // Light up EVERYONE
+                msgBox.innerText = `Broadcast sent by ${dept.toUpperCase()}. Without VLANs, EVERYONE receives the noise!`;
+                allNodes.forEach(node => {
+                    node.classList.add('ring-4', 'ring-amber-400', 'scale-105');
+                });
+            }
+
+            setTimeout(() => {
+                allNodes.forEach(node => node.classList.remove('ring-4', 'ring-amber-400', 'scale-105'));
+            }, 1500);
+        }
+
+        // --- Lesson 4: Trunking Logic ---
+        function setTrunkMode(isTrunk) {
+            const tag = document.getElementById('vlan-tag');
+            const explainer = document.getElementById('tag-explainer');
+            const details = document.getElementById('tag-detail');
+
+            if (isTrunk) {
+                tag.classList.remove('hidden');
+                tag.classList.add('flex');
+                explainer.innerHTML = "On a <strong>Trunk Link</strong>, the switch inserts an 802.1Q tag. This tag tells the receiving switch which VLAN this frame belongs to.";
+                details.classList.remove('hidden');
+            } else {
+                tag.classList.add('hidden');
+                tag.classList.remove('flex');
+                explainer.innerHTML = "In a standard <strong>Access Port</strong>, frames have no VLAN tags. The switch knows the VLAN based on the physical port configuration.";
+                details.classList.add('hidden');
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initMacChart();
+            renderMacTable();
+        });
+
+    </script>
+</body>
+</html>
+
+
+

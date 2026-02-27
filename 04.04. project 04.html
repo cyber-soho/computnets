@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Layer 2 Segmentation & RoaS | Interactive Lab Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles & Overrides */
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #1c1917; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Chart Container Standards */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+
+        /* Custom Scrollbar for code blocks */
+        .code-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .code-scroll::-webkit-scrollbar-track { background: #292524; }
+        .code-scroll::-webkit-scrollbar-thumb { background: #57534e; border-radius: 4px; }
+        .code-scroll::-webkit-scrollbar-thumb:hover { background: #78716c; }
+
+        /* Animation utilities */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone) with Functional Accents (Rose/Sky/Emerald) -->
+    <!-- Application Structure Plan: 
+         1. Context Header: Sets the academic context and strict warnings.
+         2. Roadmap Dashboard: Visualizes where this phase sits in the 11-week semester.
+         3. Concept Visualizer (Theory): Interactive Chart.js simulation comparing "Flat Network" vs "VLANs" to explain the Broadcast Domain problem visually.
+         4. The Planning Desk: Interactive table to view and understand the IP/VLAN schema required for the lab.
+         5. Configuration CLI (Implementation): Tabbed terminal-style interface showing exact commands for Switches and Routers, grouped by task.
+         6. Traffic Simulator (Verification): Canvas-based animation demonstrating the Router-on-a-Stick packet flow logic.
+         7. Assessment & Submission: Chart.js visualization of the rubric and strict submission guidelines.
+         WHY: This structure mirrors the engineering workflow: Understand -> Plan -> Configure -> Verify -> Document.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Roadmap: HTML Flexbox Stepper. Goal: Show progress.
+         2. Broadcast Simulation: Chart.js Scatter Plot. Goal: visualize broadcast storms vs isolated VLANs. Interaction: Toggle modes, trigger "broadcast".
+         3. RoaS Flow: HTML5 Canvas Animation. Goal: Explain inter-VLAN routing path. Interaction: "Send Packet" button.
+         4. Rubric: Chart.js Doughnut. Goal: Quick view of mark distribution.
+         5. CLI Blocks: HTML/CSS. Goal: Clear, copyable code references.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="antialiased text-stone-800 bg-stone-50">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-stone-900 text-stone-100 shadow-lg border-b border-stone-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl tracking-tight">NetLab<span class="text-rose-500">.Phase2</span></span>
+                    <span class="hidden md:block ml-4 text-xs bg-stone-800 px-2 py-1 rounded text-stone-400">Week 4: Segmentation</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <button onclick="scrollToSection('context')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Context</button>
+                        <button onclick="scrollToSection('concepts')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Concepts</button>
+                        <button onclick="scrollToSection('planning')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Planning</button>
+                        <button onclick="scrollToSection('config')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Configuration</button>
+                        <button onclick="scrollToSection('verification')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Verification</button>
+                        <button onclick="scrollToSection('rubric')" class="hover:bg-stone-700 px-3 py-2 rounded-md text-sm font-medium transition">Rubric</button>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <!-- Mobile menu button placeholder -->
+                    <button class="text-stone-300 hover:text-white">Menu</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Section 1: Context & Disclaimer -->
+        <section id="context" class="fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-stone-900 mb-2">Layer 2 Segmentation & Inter-VLAN Routing</h1>
+                        <p class="text-stone-600">Computer Networks Project • Phase 2 • Week 4</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 bg-amber-50 border border-amber-200 rounded-lg p-3 max-w-sm">
+                        <p class="text-xs text-amber-800 font-semibold">⚠️ Important Disclaimer</p>
+                        <p class="text-xs text-amber-700 mt-1">Simulated environments (Packet Tracer/GNS3) only. Do not apply these configs to live production networks without authorization.</p>
+                    </div>
+                </div>
+
+                <p class="text-stone-700 leading-relaxed mb-6">
+                    This phase transforms your flat network into a secure, segmented enterprise environment. 
+                    You will implement <strong>VLANs</strong> to reduce broadcast noise and <strong>Router-on-a-Stick (RoaS)</strong> to enable controlled communication between departments. 
+                    This is the foundation for all future security and automation tasks in the semester.
+                </p>
+
+                <!-- Roadmap Visualization -->
+                <div class="bg-stone-100 rounded-lg p-4 overflow-x-auto">
+                    <h3 class="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Project Timeline</h3>
+                    <div class="flex items-center min-w-max space-x-2">
+                        <!-- Phase 1 -->
+                        <div class="flex flex-col items-center w-24 opacity-50">
+                            <div class="h-3 w-3 rounded-full bg-stone-400 mb-2"></div>
+                            <span class="text-xs text-stone-500 font-bold">Phase 1</span>
+                            <span class="text-[10px] text-stone-400">Topology</span>
+                        </div>
+                        <div class="h-0.5 w-12 bg-stone-300"></div>
+                        <!-- Phase 2 (Active) -->
+                        <div class="flex flex-col items-center w-28 scale-110">
+                            <div class="h-4 w-4 rounded-full bg-rose-500 shadow-md mb-2 animate-pulse"></div>
+                            <span class="text-sm text-rose-600 font-bold">Phase 2</span>
+                            <span class="text-[10px] text-stone-600 font-medium">VLANs & RoaS</span>
+                        </div>
+                        <div class="h-0.5 w-12 bg-stone-300"></div>
+                        <!-- Phase 3 -->
+                        <div class="flex flex-col items-center w-24 opacity-50">
+                            <div class="h-3 w-3 rounded-full bg-stone-400 mb-2"></div>
+                            <span class="text-xs text-stone-500 font-bold">Phase 3</span>
+                            <span class="text-[10px] text-stone-400">Basic Config</span>
+                        </div>
+                        <div class="h-0.5 w-12 bg-stone-300"></div>
+                        <!-- Future Phases Hint -->
+                        <div class="flex flex-col items-center w-24 opacity-30">
+                            <div class="h-3 w-3 rounded-full bg-stone-300 mb-2"></div>
+                            <span class="text-xs text-stone-400">Phase 4-11</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Concepts (Interactive) -->
+        <section id="concepts" class="fade-in">
+            <h2 class="text-2xl font-bold text-stone-900 mb-4 border-l-4 border-rose-500 pl-4">The Broadcast Problem</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Explainer Text -->
+                <div class="lg:col-span-1 space-y-4">
+                    <p class="text-stone-700">
+                        In a flat network (Layer 2), every device hears every broadcast (ARP, DHCP). This creates noise and security risks.
+                    </p>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-stone-200">
+                        <h4 class="font-bold text-stone-800 mb-2">Simulation Controls</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="networkMode" value="flat" checked onchange="updateNetworkMode(this.value)" class="text-rose-500 focus:ring-rose-500">
+                                    <span class="text-sm font-medium">Flat Network (Default)</span>
+                                </label>
+                                <p class="text-xs text-stone-500 ml-6">All devices in one broadcast domain.</p>
+                            </div>
+                            <div>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="networkMode" value="vlan" onchange="updateNetworkMode(this.value)" class="text-rose-500 focus:ring-rose-500">
+                                    <span class="text-sm font-medium">Segmented (VLANs)</span>
+                                </label>
+                                <p class="text-xs text-stone-500 ml-6">Logically separated by Dept.</p>
+                            </div>
+                        </div>
+                        <button onclick="triggerBroadcast()" class="mt-4 w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-2 px-4 rounded transition">
+                            Trigger Broadcast Packet
+                        </button>
+                        <div id="broadcast-status" class="mt-2 text-xs text-center h-4 text-rose-600 font-bold transition-opacity opacity-0">
+                            Packet received by everyone!
+                        </div>
+                    </div>
+                    <div class="text-sm bg-blue-50 text-blue-800 p-3 rounded border border-blue-100">
+                        <strong>Insight:</strong> Without VLANs, a Guest user sees ARP requests from HR servers. This is a security vulnerability.
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-stone-200 p-4">
+                    <div class="chart-container">
+                        <canvas id="networkChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-stone-400 mt-2">Visual representation of nodes connected to a single switch.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Planning Desk -->
+        <section id="planning" class="fade-in">
+            <h2 class="text-2xl font-bold text-stone-900 mb-4 border-l-4 border-sky-500 pl-4">The Planning Desk</h2>
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="p-6 border-b border-stone-100 bg-stone-50">
+                    <h3 class="font-bold text-lg text-stone-800">VLAN & IP Schema</h3>
+                    <p class="text-sm text-stone-600">This table is your "source of truth" for the configuration commands. You must define these before typing CLI commands.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-stone-200">
+                        <thead class="bg-stone-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">VLAN ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Department</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Subnet (Example)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Gateway (RoaS)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-stone-200">
+                            <tr class="hover:bg-rose-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600">10</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-900">HR</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500">Human Resources</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-600">192.168.10.0/27</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-800">192.168.10.1</td>
+                            </tr>
+                            <tr class="hover:bg-sky-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-sky-600">20</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-900">Engineering</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500">Engineering Dept</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-600">192.168.20.0/27</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-800">192.168.20.1</td>
+                            </tr>
+                            <tr class="hover:bg-emerald-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">30</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-900">Guest</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500">Public WiFi</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-600">192.168.30.0/27</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-800">192.168.30.1</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">99</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-900">Native</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500">Trunk Management</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-600">N/A (Layer 2)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-stone-800">N/A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Configuration Lab -->
+        <section id="config" class="fade-in">
+            <h2 class="text-2xl font-bold text-stone-900 mb-4 border-l-4 border-emerald-500 pl-4">Implementation Lab</h2>
+            <p class="mb-6 text-stone-600">Use these snippets as templates for your device configuration. Ensure interface names match your specific topology.</p>
+            
+            <!-- Tabs -->
+            <div class="border-b border-stone-200 mb-4">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button onclick="switchTab('tab-switch')" id="btn-tab-switch" class="border-stone-800 text-stone-900 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Switch Configuration</button>
+                    <button onclick="switchTab('tab-router')" id="btn-tab-router" class="border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Router (RoaS) Config</button>
+                    <button onclick="switchTab('tab-verify')" id="btn-tab-verify" class="border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Troubleshooting Tips</button>
+                </nav>
+            </div>
+
+            <!-- Switch Tab Content -->
+            <div id="tab-switch" class="tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="bg-stone-900 rounded-lg p-4 shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-stone-400 text-xs uppercase tracking-widest">Step 1: Create VLANs</span>
+                            <button class="text-xs text-emerald-400 hover:text-emerald-300" onclick="copyToClipboard('code-vlan')">Copy</button>
+                        </div>
+                        <pre id="code-vlan" class="font-mono text-sm text-stone-300 overflow-x-auto code-scroll h-48">
+enable
+configure terminal
+! Create VLANs
+vlan 10
+ name HR
+vlan 20
+ name Engineering
+vlan 30
+ name Guest
+vlan 99
+ name Native-Trunk
+exit
+                        </pre>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded border border-stone-200 text-sm">
+                        <strong>Why?</strong> VLANs must exist in the switch database. If a VLAN isn't created, the switch will drop tagged frames for that ID.
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-stone-900 rounded-lg p-4 shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-stone-400 text-xs uppercase tracking-widest">Step 2: Trunks & Access</span>
+                            <button class="text-xs text-emerald-400 hover:text-emerald-300" onclick="copyToClipboard('code-trunk')">Copy</button>
+                        </div>
+                        <pre id="code-trunk" class="font-mono text-sm text-stone-300 overflow-x-auto code-scroll h-48">
+! Access Ports (End Users)
+interface fa0/1
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+
+! Trunk to Router (RoaS)
+interface gi0/1
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,99
+ no shutdown
+                        </pre>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded border border-stone-200 text-sm">
+                        <strong>Security Note:</strong> Always restrict `allowed vlan` on trunks. By default, Cisco switches allow 1-4094, which is a risk.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Router Tab Content (Hidden by default) -->
+            <div id="tab-router" class="tab-content hidden grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div class="space-y-4">
+                    <div class="bg-stone-900 rounded-lg p-4 shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-stone-400 text-xs uppercase tracking-widest">Router-on-a-Stick</span>
+                            <button class="text-xs text-emerald-400 hover:text-emerald-300" onclick="copyToClipboard('code-roas')">Copy</button>
+                        </div>
+                        <pre id="code-roas" class="font-mono text-sm text-stone-300 overflow-x-auto code-scroll h-64">
+enable
+configure terminal
+interface gi0/0
+ no shutdown
+!
+interface gi0/0.10
+ encapsulation dot1q 10
+ ip address 192.168.10.1 255.255.255.224
+!
+interface gi0/0.20
+ encapsulation dot1q 20
+ ip address 192.168.20.1 255.255.255.224
+!
+interface gi0/0.30
+ encapsulation dot1q 30
+ ip address 192.168.30.1 255.255.255.224
+!
+interface gi0/0.99
+ encapsulation dot1q 99 native
+                        </pre>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded border border-stone-200">
+                    <h4 class="font-bold text-stone-800 mb-2">Critical: The Native VLAN</h4>
+                    <p class="text-stone-600 text-sm mb-4">
+                        Notice the command on subinterface 0.99: <code>encapsulation dot1q 99 native</code>.
+                    </p>
+                    <ul class="list-disc list-inside text-sm text-stone-600 space-y-2">
+                        <li>The router must agree with the switch on which VLAN is native (untagged).</li>
+                        <li>If the switch sends untagged frames (VLAN 99) and the router expects tags, traffic is dropped.</li>
+                        <li>Always use a dedicated VLAN ID (like 99) for native traffic, never user data.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Verify Tab Content (Hidden by default) -->
+            <div id="tab-verify" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                        <h4 class="font-bold text-lg mb-4">Verification Checklist</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span class="text-sm text-stone-600"><strong>Layer 1:</strong> Are physical links up? (Green lights)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span class="text-sm text-stone-600"><strong>Layer 2:</strong> <code>show vlan brief</code> - Do VLANs exist? Are ports assigned correctly?</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span class="text-sm text-stone-600"><strong>Trunks:</strong> <code>show interfaces trunk</code> - Is the native VLAN matching? Is encapsulation 802.1Q?</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span class="text-sm text-stone-600"><strong>Layer 3:</strong> <code>show ip route</code> - Does the router see all connected subnets?</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-amber-50 p-6 rounded-lg border border-amber-200">
+                        <h4 class="font-bold text-lg text-amber-800 mb-2">Common Pitfalls</h4>
+                        <div class="space-y-3 text-sm text-amber-900">
+                            <p><strong>Gateway Mismatch:</strong> PC has gateway .1, Router has .254. Result: Local ping works, remote fails.</p>
+                            <p><strong>Native Mismatch:</strong> Switch uses 99, Router uses 1. Result: CDP errors in console.</p>
+                            <p><strong>Missing VLAN:</strong> VLAN 20 not created on Switch 2. Result: Traffic drops at trunk.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Verification (RoaS Animation) -->
+        <section id="verification" class="fade-in">
+            <h2 class="text-2xl font-bold text-stone-900 mb-4 border-l-4 border-purple-500 pl-4">RoaS Logic Simulator</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-stone-900 rounded-xl shadow-lg p-4 relative overflow-hidden">
+                    <div class="chart-container" style="background-color: #1c1917;">
+                        <canvas id="roasCanvas"></canvas>
+                    </div>
+                    <div class="absolute top-4 right-4 bg-black/50 p-2 rounded text-xs text-stone-300">
+                        Canvas Rendering
+                    </div>
+                </div>
+                <div class="lg:col-span-1 flex flex-col justify-center space-y-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">Trace the Packet</h3>
+                        <p class="text-sm text-stone-600 mb-4">
+                            See how a packet travels from HR (VLAN 10) to Engineering (VLAN 20). Note how it must go "up" to the router and back "down" the same physical cable.
+                        </p>
+                        <button onclick="animatePacket()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform active:scale-95">
+                            Simulate Ping (HR -> Eng)
+                        </button>
+                    </div>
+                    <div id="packet-log" class="bg-white border border-stone-200 rounded p-4 h-32 overflow-y-auto text-xs font-mono">
+                        <div class="text-stone-400 italic">Waiting for simulation...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Assessment Rubric -->
+        <section id="rubric" class="fade-in mb-16">
+            <h2 class="text-2xl font-bold text-stone-900 mb-4 border-l-4 border-stone-500 pl-4">Assessment Rubric</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="chart-container">
+                    <canvas id="rubricChart"></canvas>
+                </div>
+                <div>
+                    <div class="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-stone-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-bold text-stone-600">Criteria</th>
+                                    <th class="px-4 py-2 text-right font-bold text-stone-600">Marks</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-stone-100">
+                                <tr><td class="px-4 py-2">Router Subinterfaces</td><td class="px-4 py-2 text-right font-mono">20</td></tr>
+                                <tr><td class="px-4 py-2">VLAN Planning & Tables</td><td class="px-4 py-2 text-right font-mono">15</td></tr>
+                                <tr><td class="px-4 py-2">VLAN Config (CLI)</td><td class="px-4 py-2 text-right font-mono">15</td></tr>
+                                <tr><td class="px-4 py-2">Trunk Config (CLI)</td><td class="px-4 py-2 text-right font-mono">15</td></tr>
+                                <tr><td class="px-4 py-2">Verification (Ping Proof)</td><td class="px-4 py-2 text-right font-mono">15</td></tr>
+                                <tr><td class="px-4 py-2">Troubleshooting Notes</td><td class="px-4 py-2 text-right font-mono">10</td></tr>
+                                <tr><td class="px-4 py-2">Research Topic</td><td class="px-4 py-2 text-right font-mono">10</td></tr>
+                                <tr class="bg-stone-50 font-bold"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">100</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-4 bg-stone-100 rounded text-xs text-stone-500">
+                        <strong>Submission:</strong> Max 3 Pages A4 PDF. Filename: <code>StudentID_LastName_Phase2.pdf</code>.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-400 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">Computer Networks Graduate Programme • Lab Companion App</p>
+            <p class="text-xs mt-2 text-stone-600">Based on Phase 2 Documentation</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- State Management ---
+        const state = {
+            networkMode: 'flat', // 'flat' or 'vlan'
+            animationRunning: false
+        };
+
+        // --- Chart.js: Network Visualizer (Scatter Plot) ---
+        let networkChart;
+        
+        function initNetworkChart() {
+            const ctx = document.getElementById('networkChart').getContext('2d');
+            
+            // Define nodes with positions and types
+            const nodes = [
+                {x: 50, y: 50, label: 'Switch', type: 'core', vlan: 1}, // Center Switch
+                {x: 20, y: 80, label: 'HR PC 1', type: 'host', vlan: 10},
+                {x: 30, y: 80, label: 'HR PC 2', type: 'host', vlan: 10},
+                {x: 70, y: 80, label: 'Eng PC 1', type: 'host', vlan: 20},
+                {x: 80, y: 80, label: 'Eng PC 2', type: 'host', vlan: 20},
+                {x: 50, y: 20, label: 'Guest WiFi', type: 'host', vlan: 30}
+            ];
+
+            networkChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Network Nodes',
+                        data: nodes,
+                        backgroundColor: (ctx) => {
+                            const vlan = ctx.raw?.vlan;
+                            if (state.networkMode === 'flat') return '#a8a29e'; // Stone-400
+                            if (vlan === 1) return '#1c1917'; // Switch
+                            if (vlan === 10) return '#f43f5e'; // Rose
+                            if (vlan === 20) return '#0ea5e9'; // Sky
+                            if (vlan === 30) return '#10b981'; // Emerald
+                            return '#a8a29e';
+                        },
+                        pointRadius: (ctx) => ctx.raw?.type === 'core' ? 15 : 10,
+                        pointHoverRadius: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false, min: 0, max: 100 },
+                        y: { display: false, min: 0, max: 100 }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const n = context.raw;
+                                    return `${n.label} (VLAN ${state.networkMode === 'flat' ? '1' : n.vlan})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateNetworkMode(mode) {
+            state.networkMode = mode;
+            networkChart.update();
+            document.getElementById('broadcast-status').style.opacity = '0';
+        }
+
+        function triggerBroadcast() {
+            const status = document.getElementById('broadcast-status');
+            const dataset = networkChart.data.datasets[0];
+            const originalColors = [...dataset.backgroundColor(networkChart.ctx)]; // This logic is simplified for demo
+            
+            // Simulation logic
+            let affectedCount = 0;
+            const sourceVlan = 10; // Assume broadcast starts from HR
+
+            // Flash effect
+            const flashColor = '#fbbf24'; // Amber-400
+            
+            // We need to force a re-render with "flash" colors
+            const tempColors = networkChart.data.datasets[0].data.map(node => {
+                if (node.type === 'core') return '#1c1917'; // Switch always active
+                
+                if (state.networkMode === 'flat') {
+                    affectedCount++;
+                    return flashColor;
+                } else {
+                    // Only nodes in VLAN 10 flash
+                    if (node.vlan === sourceVlan) {
+                        affectedCount++;
+                        return flashColor;
+                    }
+                    return '#e5e7eb'; // Others gray out
+                }
+            });
+
+            // Update chart manually to override the function-based color temporarily
+            networkChart.data.datasets[0].backgroundColor = tempColors;
+            networkChart.update();
+
+            // Text update
+            if (state.networkMode === 'flat') {
+                status.innerText = "⚠️ BROADCAST STORM! Everyone received the packet.";
+                status.className = "mt-2 text-xs text-center h-4 text-red-600 font-bold transition-opacity";
+            } else {
+                status.innerText = "✅ Secure. Only HR devices received the packet.";
+                status.className = "mt-2 text-xs text-center h-4 text-green-600 font-bold transition-opacity";
+            }
+            status.style.opacity = '1';
+
+            // Reset after 1.5s
+            setTimeout(() => {
+                networkChart.data.datasets[0].backgroundColor = (ctx) => {
+                     const vlan = ctx.raw?.vlan;
+                     if (state.networkMode === 'flat') return '#a8a29e';
+                     if (vlan === 1) return '#1c1917';
+                     if (vlan === 10) return '#f43f5e';
+                     if (vlan === 20) return '#0ea5e9';
+                     if (vlan === 30) return '#10b981';
+                     return '#a8a29e';
+                };
+                networkChart.update();
+                status.style.opacity = '0';
+            }, 1500);
+        }
+
+        // --- Chart.js: Rubric Donut ---
+        function initRubricChart() {
+            const ctx = document.getElementById('rubricChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Subinterfaces (20)', 'VLAN Plan (15)', 'VLAN Config (15)', 'Trunks (15)', 'Ping Proof (15)', 'Troubleshooting (10)', 'Research (10)'],
+                    datasets: [{
+                        data: [20, 15, 15, 15, 15, 10, 10],
+                        backgroundColor: [
+                            '#1c1917', '#f43f5e', '#fb7185', '#0ea5e9', '#38bdf8', '#10b981', '#fbbf24'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } }
+                    }
+                }
+            });
+        }
+
+        // --- RoaS Canvas Animation ---
+        function initRoasCanvas() {
+            const canvas = document.getElementById('roasCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas resolution
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            drawRoasStatic(ctx, rect.width, rect.height);
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                drawRoasStatic(ctx, rect.width, rect.height);
+            });
+        }
+
+        function drawRoasStatic(ctx, w, h) {
+            ctx.clearRect(0, 0, w, h);
+            
+            // Positions
+            const routerY = h * 0.2;
+            const switchY = h * 0.5;
+            const pcY = h * 0.8;
+            const centerX = w * 0.5;
+            const leftX = w * 0.2;
+            const rightX = w * 0.8;
+
+            // Draw Links
+            ctx.strokeStyle = '#44403c';
+            ctx.lineWidth = 4;
+            
+            // Router to Switch (Trunk)
+            ctx.beginPath();
+            ctx.moveTo(centerX, routerY);
+            ctx.lineTo(centerX, switchY);
+            ctx.stroke();
+
+            // Switch to PCs
+            ctx.beginPath();
+            ctx.moveTo(centerX, switchY);
+            ctx.lineTo(leftX, pcY); // HR
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, switchY);
+            ctx.lineTo(rightX, pcY); // Eng
+            ctx.stroke();
+
+            // Draw Devices (Simple Shapes)
+            // Router (Circle)
+            ctx.fillStyle = '#1c1917';
+            ctx.beginPath();
+            ctx.arc(centerX, routerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('R1', centerX, routerY + 4);
+
+            // Switch (Rect)
+            ctx.fillStyle = '#44403c';
+            ctx.fillRect(centerX - 30, switchY - 15, 60, 30);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('SW1', centerX, switchY + 4);
+
+            // PCs
+            ctx.fillStyle = '#f43f5e'; // HR
+            ctx.fillRect(leftX - 20, pcY - 15, 40, 30);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('HR', leftX, pcY + 4);
+
+            ctx.fillStyle = '#0ea5e9'; // Eng
+            ctx.fillRect(rightX - 20, pcY - 15, 40, 30);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Eng', rightX, pcY + 4);
+        }
+
+        function animatePacket() {
+            if (state.animationRunning) return;
+            state.animationRunning = true;
+
+            const canvas = document.getElementById('roasCanvas');
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect(); // Use client rect for logical coords
+            const w = rect.width; 
+            const h = rect.height; 
+
+            // Hardcoded Paths based on static draw positions
+            const leftX = w * 0.2;
+            const rightX = w * 0.8;
+            const centerX = w * 0.5;
+            const pcY = h * 0.8;
+            const switchY = h * 0.5;
+            const routerY = h * 0.2;
+
+            const log = document.getElementById('packet-log');
+            log.innerHTML = '';
+            
+            const steps = [
+                {x: leftX, y: pcY, msg: "HR (10.10) sends packet to Gateway (10.1)"},
+                {x: centerX, y: switchY, msg: "Switch tags frame VLAN 10, sends up Trunk"},
+                {x: centerX, y: routerY, msg: "Router receives on subint .10, routes to .20"},
+                {x: centerX, y: switchY, msg: "Switch receives frame tagged VLAN 20"},
+                {x: rightX, y: pcY, msg: "Engineering (20.10) receives packet"}
+            ];
+
+            let currentStep = 0;
+            let progress = 0;
+            
+            function loop() {
+                // Redraw static background
+                drawRoasStatic(ctx, w, h);
+
+                if (currentStep >= steps.length - 1) {
+                    state.animationRunning = false;
+                    addLog("✅ Ping Successful!", true);
+                    return;
+                }
+
+                const start = steps[currentStep];
+                const end = steps[currentStep + 1];
+
+                const curX = start.x + (end.x - start.x) * progress;
+                const curY = start.y + (end.y - start.y) * progress;
+
+                // Draw Packet
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.arc(curX, curY, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                progress += 0.02;
+
+                if (progress >= 1) {
+                    progress = 0;
+                    currentStep++;
+                    addLog(steps[currentStep].msg);
+                }
+
+                requestAnimationFrame(loop);
+            }
+
+            addLog(steps[0].msg);
+            loop();
+        }
+
+        function addLog(msg, isFinal = false) {
+            const log = document.getElementById('packet-log');
+            const div = document.createElement('div');
+            div.className = isFinal ? "text-green-600 font-bold mt-2" : "mb-1";
+            div.innerText = `> ${msg}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // --- Utility Functions ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Update button styles
+            const buttons = ['btn-tab-switch', 'btn-tab-router', 'btn-tab-verify'];
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btnId.includes(tabId.split('-')[1])) {
+                    btn.classList.remove('border-transparent', 'text-stone-500');
+                    btn.classList.add('border-stone-800', 'text-stone-900');
+                } else {
+                    btn.classList.add('border-transparent', 'text-stone-500');
+                    btn.classList.remove('border-stone-800', 'text-stone-900');
+                }
+            });
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Code copied to clipboard!");
+            });
+        }
+
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+            initNetworkChart();
+            initRubricChart();
+            initRoasCanvas();
+        });
+
+    </script>
+</body>
+</html>
+
+
+

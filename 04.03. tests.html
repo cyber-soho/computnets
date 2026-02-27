@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethernet Switching: Study Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+
+        /* 3D Flip Card CSS */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .flip-card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        /* FIXED: Changed from .flipped .flip-card-inner to target the element directly */
+        .flip-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar for rationale */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-6 text-center">
+            <h1 class="text-3xl font-bold tracking-tight">Ethernet Switching Mastery</h1>
+            <p class="text-indigo-200 mt-2">Module 4 Study Portal</p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 flex justify-center space-x-2 md:space-x-8">
+            <button id="tab-flashcards" class="px-6 py-4 font-semibold text-indigo-600 border-b-4 border-indigo-600 transition-colors" onclick="switchTab('flashcards')">
+                Flashcards
+            </button>
+            <button id="tab-quiz" class="px-6 py-4 font-semibold text-slate-500 border-b-4 border-transparent hover:text-indigo-600 transition-colors" onclick="switchTab('quiz')">
+                Practice Quiz
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center p-4 py-8">
+        
+        <!-- ========================================== -->
+        <!-- FLASHCARDS SECTION                         -->
+        <!-- ========================================== -->
+        <div id="section-flashcards" class="w-full max-w-3xl block">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Key Concepts</h2>
+                <p class="text-slate-500 text-sm">Click the card to reveal the definition.</p>
+            </div>
+
+            <!-- Card Container -->
+            <div class="perspective-1000 w-full h-80 md:h-96 cursor-pointer group" onclick="toggleFlip()">
+                <div id="flashcard" class="flip-card-inner relative w-full h-full transform-style-3d shadow-xl rounded-2xl">
+                    <!-- Front (Term) -->
+                    <div class="absolute inset-0 backface-hidden bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center transition-shadow group-hover:shadow-2xl">
+                        <span class="text-sm font-semibold tracking-widest text-indigo-500 uppercase mb-4">Term</span>
+                        <h3 id="fc-term" class="text-3xl md:text-4xl font-bold text-slate-800 leading-tight">MAC Address Table</h3>
+                    </div>
+                    <!-- Back (Definition) -->
+                    <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl flex flex-col items-center justify-center p-8 text-center text-white shadow-2xl">
+                        <span class="text-sm font-semibold tracking-widest text-indigo-300 uppercase mb-4">Definition</span>
+                        <p id="fc-def" class="text-xl md:text-2xl font-light leading-relaxed">A database mapping MAC addresses to the specific switch ports they are connected to.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="mt-8 flex items-center justify-between bg-white rounded-full px-6 py-3 shadow-sm border border-slate-200">
+                <button onclick="prevCard()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div class="font-semibold text-slate-600 text-lg">
+                    <span id="fc-current">1</span> / <span id="fc-total">25</span>
+                </div>
+                <button onclick="nextCard()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-1.5 mt-6 rounded-full overflow-hidden">
+                <div id="fc-progress" class="bg-indigo-500 h-full transition-all duration-300" style="width: 4%"></div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- QUIZ SECTION                               -->
+        <!-- ========================================== -->
+        <div id="section-quiz" class="w-full max-w-4xl hidden">
+            
+            <!-- Quiz Start / Running State -->
+            <div id="quiz-container" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                
+                <!-- Quiz Header -->
+                <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                    <span class="font-bold text-slate-500">Question <span id="q-current">1</span> of 10</span>
+                    <span class="bg-indigo-100 text-indigo-700 text-sm font-bold px-3 py-1 rounded-full">Score: <span id="q-score">0</span></span>
+                </div>
+
+                <div class="p-6 md:p-10">
+                    <!-- Question Text -->
+                    <h3 id="q-text" class="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
+                        Question text goes here?
+                    </h3>
+
+                    <!-- Hint Button & Area -->
+                    <div class="mb-6">
+                        <button onclick="toggleHint()" class="flex items-center text-sm font-semibold text-amber-500 hover:text-amber-600 transition-colors">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            Need a hint?
+                        </button>
+                        <div id="q-hint" class="hidden mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                            Hint text goes here.
+                        </div>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="q-options" class="grid grid-cols-1 gap-4">
+                        <!-- Options injected by JS -->
+                    </div>
+
+                    <!-- Feedback Area (Rationale) -->
+                    <div id="q-feedback" class="hidden mt-8 p-5 rounded-xl text-slate-800 border">
+                        <div class="flex items-start">
+                            <div id="q-feedback-icon" class="flex-shrink-0 mr-3 mt-1"></div>
+                            <div>
+                                <h4 id="q-feedback-title" class="font-bold text-lg mb-1">Result</h4>
+                                <p id="q-feedback-rationale" class="text-sm md:text-base"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Button -->
+                    <div class="mt-8 flex justify-end">
+                        <button id="btn-next-question" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all transform hover:scale-105">
+                            Next Question &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Results State -->
+            <div id="quiz-results" class="hidden bg-white rounded-2xl shadow-xl p-10 text-center border border-slate-200">
+                <div class="mb-6">
+                    <svg class="w-24 h-24 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 class="text-4xl font-bold text-slate-800 mb-2">Quiz Complete!</h2>
+                <p class="text-lg text-slate-500 mb-8">You've finished the Ethernet Switching practice quiz.</p>
+                
+                <div class="inline-block bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 min-w-[250px]">
+                    <span class="block text-slate-500 font-semibold mb-1">Final Score</span>
+                    <span id="final-score" class="text-5xl font-black text-indigo-600">8/10</span>
+                </div>
+
+                <div>
+                    <button onclick="restartQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors">
+                        Retake Quiz
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Data & Application Logic -->
+    <script>
+        // ==========================================
+        // DATA: FLASHCARDS (25 Items)
+        // ==========================================
+        const flashcards = [
+            { term: "MAC Address", definition: "A 48-bit hardware address uniquely identifying a network interface on a local segment." },
+            { term: "Switch", definition: "A Layer 2 device that makes intelligent forwarding decisions based on destination MAC addresses." },
+            { term: "Hub", definition: "A legacy physical layer device that blindly repeats incoming signals to all other ports (creates one large collision domain)." },
+            { term: "Flooding", definition: "When a switch sends an incoming frame out all active ports except the receiving port. Occurs for unknown unicasts, broadcasts, and multicasts." },
+            { term: "Forwarding", definition: "When a switch sends a frame out a single, specific port toward its known destination based on the MAC table." },
+            { term: "Filtering", definition: "When a switch drops a frame, typically because the destination and source exist on the same port, or due to security ACLs." },
+            { term: "MAC Address Table", definition: "A database in the switch mapping learned MAC addresses to the specific physical ports they are connected to." },
+            { term: "Dynamic Learning", definition: "The automatic process where a switch examines the *source* MAC address of incoming frames to populate its MAC table." },
+            { term: "Aging Timer", definition: "The time a dynamic MAC table entry remains valid without new traffic from that device. Default is typically 300 seconds (5 minutes)." },
+            { term: "Broadcast Frame", definition: "A frame addressed to FF:FF:FF:FF:FF:FF, intended to be processed by every device on the local network." },
+            { term: "Broadcast Domain", definition: "A logical boundary representing how far a broadcast frame can travel. Routers and VLANs create these boundaries." },
+            { term: "Collision Domain", definition: "A network segment where data packets can collide. Every individual port on a switch forms its own collision domain." },
+            { term: "VLAN (Virtual LAN)", definition: "A logical overlay network that groups a subset of devices sharing a physical LAN, creating isolated broadcast domains." },
+            { term: "Access Port", definition: "A switch port configured to belong to only one specific VLAN. Used exclusively to connect endpoint devices." },
+            { term: "Trunk Link", definition: "A point-to-point connection between switches designed to carry traffic for multiple VLANs simultaneously." },
+            { term: "802.1Q", definition: "The IEEE standard protocol for inserting VLAN tags into Ethernet frames on trunk links." },
+            { term: "VLAN Tag", definition: "A 4-byte field inserted into an Ethernet frame header by a switch to identify the frame's VLAN membership." },
+            { term: "TPID", definition: "Tag Protocol Identifier. A 2-byte field in the 802.1Q tag, set to 0x8100, signaling that the frame is VLAN-tagged." },
+            { term: "Native VLAN", definition: "The specific VLAN on an 802.1Q trunk whose traffic is sent *untagged* for backward compatibility. Defaults to VLAN 1." },
+            { term: "VLAN Hopping", definition: "A security attack where an endpoint attempts to send traffic to a different VLAN. Mitigated by disabling DTP and changing the native VLAN." },
+            { term: "Allowed VLAN List", definition: "A trunk configuration restriction that defines exactly which VLANs are permitted to cross that specific trunk link." },
+            { term: "ARP", definition: "Address Resolution Protocol. Used by a host to discover the unknown MAC address associated with a known IP address." },
+            { term: "Unicast", definition: "A communication pattern where a frame is transmitted from one specific sender to one specific receiver." },
+            { term: "Multicast", definition: "A communication pattern where a frame is transmitted from one sender to a specific group of interested receivers." },
+            { term: "Layer 2", definition: "The Data Link layer of the OSI model. This is where Ethernet frames, MAC addresses, and switches operate." }
+        ];
+
+        // ==========================================
+        // DATA: QUIZ (10 Questions)
+        // ==========================================
+        const quizData = [
+            {
+                question: "A switch receives a frame on Port 1 intended for MAC address AA:BB:CC:DD:EE:FF. The switch checks its MAC address table and does not find an entry for this specific MAC address. What action does the switch perform?",
+                hint: "Think about the 'University Post Room' analogy when the clerk encounters a recipient name that isn't on the board.",
+                options: [
+                    { text: "It drops the frame immediately to prevent network congestion.", rationale: "Dropping the frame would result in data loss; the switch must attempt to deliver it even if the location is unknown.", isCorrect: false },
+                    { text: "It sends the frame back out of Port 1 to the sender.", rationale: "Sending the frame back to the source (Port 1) serves no purpose in delivering it to the destination and creates unnecessary traffic.", isCorrect: false },
+                    { text: "It floods the frame out of all active ports except Port 1.", rationale: "When the destination is unknown, the switch must flood the frame to ensure the recipient receives it, but it excludes the incoming port to prevent loops.", isCorrect: true },
+                    { text: "It holds the frame in a buffer and sends an ARP request to find the destination.", rationale: "Switches operate at Layer 2 and forward frames based on MAC tables; they do not hold data to perform Layer 3 protocols like ARP on behalf of hosts.", isCorrect: false }
+                ]
+            },
+            {
+                question: "PC A and PC B are both connected to a hub, which is then connected to Port 1 of a switch. PC A sends a frame to PC B. The switch receives this frame on Port 1. If the switch knows that PC B is also accessible via Port 1, what action does it take?",
+                hint: "If the sender and the recipient are already in the same room, does the post room clerk need to walk anywhere to deliver the letter?",
+                options: [
+                    { text: "Flood", rationale: "Flooding is reserved for unknown destinations, but here the switch knows the destination is on the same port segment.", isCorrect: false },
+                    { text: "Forward", rationale: "Forwarding implies sending the frame out a different port, but the destination is on the same wire the frame arrived on.", isCorrect: false },
+                    { text: "Filter", rationale: "Since the source and destination are on the same port segment, the switch drops (filters) the frame because the destination has already received it via the hub.", isCorrect: true },
+                    { text: "Broadcast", rationale: "Broadcasting is a specific frame type, not a switch decision based on location; the switch filters local traffic.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A switch receives a frame with a Source MAC of 00:11:22:33:44:55 on Port 5. This MAC address is not currently in the MAC address table. How does the switch update its table?",
+                hint: "The switch is like a detective that takes notes on where people are coming *from*.",
+                options: [
+                    { text: "It adds an entry mapping 00:11:22:33:44:55 to Port 5.", rationale: "Switches use the Source MAC address of incoming frames to learn the location of devices dynamically.", isCorrect: true },
+                    { text: "It sends a query to the device on Port 5 asking for its IP address.", rationale: "Switches build MAC tables passively by listening to traffic, not by active querying or using IP addresses.", isCorrect: false },
+                    { text: "It waits for a frame destined for 00:11:22:33:44:55 before adding the entry.", rationale: "Learning happens based on the Source MAC of incoming frames, not the destination of future frames.", isCorrect: false },
+                    { text: "It ignores the Source MAC and only looks at the Destination MAC.", rationale: "Ignoring the Source MAC would prevent the switch from ever populating its table dynamically.", isCorrect: false }
+                ]
+            },
+            {
+                question: "In a Cisco switch with default settings, a specific device entry has been in the MAC address table for 300 seconds without sending any new traffic. What happens to this entry?",
+                hint: "Consider the 'Gym Check-In' analogy: what happens to a member's log entry if they haven't been seen for a long time?",
+                options: [
+                    { text: "It is permanently locked as a static entry.", rationale: "Static entries must be manually configured; dynamic entries do not become static over time.", isCorrect: false },
+                    { text: "It is removed (aged out) from the table.", rationale: "The default aging time is 300 seconds; inactive entries are removed to free up memory and keep the table current.", isCorrect: true },
+                    { text: "The switch broadcasts a 'keep-alive' ping to the device.", rationale: "Switches do not actively ping devices to maintain MAC table entries; they rely on passive traffic observation.", isCorrect: false },
+                    { text: "The entry remains until the switch is rebooted.", rationale: "Keeping stale entries indefinitely would fill the table with obsolete data; the aging timer prevents this.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You have configured VLAN 10 for Engineering and VLAN 20 for Finance on a single 24-port switch. A computer in VLAN 10 sends a broadcast frame. Which devices receive this broadcast?",
+                hint: "Think of the 'Office Building' analogy: if someone shouts in the Engineering room (Floor 1), can the people in the Finance room (Floor 2) hear them?",
+                options: [
+                    { text: "All devices connected to the switch, regardless of VLAN.", rationale: "VLANs logically segment the network; a broadcast in one VLAN cannot cross into another without a router.", isCorrect: false },
+                    { text: "Only devices assigned to VLAN 10.", rationale: "VLANs create separate broadcast domains, so broadcasts are contained strictly within the originating VLAN.", isCorrect: true },
+                    { text: "Only devices assigned to VLAN 20.", rationale: "Broadcasts stay within their source VLAN; traffic from VLAN 10 does not leak into VLAN 20.", isCorrect: false },
+                    { text: "Only the trunk ports connected to the switch.", rationale: "While trunk ports may carry the broadcast to other switches, local devices in VLAN 10 must also receive it.", isCorrect: false }
+                ]
+            },
+            {
+                question: "What is the primary function of the 802.1Q tag in a trunk link?",
+                hint: "On the 'Multi-lane Highway', what prevents the trucks (VLAN 10) from getting mixed up with the cars (VLAN 20)?",
+                options: [
+                    { text: "To encrypt the data payload for security between switches.", rationale: "802.1Q tags are for identification, not encryption; the payload remains readable.", isCorrect: false },
+                    { text: "To identify which VLAN a frame belongs to as it traverses the link.", rationale: "Trunk links carry traffic for multiple VLANs, so a tag is required to distinguish which frame belongs to which VLAN.", isCorrect: true },
+                    { text: "To increase the bandwidth of the link by compressing the frame.", rationale: "The tag actually adds 4 bytes of overhead to the frame; it does not compress data or increase bandwidth.", isCorrect: false },
+                    { text: "To tell the receiving switch the MAC address of the sender.", rationale: "The Source MAC is already part of the standard Ethernet header; the tag serves a different purpose.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A frame arrives at a switch trunk port with a TPID value of 0x8100. What does this indicate to the switch?",
+                hint: "This hexadecimal value serves as a flag in the frame header to announce that a specific 4-byte field has been inserted.",
+                options: [
+                    { text: "The frame is an IPv6 packet.", rationale: "IPv6 uses a different EtherType; 0x8100 is specifically the identifier for 802.1Q tagging.", isCorrect: false },
+                    { text: "The frame is corrupt and should be dropped.", rationale: "0x8100 is a valid standard value, not an error indicator.", isCorrect: false },
+                    { text: "The frame carries an 802.1Q tag.", rationale: "0x8100 is the standard Tag Protocol Identifier (TPID) that signals the presence of an 802.1Q tag.", isCorrect: true },
+                    { text: "The frame is destined for the Native VLAN.", rationale: "Native VLAN frames travel untagged and would not have the 0x8100 TPID field inserted.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Traffic belonging to the configured Native VLAN is sent across an 802.1Q trunk link. How is this traffic modified?",
+                hint: "This feature exists for backward compatibility with devices that don't understand tags at all.",
+                options: [
+                    { text: "It is tagged with VLAN ID 1.", rationale: "Native VLAN traffic is unique because it is explicitly *not* tagged, regardless of the ID number.", isCorrect: false },
+                    { text: "It is tagged with the configured Native VLAN ID (e.g., 99).", rationale: "Native VLAN traffic is sent untagged for backward compatibility; tagging it would treat it as a regular VLAN.", isCorrect: false },
+                    { text: "It is sent untagged.", rationale: "The defining characteristic of the Native VLAN on an 802.1Q trunk is that its frames carry no tag.", isCorrect: true },
+                    { text: "It is encapsulated in an ISL header.", rationale: "ISL is an obsolete Cisco proprietary protocol; 802.1Q uses untagged frames for the native VLAN.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Why is it considered a security best practice to change the Native VLAN from the default (VLAN 1) to an unused VLAN ID?",
+                hint: "If you leave the 'back door' (VLAN 1) unlocked and everyone knows where it is, it's easier for intruders to sneak in.",
+                options: [
+                    { text: "To increase the speed of the trunk link.", rationale: "Changing the VLAN ID has no impact on the physical speed or throughput of the link.", isCorrect: false },
+                    { text: "To prevent VLAN hopping attacks.", rationale: "Attackers can exploit the default Native VLAN 1 to 'hop' across VLANs; moving it to an unused ID mitigates this risk.", isCorrect: true },
+                    { text: "To allow more than 4094 VLANs on the switch.", rationale: "The VLAN limit is defined by the 12-bit VID field, not by which VLAN is designated as native.", isCorrect: false },
+                    { text: "To enable automatic MAC address learning.", rationale: "MAC learning happens automatically on all active VLANs regardless of the Native VLAN configuration.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You enter the command 'switchport trunk allowed vlan 10,20' on a trunk interface. A frame destined for VLAN 30 arrives at the switch and needs to cross this trunk. What happens?",
+                hint: "This command acts like a bouncer with a guest list. If your name (VLAN ID) isn't on the list, do you get in?",
+                options: [
+                    { text: "The switch dynamically adds VLAN 30 to the allowed list and sends the frame.", rationale: "The allowed list is a static filter; the switch will not automatically modify security configurations.", isCorrect: false },
+                    { text: "The switch sends the frame but strips the tag.", rationale: "Sending the frame untagged would place it in the native VLAN, effectively leaking data to the wrong network.", isCorrect: false },
+                    { text: "The switch drops the frame.", rationale: "Because VLAN 30 is not in the allowed list, the switch acts as a filter and prevents the traffic from crossing the link.", isCorrect: true },
+                    { text: "The switch sends the frame to the default Gateway.", rationale: "Trunk restrictions happen at Layer 2; the switch will not attempt to route the frame if it is blocked at the port level.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // LOGIC: TABS NAVIGATION
+        // ==========================================
+        function switchTab(tabName) {
+            const btnFlashcards = document.getElementById('tab-flashcards');
+            const btnQuiz = document.getElementById('tab-quiz');
+            const secFlashcards = document.getElementById('section-flashcards');
+            const secQuiz = document.getElementById('section-quiz');
+
+            // Reset styles
+            btnFlashcards.className = "px-6 py-4 font-semibold text-slate-500 border-b-4 border-transparent hover:text-indigo-600 transition-colors";
+            btnQuiz.className = "px-6 py-4 font-semibold text-slate-500 border-b-4 border-transparent hover:text-indigo-600 transition-colors";
+            secFlashcards.classList.add('hidden');
+            secQuiz.classList.add('hidden');
+
+            if (tabName === 'flashcards') {
+                btnFlashcards.className = "px-6 py-4 font-semibold text-indigo-600 border-b-4 border-indigo-600 transition-colors";
+                secFlashcards.classList.remove('hidden');
+                secFlashcards.classList.add('block');
+            } else {
+                btnQuiz.className = "px-6 py-4 font-semibold text-indigo-600 border-b-4 border-indigo-600 transition-colors";
+                secQuiz.classList.remove('hidden');
+                secQuiz.classList.add('block');
+                if(currentQuizIndex === -1) startQuiz(); // Start on first load
+            }
+        }
+
+        // ==========================================
+        // LOGIC: FLASHCARDS
+        // ==========================================
+        let currentCard = 0;
+        const totalCards = flashcards.length;
+        const flashcardElement = document.getElementById('flashcard');
+
+        function loadCard(index) {
+            // Remove flip if applied
+            flashcardElement.classList.remove('flipped');
+            
+            // Wait for flip back animation before changing text. 
+            // 300ms is exactly halfway through the 0.6s transition, making the text change invisible while edge-on!
+            setTimeout(() => {
+                document.getElementById('fc-term').textContent = flashcards[index].term;
+                document.getElementById('fc-def').textContent = flashcards[index].definition;
+                document.getElementById('fc-current').textContent = index + 1;
+                
+                // Update progress bar
+                const percentage = ((index + 1) / totalCards) * 100;
+                document.getElementById('fc-progress').style.width = percentage + '%';
+            }, 300); 
+        }
+
+        function toggleFlip() {
+            flashcardElement.classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % totalCards;
+            loadCard(currentCard);
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + totalCards) % totalCards;
+            loadCard(currentCard);
+        }
+
+        // ==========================================
+        // LOGIC: QUIZ
+        // ==========================================
+        let currentQuizIndex = -1;
+        let score = 0;
+        let quizCompleted = false;
+        let answered = false;
+
+        function startQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            quizCompleted = false;
+            document.getElementById('q-score').textContent = score;
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Shuffle utility
+        function shuffleArray(array) {
+            const newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        function renderQuestion() {
+            answered = false;
+            const q = quizData[currentQuizIndex];
+            
+            // Update UI
+            document.getElementById('q-current').textContent = currentQuizIndex + 1;
+            document.getElementById('q-text').textContent = q.question;
+            document.getElementById('q-hint').textContent = q.hint;
+            document.getElementById('q-hint').classList.add('hidden'); // hide hint initially
+            
+            // Reset Feedback & Next button
+            document.getElementById('q-feedback').classList.add('hidden');
+            document.getElementById('btn-next-question').classList.add('hidden');
+            
+            // Render Options (Shuffled)
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = '';
+            
+            const shuffledOptions = shuffleArray(q.options);
+            
+            shuffledOptions.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "text-left w-full p-4 border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all font-medium text-slate-700 bg-white shadow-sm";
+                btn.textContent = opt.text;
+                btn.onclick = () => selectOption(btn, opt, shuffledOptions);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function toggleHint() {
+            document.getElementById('q-hint').classList.toggle('hidden');
+        }
+
+        function selectOption(selectedBtn, selectedOpt, allOptionsData) {
+            if (answered) return; // Prevent multiple answers
+            answered = true;
+
+            const buttons = document.getElementById('q-options').children;
+
+            // Process all buttons for styling
+            for (let i = 0; i < buttons.length; i++) {
+                const btn = buttons[i];
+                const optData = allOptionsData[i];
+                
+                btn.disabled = true; // Disable all
+                btn.classList.remove('hover:border-indigo-400', 'hover:bg-indigo-50', 'cursor-pointer');
+                
+                if (optData.isCorrect) {
+                    btn.classList.remove('border-slate-200', 'text-slate-700');
+                    btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                } else if (btn === selectedBtn && !optData.isCorrect) {
+                    btn.classList.remove('border-slate-200', 'text-slate-700');
+                    btn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-800');
+                } else {
+                    btn.classList.add('opacity-50'); // Dim others
+                }
+            }
+
+            // Update Score & Feedback
+            const feedbackBox = document.getElementById('q-feedback');
+            const feedbackIcon = document.getElementById('q-feedback-icon');
+            const feedbackTitle = document.getElementById('q-feedback-title');
+            const feedbackRationale = document.getElementById('q-feedback-rationale');
+            
+            feedbackBox.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'bg-rose-50', 'border-rose-200');
+
+            if (selectedOpt.isCorrect) {
+                score++;
+                document.getElementById('q-score').textContent = score;
+                feedbackBox.classList.add('bg-green-50', 'border-green-200');
+                feedbackTitle.textContent = "Correct!";
+                feedbackTitle.className = "font-bold text-lg mb-1 text-green-700";
+                feedbackIcon.innerHTML = `<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            } else {
+                feedbackBox.classList.add('bg-rose-50', 'border-rose-200');
+                feedbackTitle.textContent = "Incorrect";
+                feedbackTitle.className = "font-bold text-lg mb-1 text-rose-700";
+                feedbackIcon.innerHTML = `<svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            }
+
+            feedbackRationale.textContent = selectedOpt.rationale;
+            
+            // Show next button
+            const nextBtn = document.getElementById('btn-next-question');
+            nextBtn.classList.remove('hidden');
+            if(currentQuizIndex === quizData.length - 1) {
+                nextBtn.textContent = "Finish Quiz";
+            } else {
+                nextBtn.innerHTML = "Next Question &rarr;";
+            }
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            if (currentQuizIndex < quizData.length) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('final-score').textContent = `${score}/${quizData.length}`;
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.getElementById('fc-total').textContent = totalCards;
+        loadCard(0); // Load first flashcard
+
+    </script>
+</body>
+</html>

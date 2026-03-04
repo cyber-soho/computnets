@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5 — The Network Layer & Routing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals (Stone/Beige backgrounds, dark stone text, muted teal/cyan accents for calm clarity) -->
+    <!-- Application Structure Plan: The SPA uses a side-navigation dashboard layout. This structure was chosen to allow non-linear exploration of the four distinct lessons (Routing Tables, Static, Gateway, Dynamic) and reference materials. Users can jump directly to the concept they need without scrolling through a linear slide deck. Each section uses targeted interactions (toggles, step-throughs, filtering) to chunk information logically, transforming passive reading into active engagement. -->
+    <!-- Visualization & Content Choices: 
+         - Overview: Analogy Cards (Goal: Relate concepts -> Interactive flip/hover cards -> Justification: Simplifies abstract networking concepts -> HTML/CSS Tailwind).
+         - Lesson 1 (Tables): Interactive Data Grid (Goal: Detail fields -> Clickable rows revealing definitions -> Justification: Prevents text wall, focuses attention -> HTML/JS).
+         - Lesson 4 (Protocols): Radar Chart (Goal: Compare routing protocols -> Chart.js Radar -> Justification: Effectively compares multi-variable qualitative traits (Speed, Scalability) in a visual format -> Chart.js, NO SVG).
+         - Reference: Searchable Lists (Goal: Quick lookup -> Text input filtering -> Justification: Best for dictionaries/commands -> HTML/JS).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #292524; }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 350px; 
+            max-height: 400px; 
+        }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .nav-active { background-color: #e7e5e4; border-left: 4px solid #0f766e; font-weight: 600; color: #0f766e; }
+        .section-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .section-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .analogy-card:hover .analogy-reveal { max-height: 100px; opacity: 1; margin-top: 0.5rem; }
+        .analogy-reveal { max-height: 0; opacity: 0; overflow: hidden; transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-stone-800">
+
+    <aside class="w-64 bg-stone-100 border-r border-stone-200 flex flex-col hidden md:flex z-10 shadow-sm">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-xl font-bold text-stone-900 leading-tight">Cyber.SoHo</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider">Module 5</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><button data-target="overview" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors nav-active">📍 Overview</button></li>
+                <li><button data-target="lesson1" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors">🗂️ 1. Routing Tables</button></li>
+                <li><button data-target="lesson2" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors">📌 2. Static Routing</button></li>
+                <li><button data-target="lesson3" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors">🚪 3. Default Gateway</button></li>
+                <li><button data-target="lesson4" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors">📡 4. Dynamic Routing</button></li>
+                <li><button data-target="reference" class="nav-btn w-full text-left px-6 py-3 hover:bg-stone-200 transition-colors mt-4 border-t border-stone-200">📚 Reference</button></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-stone-50 relative">
+        <div class="md:hidden bg-stone-100 p-4 border-b border-stone-200 flex justify-between items-center sticky top-0 z-20">
+            <h1 class="font-bold text-lg">Module 5: Routing</h1>
+            <select id="mobile-nav" class="bg-white border border-stone-300 rounded p-1 text-sm">
+                <option value="overview">Overview</option>
+                <option value="lesson1">1. Routing Tables</option>
+                <option value="lesson2">2. Static Routing</option>
+                <option value="lesson3">3. Default Gateway</option>
+                <option value="lesson4">4. Dynamic Routing</option>
+                <option value="reference">Reference</option>
+            </select>
+        </div>
+
+        <div class="max-w-5xl mx-auto p-6 md:p-10 pb-24">
+
+            <section id="overview" class="section-content active">
+                <header class="mb-8">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-stone-900 mb-4">The Network Layer & Routing</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        Welcome to Module 5. This interactive application introduces the core concepts of how data finds its way across complex networks. Here, we establish the foundational analogies that map real-world navigation to digital packet forwarding. Hover over the travel methods below to reveal their networking equivalents.
+                    </p>
+                </header>
+
+                <h3 class="text-xl font-bold mb-4 text-stone-800">The Big Picture: A Travel Analogy</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="analogy-card bg-white p-6 rounded-lg shadow-sm border border-stone-200 cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-3">🗺️</div>
+                        <h4 class="font-bold text-lg">Paper Map</h4>
+                        <p class="text-sm text-stone-500">Fixed, pre-planned routes.</p>
+                        <div class="analogy-reveal bg-teal-50 p-3 rounded text-teal-800 text-sm font-semibold border border-teal-100">
+                            Static Routing
+                        </div>
+                    </div>
+                    <div class="analogy-card bg-white p-6 rounded-lg shadow-sm border border-stone-200 cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-3">🗣️</div>
+                        <h4 class="font-bold text-lg">Asking a Local</h4>
+                        <p class="text-sm text-stone-500">Finding adjacent paths.</p>
+                        <div class="analogy-reveal bg-teal-50 p-3 rounded text-teal-800 text-sm font-semibold border border-teal-100">
+                            Neighbor Discovery
+                        </div>
+                    </div>
+                    <div class="analogy-card bg-white p-6 rounded-lg shadow-sm border border-stone-200 cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-3">📱</div>
+                        <h4 class="font-bold text-lg">GPS App</h4>
+                        <p class="text-sm text-stone-500">Real-time, adaptive pathfinding.</p>
+                        <div class="analogy-reveal bg-teal-50 p-3 rounded text-teal-800 text-sm font-semibold border border-teal-100">
+                            Dynamic Routing
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson1" class="section-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 1: Routing Tables</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        This section explores the internal reference list stored in a router's RAM. Without this table, a router cannot forward packets. Click through the routing table fields below to understand the criteria routers use to answer the question: <em>"Where do I send this packet next?"</em>
+                    </p>
+                </header>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200 mb-8">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🏢 The Post Office Analogy</h3>
+                    <ul class="space-y-2 text-stone-700">
+                        <li><strong>Router</strong> = Post office sorting room</li>
+                        <li><strong>Destination IP</strong> = ZIP code on envelope</li>
+                        <li><strong>Routing table rows</strong> = Labelled sorting bins</li>
+                        <li><strong>Exit interfaces</strong> = Truck loading bays</li>
+                        <li><strong>Default route</strong> = "Everything else" bin</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Routing Table Fields</h3>
+                        <p class="text-sm text-stone-500 mb-4">Click a field to view its purpose.</p>
+                        <div class="space-y-2" id="rt-fields-container">
+                        </div>
+                    </div>
+                    <div class="bg-stone-100 p-6 rounded-lg border border-stone-200 flex flex-col justify-center min-h-[200px]" id="rt-detail-panel">
+                        <p class="text-stone-500 italic text-center">Select a field from the list to see details.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold mb-4">The Core Forwarding Algorithm</h3>
+                    <div class="bg-stone-800 text-green-400 p-4 rounded font-mono text-sm shadow-inner overflow-x-auto">
+                        1. Extract destination IP from packet header<br>
+                        2. Compare against every route in the table<br>
+                        3. Find all matching networks<br>
+                        <span class="bg-teal-700 text-white px-1">4. Select the most specific match (Longest Prefix)</span><br>
+                        5. Forward packet via that route's exit interface<br><br>
+                        <span class="text-stone-400"># If prefix lengths tie &rarr; choose route with lower metric</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson2" class="section-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 2: Static Routing Logic</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        Static routes are manually configured paths. In this section, compare the specific scenarios where static routing excels against its inherent limitations. Use the toggle to switch between analyzing the advantages and disadvantages of this zero-overhead, yet rigid, method.
+                    </p>
+                </header>
+
+                <div class="bg-stone-800 text-stone-100 p-6 rounded-lg shadow-md mb-8">
+                    <p class="text-sm uppercase tracking-wider text-stone-400 mb-2">Cisco IOS Command</p>
+                    <code class="text-lg font-mono text-teal-300">ip route &lt;network&gt; &lt;mask&gt; &lt;next_hop&gt;</code>
+                    <p class="mt-4 text-sm font-mono bg-stone-900 p-2 rounded">Example: ip route 192.168.20.0 255.255.255.0 10.0.0.2</p>
+                </div>
+
+                <div class="flex justify-center mb-6">
+                    <div class="bg-stone-200 p-1 rounded-lg inline-flex">
+                        <button id="btn-adv" class="px-6 py-2 rounded shadow bg-white font-bold text-teal-700 transition-all">Advantages</button>
+                        <button id="btn-disadv" class="px-6 py-2 rounded text-stone-600 font-bold hover:text-stone-800 transition-all">Disadvantages</button>
+                    </div>
+                </div>
+
+                <div id="static-content-adv" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-teal-500">
+                        <h4 class="font-bold text-lg mb-2">Zero Overhead</h4>
+                        <p class="text-stone-600">No routing protocol traffic generated on the network.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-teal-500">
+                        <h4 class="font-bold text-lg mb-2">Predictable</h4>
+                        <p class="text-stone-600">Admin knows exactly where packets go every time.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-teal-500">
+                        <h4 class="font-bold text-lg mb-2">Simple</h4>
+                        <p class="text-stone-600">Easy to understand and configure for small networks.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-teal-500">
+                        <h4 class="font-bold text-lg mb-2">Secure</h4>
+                        <p class="text-stone-600">No route advertisements broadcasted to intercept.</p>
+                    </div>
+                </div>
+
+                <div id="static-content-disadv" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-red-500">
+                        <h4 class="font-bold text-lg mb-2">No Fault Tolerance</h4>
+                        <p class="text-stone-600">Cannot adapt or reroute if a link fails.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-red-500">
+                        <h4 class="font-bold text-lg mb-2">Unscalable</h4>
+                        <p class="text-stone-600">500 subnets means hundreds of manual entries per router.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-red-500">
+                        <h4 class="font-bold text-lg mb-2">Error-Prone</h4>
+                        <p class="text-stone-600">One typo creates a routing black hole.</p>
+                    </div>
+                    <div class="bg-white p-5 border border-stone-200 rounded-lg shadow-sm border-t-4 border-t-red-500">
+                        <h4 class="font-bold text-lg mb-2">Maintenance Burden</h4>
+                        <p class="text-stone-600">Every single topology change requires manual admin intervention.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 p-4 bg-teal-50 text-teal-900 rounded border border-teal-200">
+                    <strong>Best for:</strong> Small offices (2-3 routers), Stub networks (one way in/out), or establishing a Default Route to an ISP.
+                </div>
+            </section>
+
+            <section id="lesson3" class="section-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 3: The Default Gateway</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        The default gateway is a device's exit door to the outside world. This section differentiates local Layer 2 traffic from routed Layer 3 traffic. Use the interactive troubleshooter below to step through the standard diagnostic process when network connectivity fails.
+                    </p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+                        <div class="bg-stone-100 p-4 border-b border-stone-200 font-bold">Local vs. Remote</div>
+                        <div class="p-4">
+                            <table class="w-full text-sm text-left">
+                                <tr class="border-b">
+                                    <th class="py-2">Scenario</th>
+                                    <td class="py-2">Same subnet (laptop &rarr; printer)</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <th class="py-2">Mechanism</th>
+                                    <td class="py-2">Layer 2 / MAC address</td>
+                                </tr>
+                                <tr>
+                                    <th class="py-2">Gateway?</th>
+                                    <td class="py-2 font-bold text-stone-500">NO</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden border-t-4 border-t-teal-600">
+                        <div class="bg-stone-100 p-4 border-b border-stone-200 font-bold">Remote Communication</div>
+                        <div class="p-4">
+                            <table class="w-full text-sm text-left">
+                                <tr class="border-b">
+                                    <th class="py-2">Scenario</th>
+                                    <td class="py-2">Diff network (laptop &rarr; google.com)</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <th class="py-2">Mechanism</th>
+                                    <td class="py-2">Layer 3 / Routed via gateway</td>
+                                </tr>
+                                <tr>
+                                    <th class="py-2">Gateway?</th>
+                                    <td class="py-2 font-bold text-teal-700">YES</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-stone-900 text-stone-100 rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4 text-teal-300">Interactive Troubleshooter</h3>
+                    <p class="text-sm text-stone-400 mb-6">Click the options based on the results you see to find the issue.</p>
+                    
+                    <div id="ts-step-1" class="ts-step">
+                        <p class="text-lg mb-4">1. Is a default gateway configured? (Check ipconfig/ifconfig)</p>
+                        <div class="flex gap-4">
+                            <button class="ts-btn bg-teal-700 hover:bg-teal-600 px-4 py-2 rounded" onclick="tsNext('ts-step-2')">YES</button>
+                            <button class="ts-btn bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded" onclick="tsResult('Check DHCP or static IP settings.')">NO</button>
+                        </div>
+                    </div>
+
+                    <div id="ts-step-2" class="ts-step hidden mt-6 border-t border-stone-700 pt-6">
+                        <p class="text-lg mb-4">2. Can you PING the gateway IP?</p>
+                        <div class="flex gap-4">
+                            <button class="ts-btn bg-teal-700 hover:bg-teal-600 px-4 py-2 rounded" onclick="tsNext('ts-step-3')">YES</button>
+                            <button class="ts-btn bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded" onclick="tsResult('Check physical cable, Wi-Fi connection, or router power.')">NO</button>
+                        </div>
+                    </div>
+
+                    <div id="ts-step-3" class="ts-step hidden mt-6 border-t border-stone-700 pt-6">
+                        <p class="text-lg mb-4">3. Can you PING 8.8.8.8 (External IP)?</p>
+                        <div class="flex gap-4">
+                            <button class="ts-btn bg-teal-700 hover:bg-teal-600 px-4 py-2 rounded" onclick="tsNext('ts-step-4')">YES</button>
+                            <button class="ts-btn bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded" onclick="tsResult('Upstream / ISP problem. The router has no path to the internet.')">NO</button>
+                        </div>
+                    </div>
+
+                    <div id="ts-step-4" class="ts-step hidden mt-6 border-t border-stone-700 pt-6">
+                        <p class="text-lg mb-4">4. Can you PING www.google.com (Hostname)?</p>
+                        <div class="flex gap-4">
+                            <button class="ts-btn bg-teal-700 hover:bg-teal-600 px-4 py-2 rounded" onclick="tsResult('Everything works! No network issue found.', true)">YES</button>
+                            <button class="ts-btn bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded" onclick="tsResult('DNS (Domain Name System) resolution issue. Check DNS server settings.')">NO</button>
+                        </div>
+                    </div>
+
+                    <div id="ts-result" class="hidden mt-6 p-4 rounded bg-stone-800 border-l-4 border-stone-500">
+                        <p class="font-bold text-lg" id="ts-result-text"></p>
+                        <button class="mt-4 text-sm text-teal-400 hover:text-teal-300 underline" onclick="tsReset()">Restart Troubleshooter</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson4" class="section-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 4: Dynamic Routing</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        Dynamic routing protocols allow networks to self-heal. This section breaks down the major protocols. Explore the interactive radar chart to understand the trade-offs between simplicity, scalability, and speed among different dynamic routing protocols based on their functional types.
+                    </p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-5 rounded-lg border border-stone-200 shadow-sm cursor-pointer hover:bg-stone-50" onclick="highlightChart('RIP')">
+                        <h4 class="font-bold text-teal-700 mb-1">Distance Vector (RIP)</h4>
+                        <p class="text-sm text-stone-600 mb-2">"Passing rumors." Shares table with neighbors. Counts hops.</p>
+                        <span class="text-xs bg-stone-200 px-2 py-1 rounded">Best for: Small LANs</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg border border-stone-200 shadow-sm cursor-pointer hover:bg-stone-50" onclick="highlightChart('OSPF')">
+                        <h4 class="font-bold text-teal-700 mb-1">Link State (OSPF)</h4>
+                        <p class="text-sm text-stone-600 mb-2">Builds full map via LSDB. Uses Dijkstra's algorithm.</p>
+                        <span class="text-xs bg-stone-200 px-2 py-1 rounded">Best for: Enterprise</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg border border-stone-200 shadow-sm cursor-pointer hover:bg-stone-50" onclick="highlightChart('BGP')">
+                        <h4 class="font-bold text-teal-700 mb-1">Path Vector (BGP)</h4>
+                        <p class="text-sm text-stone-600 mb-2">Shares full path across organizations.</p>
+                        <span class="text-xs bg-stone-200 px-2 py-1 rounded">Best for: Internet / ISPs</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold mb-2 text-center">Protocol Capabilities Comparison</h3>
+                    <p class="text-sm text-center text-stone-500 mb-4">Click labels above or items below to isolate data. Higher value = Better capability/efficiency.</p>
+                    <div class="chart-container">
+                        <canvas id="protocolChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-stone-100 p-6 rounded-lg border border-stone-200">
+                    <h3 class="text-lg font-bold mb-3">The 4-Step Dynamic Process</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-stone-700">
+                        <li><strong>Neighbor Discovery</strong> — Routers send "hello" messages to adjacent devices.</li>
+                        <li><strong>Information Exchange</strong> — Share known routes or link states.</li>
+                        <li><strong>Route Computation</strong> — Each router calculates best paths independently.</li>
+                        <li><strong>Ongoing Updates</strong> — Periodic/event-triggered updates keep routing tables current.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="reference" class="section-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-900 mb-4">Reference Guide</h2>
+                    <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4 bg-white p-4 shadow-sm rounded-r">
+                        Search through the key commands and abbreviations from Module 5. Use the filter below to quickly find specific syntax or definitions required for network configuration and troubleshooting.
+                    </p>
+                </header>
+
+                <div class="mb-6">
+                    <input type="text" id="ref-search" placeholder="Search commands or abbreviations..." class="w-full p-3 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 bg-stone-200 p-2 rounded">Commands</h3>
+                        <div class="space-y-3" id="cmd-list">
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 bg-stone-200 p-2 rounded">Abbreviations</h3>
+                        <div class="space-y-3" id="abbr-list">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const rtFields = [
+            { name: "Destination Network", desc: "The target network IP address (e.g., 192.168.10.0/24). This is what the router attempts to match against the packet." },
+            { name: "Subnet Mask / Prefix", desc: "Defines the network size. Used in the Longest Prefix Match algorithm to find the most specific route." },
+            { name: "Next Hop", desc: "The IP address of the adjacent router that will receive the packet next." },
+            { name: "Exit Interface", desc: "The physical port (e.g., GigabitEthernet0/0) the packet leaves through." },
+            { name: "Metric / Cost", desc: "Preference value when multiple routes exist. Lower metric = better route. (e.g., Hop count for RIP, Cost for OSPF)." },
+            { name: "Route Source Codes", desc: "How the route was learned: <br><br><b>C</b> - Connected<br><b>S</b> - Static<br><b>O</b> - OSPF<br><b>R</b> - RIP<br><b>D</b> - EIGRP<br><b>B</b> - BGP" }
+        ];
+
+        const rtContainer = document.getElementById('rt-fields-container');
+        const rtDetail = document.getElementById('rt-detail-panel');
+
+        rtFields.forEach((field, index) => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left p-3 rounded border border-stone-200 bg-white hover:bg-teal-50 hover:border-teal-300 transition-colors font-semibold text-stone-700";
+            btn.textContent = field.name;
+            btn.onclick = () => {
+                document.querySelectorAll('#rt-fields-container button').forEach(b => {
+                    b.classList.remove('bg-teal-600', 'text-white', 'border-teal-700');
+                    b.classList.add('bg-white', 'text-stone-700');
+                });
+                btn.classList.remove('bg-white', 'text-stone-700', 'hover:bg-teal-50');
+                btn.classList.add('bg-teal-600', 'text-white', 'border-teal-700');
+                
+                rtDetail.innerHTML = `
+                    <h4 class="text-lg font-bold text-teal-800 mb-2">${field.name}</h4>
+                    <p class="text-stone-700">${field.desc}</p>
+                `;
+            };
+            rtContainer.appendChild(btn);
+        });
+
+        const btnAdv = document.getElementById('btn-adv');
+        const btnDisadv = document.getElementById('btn-disadv');
+        const contentAdv = document.getElementById('static-content-adv');
+        const contentDisadv = document.getElementById('static-content-disadv');
+
+        btnAdv.addEventListener('click', () => {
+            btnAdv.className = "px-6 py-2 rounded shadow bg-white font-bold text-teal-700 transition-all";
+            btnDisadv.className = "px-6 py-2 rounded text-stone-600 font-bold hover:text-stone-800 transition-all";
+            contentAdv.classList.remove('hidden');
+            contentDisadv.classList.add('hidden');
+        });
+
+        btnDisadv.addEventListener('click', () => {
+            btnDisadv.className = "px-6 py-2 rounded shadow bg-white font-bold text-red-700 transition-all";
+            btnAdv.className = "px-6 py-2 rounded text-stone-600 font-bold hover:text-stone-800 transition-all";
+            contentDisadv.classList.remove('hidden');
+            contentAdv.classList.add('hidden');
+        });
+
+        function tsNext(nextId) {
+            document.getElementById(nextId).classList.remove('hidden');
+        }
+
+        function tsResult(msg, success=false) {
+            const resBox = document.getElementById('ts-result');
+            const resText = document.getElementById('ts-result-text');
+            resBox.classList.remove('hidden');
+            resBox.className = `mt-6 p-4 rounded border-l-4 ${success ? 'bg-teal-900 border-teal-500 text-teal-100' : 'bg-stone-800 border-red-500 text-stone-100'}`;
+            resText.textContent = msg;
+            
+            document.querySelectorAll('.ts-btn').forEach(b => b.disabled = true);
+            document.querySelectorAll('.ts-btn').forEach(b => b.classList.add('opacity-50', 'cursor-not-allowed'));
+        }
+
+        function tsReset() {
+            document.getElementById('ts-result').classList.add('hidden');
+            ['ts-step-2', 'ts-step-3', 'ts-step-4'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.querySelectorAll('.ts-btn').forEach(b => {
+                b.disabled = false;
+                b.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        }
+
+        let protocolChartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('protocolChart').getContext('2d');
+            
+            const data = {
+                labels: ['Scalability', 'Convergence Speed', 'Setup Simplicity', 'Low Resource Usage'],
+                datasets: [
+                    {
+                        label: 'RIP',
+                        data: [2, 3, 9, 8],
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        pointBackgroundColor: 'rgb(239, 68, 68)',
+                    },
+                    {
+                        label: 'OSPF',
+                        data: [8, 8, 4, 3],
+                        backgroundColor: 'rgba(15, 118, 110, 0.2)',
+                        borderColor: 'rgb(15, 118, 110)',
+                        pointBackgroundColor: 'rgb(15, 118, 110)',
+                    },
+                    {
+                        label: 'BGP',
+                        data: [10, 4, 2, 5],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                    }
+                ]
+            };
+
+            protocolChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            pointLabels: {
+                                font: { size: 12, family: 'Inter' },
+                                color: '#57534e'
+                            },
+                            ticks: { display: false, min: 0, max: 10 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw + '/10';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.highlightChart = function(protocolName) {
+            if(!protocolChartInstance) return;
+            protocolChartInstance.data.datasets.forEach(ds => {
+                if(ds.label === protocolName) {
+                    ds.borderWidth = 4;
+                    ds.backgroundColor = ds.borderColor.replace(')', ', 0.5)').replace('rgb', 'rgba');
+                } else {
+                    ds.borderWidth = 1;
+                    ds.backgroundColor = ds.borderColor.replace(')', ', 0.05)').replace('rgb', 'rgba');
+                }
+            });
+            protocolChartInstance.update();
+        };
+
+        const commands = [
+            { cmd: "show ip route", desc: "Display routing table" },
+            { cmd: "ip route <dest> <mask> <next_hop>", desc: "Add static route" },
+            { cmd: "no ip route <dest> <mask> <next_hop>", desc: "Remove static route" },
+            { cmd: "ip default-gateway <ip>", desc: "Set gateway on L2 switch" },
+            { cmd: "show ip protocols", desc: "Show active routing protocols" },
+            { cmd: "show ip ospf neighbor", desc: "Show OSPF neighbors" },
+            { cmd: "ping <ip>", desc: "Test reachability" },
+            { cmd: "traceroute <ip>", desc: "Trace packet path" }
+        ];
+
+        const abbreviations = [
+            { abbr: "BGP", full: "Border Gateway Protocol" },
+            { abbr: "CIDR", full: "Classless Inter-Domain Routing" },
+            { abbr: "DHCP", full: "Dynamic Host Configuration Protocol" },
+            { abbr: "DNS", full: "Domain Name System" },
+            { abbr: "EIGRP", full: "Enhanced Interior Gateway Routing Protocol" },
+            { abbr: "ICMP", full: "Internet Control Message Protocol" },
+            { abbr: "ISP", full: "Internet Service Provider" },
+            { abbr: "LSDB", full: "Link-State Database" },
+            { abbr: "MAC", full: "Media Access Control" },
+            { abbr: "OSPF", full: "Open Shortest Path First" },
+            { abbr: "RIP", full: "Routing Information Protocol" }
+        ];
+
+        const cmdContainer = document.getElementById('cmd-list');
+        const abbrContainer = document.getElementById('abbr-list');
+        const searchInput = document.getElementById('ref-search');
+
+        function renderList(container, data, type) {
+            container.innerHTML = '';
+            data.forEach(item => {
+                const el = document.createElement('div');
+                el.className = "bg-white p-3 rounded border border-stone-200 shadow-sm ref-item";
+                if(type === 'cmd') {
+                    el.innerHTML = `<code class="text-teal-700 font-bold block mb-1">${item.cmd}</code><span class="text-sm text-stone-600">${item.desc}</span>`;
+                } else {
+                    el.innerHTML = `<strong class="text-stone-800">${item.abbr}</strong><span class="text-sm text-stone-600 block">${item.full}</span>`;
+                }
+                container.appendChild(el);
+            });
+        }
+
+        renderList(cmdContainer, commands, 'cmd');
+        renderList(abbrContainer, abbreviations, 'abbr');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const fCmd = commands.filter(c => c.cmd.toLowerCase().includes(term) || c.desc.toLowerCase().includes(term));
+            const fAbbr = abbreviations.filter(a => a.abbr.toLowerCase().includes(term) || a.full.toLowerCase().includes(term));
+            renderList(cmdContainer, fCmd, 'cmd');
+            renderList(abbrContainer, fAbbr, 'abbr');
+        });
+
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section-content');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        function switchSection(targetId) {
+            sections.forEach(sec => sec.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+            
+            navBtns.forEach(btn => btn.classList.remove('nav-active'));
+            document.querySelector(`[data-target="${targetId}"]`).classList.add('nav-active');
+            
+            mobileNav.value = targetId;
+            document.querySelector('.flex-1').scrollTo(0,0);
+            
+            if(targetId === 'lesson4' && !protocolChartInstance) {
+                initChart();
+            }
+        }
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchSection(btn.getAttribute('data-target'));
+            });
+        });
+
+        mobileNav.addEventListener('change', (e) => {
+            switchSection(e.target.value);
+        });
+
+    </script>
+</body>
+</html>
+
+
+

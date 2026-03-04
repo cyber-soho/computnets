@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 5 — The Network Layer &amp; Routing | Cyber.SoHo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c1b33;
+  --deep: #065a82;
+  --teal: #1c7293;
+  --seafoam: #00a896;
+  --mint: #02c39a;
+  --coral: #f96167;
+  --gold: #f9cf58;
+  --off-white: #f0f4f8;
+  --light-gray: #e2e8f0;
+  --med-gray: #94a3b8;
+  --dark: #1e293b;
+  --code-bg: #0d1117;
+  --card-shadow: 0 4px 24px rgba(12,27,51,.08);
+  --glow: 0 0 40px rgba(0,168,150,.15);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Outfit',sans-serif;color:var(--dark);background:var(--off-white);line-height:1.7;overflow-x:hidden}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--off-white)}
+::-webkit-scrollbar-thumb{background:var(--teal);border-radius:4px}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9999;opacity:.018;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;min-height:100vh;display:flex;align-items:center;
+  background:linear-gradient(135deg,var(--navy) 0%,#0a2647 40%,var(--deep) 100%);
+  overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;bottom:-2px;left:0;width:100%;height:120px;
+  background:linear-gradient(to top,var(--off-white),transparent);z-index:2;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(28,114,147,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(28,114,147,.08) 1px,transparent 1px);
+  background-size:60px 60px;
+  animation:gridPulse 8s ease-in-out infinite;
+}
+@keyframes gridPulse{0%,100%{opacity:.4}50%{opacity:.7}}
+
+.hero-orb{
+  position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;
+  animation:orbFloat 12s ease-in-out infinite;
+}
+.hero-orb--1{width:500px;height:500px;background:var(--seafoam);top:-100px;right:-100px;animation-delay:-2s}
+.hero-orb--2{width:350px;height:350px;background:var(--teal);bottom:0;left:10%;animation-delay:-6s}
+.hero-orb--3{width:250px;height:250px;background:var(--mint);top:40%;left:60%;animation-delay:-4s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+.hero-content{
+  position:relative;z-index:3;max-width:900px;padding:2rem 6%;
+}
+.hero-badge{
+  display:inline-block;padding:.35rem 1rem;border-radius:100px;
+  background:rgba(0,168,150,.15);border:1px solid rgba(0,168,150,.3);
+  color:var(--mint);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:1.5rem;
+}
+.hero h1{
+  font-size:clamp(2.8rem,6vw,4.5rem);font-weight:800;line-height:1.08;
+  color:#fff;margin-bottom:.75rem;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,var(--seafoam),var(--mint));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-family:'Crimson Pro',serif;font-size:1.35rem;font-style:italic;
+  color:var(--med-gray);margin-bottom:2.5rem;max-width:600px;
+}
+.hero-meta{display:flex;gap:2rem;flex-wrap:wrap}
+.hero-meta-item{color:rgba(255,255,255,.6);font-size:.9rem}
+.hero-meta-item strong{color:var(--seafoam);display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.15rem}
+
+/* ── NAV PROGRESS ── */
+.progress-bar{
+  position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--seafoam),var(--mint));
+  z-index:1000;width:0;transition:width .15s;
+}
+
+/* ── STICKY TOC ── */
+.toc-sidebar{
+  position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:100;
+  display:flex;flex-direction:column;gap:4px;padding:.5rem;
+}
+.toc-dot{
+  width:10px;height:10px;border-radius:50%;background:var(--light-gray);
+  border:2px solid var(--med-gray);cursor:pointer;transition:all .3s;
+  position:relative;
+}
+.toc-dot.active{background:var(--seafoam);border-color:var(--seafoam);transform:scale(1.3)}
+.toc-dot:hover::after{
+  content:attr(data-label);position:absolute;left:20px;top:50%;transform:translateY(-50%);
+  background:var(--navy);color:#fff;padding:.25rem .6rem;border-radius:4px;
+  font-size:.7rem;white-space:nowrap;
+}
+
+@media(max-width:900px){.toc-sidebar{display:none}}
+
+/* ── SECTIONS ── */
+.section{padding:5rem 6%;max-width:1100px;margin:0 auto}
+.section--full{max-width:100%;padding-left:0;padding-right:0}
+
+/* ── LESSON HEADER ── */
+.lesson-header{
+  display:flex;align-items:center;gap:1.2rem;margin-bottom:2.5rem;
+  padding-bottom:1.5rem;border-bottom:2px solid var(--light-gray);
+}
+.lesson-num{
+  width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:800;color:#fff;flex-shrink:0;
+  background:linear-gradient(135deg,var(--deep),var(--teal));
+  box-shadow:var(--glow);
+}
+.lesson-header h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;line-height:1.2}
+.lesson-header .time-badge{
+  margin-left:auto;padding:.3rem .8rem;border-radius:100px;
+  background:var(--light-gray);font-size:.75rem;font-weight:600;color:var(--teal);
+  white-space:nowrap;
+}
+
+/* ── CARDS ── */
+.card{
+  background:#fff;border-radius:16px;padding:2rem;margin-bottom:2rem;
+  box-shadow:var(--card-shadow);border:1px solid rgba(226,232,240,.6);
+  transition:transform .2s,box-shadow .2s;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(12,27,51,.12)}
+.card h3{font-size:1.15rem;font-weight:700;margin-bottom:1rem;color:var(--deep)}
+.card p,.card li{font-size:.95rem;line-height:1.75}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;margin:1.5rem 0;border-radius:12px;box-shadow:var(--card-shadow)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+thead{background:linear-gradient(135deg,var(--deep),var(--teal))}
+th{padding:.75rem 1rem;color:#fff;font-weight:600;text-align:left;white-space:nowrap}
+td{padding:.65rem 1rem;border-bottom:1px solid var(--light-gray)}
+tbody tr{background:#fff;transition:background .15s}
+tbody tr:nth-child(even){background:var(--off-white)}
+tbody tr:hover{background:rgba(0,168,150,.06)}
+td code{
+  background:rgba(28,114,147,.08);padding:.15rem .4rem;border-radius:4px;
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--deep);
+}
+
+/* ── CODE BLOCKS ── */
+.code-block{
+  position:relative;background:var(--code-bg);border-radius:12px;
+  margin:1.5rem 0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.code-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.6rem 1.2rem;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.06);
+}
+.code-dots{display:flex;gap:6px}
+.code-dots span{width:10px;height:10px;border-radius:50%}
+.code-dots span:nth-child(1){background:#ff5f57}
+.code-dots span:nth-child(2){background:#febc2e}
+.code-dots span:nth-child(3){background:#28c840}
+.code-lang{color:var(--med-gray);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em}
+.code-copy{
+  background:none;border:1px solid rgba(255,255,255,.15);color:var(--med-gray);
+  padding:.25rem .7rem;border-radius:6px;cursor:pointer;font-size:.72rem;transition:all .2s;
+}
+.code-copy:hover{border-color:var(--seafoam);color:var(--seafoam)}
+.code-copy.copied{border-color:var(--mint);color:var(--mint)}
+pre{padding:1.2rem 1.5rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.8}
+pre code{color:#c9d1d9}
+.code-comment{color:#8b949e;font-style:italic}
+.code-keyword{color:#ff7b72}
+.code-string{color:#a5d6ff}
+.code-function{color:#d2a8ff}
+.code-number{color:#79c0ff}
+
+/* ── DIAGRAMS (ASCII art boxes) ── */
+.diagram{
+  background:var(--navy);color:var(--mint);border-radius:12px;
+  padding:1.5rem 2rem;margin:1.5rem 0;overflow-x:auto;
+  font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;
+  box-shadow:0 4px 20px rgba(12,27,51,.25);white-space:pre;
+}
+
+/* ── KEY TAKEAWAY ── */
+.takeaway{
+  background:linear-gradient(135deg,rgba(0,168,150,.06),rgba(2,195,154,.06));
+  border-left:4px solid var(--seafoam);border-radius:0 12px 12px 0;
+  padding:1.5rem 2rem;margin:2rem 0;position:relative;
+}
+.takeaway::before{
+  content:'KEY TAKEAWAY';display:block;font-size:.7rem;font-weight:700;
+  letter-spacing:.12em;color:var(--seafoam);margin-bottom:.5rem;
+}
+.takeaway p{font-family:'Crimson Pro',serif;font-size:1.1rem;font-style:italic;color:var(--dark)}
+
+/* ── ANALOGY BOX ── */
+.analogy{
+  background:#fff;border-radius:16px;padding:2rem;margin:2rem 0;
+  border:2px dashed var(--seafoam);position:relative;
+}
+.analogy-badge{
+  position:absolute;top:-12px;left:24px;background:var(--seafoam);color:#fff;
+  padding:.2rem .8rem;border-radius:100px;font-size:.72rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.analogy h4{font-size:1.05rem;margin-bottom:.5rem;margin-top:.5rem;color:var(--deep)}
+
+/* ── STEP EXPLANATION ── */
+.steps{counter-reset:step;margin:1.5rem 0}
+.step{
+  display:flex;gap:1rem;margin-bottom:1.2rem;padding:1rem;
+  background:#fff;border-radius:12px;box-shadow:var(--card-shadow);
+  counter-increment:step;
+}
+.step::before{
+  content:counter(step);flex-shrink:0;width:32px;height:32px;
+  border-radius:50%;background:var(--deep);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:.85rem;
+  margin-top:.15rem;
+}
+.step p{font-size:.9rem}
+
+/* ── ACCORDION ── */
+.accordion{margin:1.5rem 0}
+.accordion-item{
+  background:#fff;border-radius:12px;margin-bottom:.75rem;
+  box-shadow:var(--card-shadow);overflow:hidden;border:1px solid var(--light-gray);
+}
+.accordion-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.5rem;background:none;border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:600;
+  color:var(--dark);text-align:left;transition:color .2s;
+}
+.accordion-btn:hover{color:var(--teal)}
+.accordion-btn .arrow{
+  transition:transform .3s;font-size:1.2rem;color:var(--teal);
+}
+.accordion-item.open .accordion-btn .arrow{transform:rotate(180deg)}
+.accordion-body{
+  max-height:0;overflow:hidden;transition:max-height .4s ease;
+}
+.accordion-item.open .accordion-body{max-height:2000px}
+.accordion-inner{padding:0 1.5rem 1.5rem;font-size:.9rem;line-height:1.75}
+
+/* ── SECTION DIVIDER ── */
+.divider{
+  display:flex;align-items:center;gap:1rem;margin:4rem 0 2rem;
+}
+.divider-line{flex:1;height:1px;background:var(--light-gray)}
+.divider-icon{
+  width:40px;height:40px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;background:var(--deep);color:#fff;font-size:1rem;
+}
+
+/* ── LINKS SECTION ── */
+.link-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;margin:1.5rem 0}
+.link-card{
+  display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem;
+  background:#fff;border-radius:12px;box-shadow:var(--card-shadow);
+  text-decoration:none;color:var(--dark);transition:all .2s;
+  border:1px solid transparent;
+}
+.link-card:hover{border-color:var(--seafoam);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,168,150,.12)}
+.link-num{
+  width:28px;height:28px;border-radius:6px;background:var(--deep);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;
+}
+.link-card .link-title{font-weight:600;font-size:.88rem;color:var(--deep)}
+.link-card .link-desc{font-size:.75rem;color:var(--med-gray);margin-top:.15rem}
+
+/* ── DISCLAIMER ── */
+.disclaimer{
+  background:var(--navy);color:rgba(255,255,255,.65);padding:4rem 6%;margin-top:5rem;
+}
+.disclaimer-inner{max-width:1100px;margin:0 auto}
+.disclaimer h2{color:#fff;font-size:1.8rem;margin-bottom:2rem}
+.disclaimer h3{color:var(--seafoam);font-size:1rem;margin-top:2rem;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em}
+.disclaimer p{font-size:.88rem;line-height:1.8;margin-bottom:.75rem}
+.disclaimer a{color:var(--mint);text-decoration:underline}
+.disclaimer-footer{
+  text-align:center;padding-top:3rem;margin-top:3rem;border-top:1px solid rgba(255,255,255,.08);
+  font-size:.8rem;color:rgba(255,255,255,.35);
+}
+
+/* ── ANIMATIONS ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hero-content{padding:2rem 1.5rem}
+  .section{padding:3rem 1.5rem}
+  .hero-meta{gap:1rem}
+  .lesson-header{flex-wrap:wrap}
+  .lesson-header .time-badge{margin-left:0;margin-top:.5rem}
+  .code-block pre{font-size:.72rem}
+  .diagram{font-size:.65rem;padding:1rem}
+  .disclaimer{padding:3rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- TOC Sidebar -->
+<nav class="toc-sidebar" id="tocSidebar">
+  <div class="toc-dot" data-label="Home" data-target="hero" onclick="scrollTo('#hero')"></div>
+  <div class="toc-dot" data-label="Lesson 1: Routing Tables" data-target="lesson1" onclick="scrollTo('#lesson1')"></div>
+  <div class="toc-dot" data-label="Lesson 2: Static Routing" data-target="lesson2" onclick="scrollTo('#lesson2')"></div>
+  <div class="toc-dot" data-label="Lesson 3: Default Gateway" data-target="lesson3" onclick="scrollTo('#lesson3')"></div>
+  <div class="toc-dot" data-label="Lesson 4: Dynamic Routing" data-target="lesson4" onclick="scrollTo('#lesson4')"></div>
+  <div class="toc-dot" data-label="Summary" data-target="summary" onclick="scrollTo('#summary')"></div>
+  <div class="toc-dot" data-label="Resources" data-target="resources" onclick="scrollTo('#resources')"></div>
+</nav>
+
+<!-- ══════════════════════════════════════ HERO ══════════════════════════════════════ -->
+<header class="hero" id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-orb hero-orb--1"></div>
+  <div class="hero-orb hero-orb--2"></div>
+  <div class="hero-orb hero-orb--3"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Part I · Weeks 1–6 · Week 5</div>
+    <h1>The Network Layer<br>&amp; <span>Routing</span></h1>
+    <p class="hero-sub">How routers decide where to send every single packet — and what happens when things go wrong.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>Module</strong>5 of 6</div>
+      <div class="hero-meta-item"><strong>Duration</strong>1 Hour</div>
+      <div class="hero-meta-item"><strong>Audience</strong>Graduate CS Students</div>
+      <div class="hero-meta-item"><strong>Author</strong>Cyber.SoHo</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════ ROADMAP ══════════════════════════════════════ -->
+<section class="section reveal" id="roadmap">
+  <div class="divider"><div class="divider-line"></div><div class="divider-icon">📋</div><div class="divider-line"></div></div>
+  <h2 style="font-size:1.8rem;margin-bottom:1.5rem;text-align:center">Today's Roadmap</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Lesson</th><th>Topic</th></tr></thead>
+      <tbody>
+        <tr><td>00:00 – 15:00</td><td>Lesson 1</td><td><strong>Routing Tables</strong></td></tr>
+        <tr><td>15:00 – 30:00</td><td>Lesson 2</td><td><strong>Static Routing Logic</strong></td></tr>
+        <tr><td>30:00 – 45:00</td><td>Lesson 3</td><td><strong>The Function of a Default Gateway</strong></td></tr>
+        <tr><td>45:00 – 60:00</td><td>Lesson 4</td><td><strong>Dynamic Routing Explained</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="text-align:center;color:var(--med-gray);margin-top:1rem;font-family:'Crimson Pro',serif;font-style:italic;font-size:1.1rem">
+    Think of it as a road trip: paper map → napkin directions → hotel concierge → live GPS rerouting.
+  </p>
+</section>
+
+<!-- ══════════════════════════════════════ LESSON 1 ══════════════════════════════════════ -->
+<section class="section reveal" id="lesson1">
+  <div class="lesson-header">
+    <div class="lesson-num">1</div>
+    <h2>Lesson 1: Routing Tables</h2>
+    <span class="time-badge">⏱ 15 min</span>
+  </div>
+
+  <div class="card">
+    <h3>What Is a Routing Table?</h3>
+    <p>Every router — and every computer with a network connection — maintains an internal reference list called a <strong>routing table</strong>. It is stored in RAM (Random Access Memory) and is consulted for every single packet the device processes.</p>
+    <p style="margin-top:1rem">It answers one question over and over: <em>"If a packet needs to go to <strong>this</strong> destination network, which door (interface) should I push it through, and who is the next person (next hop) I should hand it to?"</em></p>
+  </div>
+
+  <div class="card">
+    <h3>Routing Table Fields</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Destination Network</strong></td><td>Target network address, e.g. <code>192.168.10.0/24</code></td></tr>
+          <tr><td><strong>Subnet Mask / Prefix</strong></td><td>Defines the size of the destination network</td></tr>
+          <tr><td><strong>Next Hop</strong></td><td>IP (Internet Protocol) address of the next router in the path</td></tr>
+          <tr><td><strong>Exit Interface</strong></td><td>The physical or logical port the packet leaves through (e.g., <code>eth0</code>, <code>Gi0/1</code>)</td></tr>
+          <tr><td><strong>Metric / Cost</strong></td><td>A numeric value representing "how expensive" this route is — lower is better</td></tr>
+          <tr><td><strong>Route Source</strong></td><td>How the router learned the route: <code>C</code> (Connected), <code>S</code> (Static), <code>O</code> (OSPF — Open Shortest Path First), etc.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Longest Prefix Match — The Core Algorithm</h3>
+    <p>When a packet arrives, the router:</p>
+    <div class="steps">
+      <div class="step"><p>Extracts the destination IP address from the packet header.</p></div>
+      <div class="step"><p>Scans the routing table and finds all networks that contain this destination.</p></div>
+      <div class="step"><p>Selects the <strong>most specific match</strong> — the entry with the longest prefix length.</p></div>
+      <div class="step"><p>Forwards the packet via that route's exit interface to the indicated next hop.</p></div>
+      <div class="step"><p>If two routes tie in prefix length, the one with the <strong>lower metric</strong> (cost) wins.</p></div>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <span class="analogy-badge">Real-Life Analogy</span>
+    <h4>🏙️ The City Post Office</h4>
+    <p><strong>Task:</strong> Demonstrate how a routing table works by comparing it to the sorting process at a city post office.</p>
+    <p>Picture a post office. Letters arrive by the sack. A clerk reads the postal code on each envelope (like a router reading the destination IP), and sorts it into labelled bins (routing table entries). Each bin connects to a truck bay (exit interface) that goes to the next sorting depot (next hop). The "Everything else" bin is the <strong>default route</strong>. The clerk never opens the letter — they only read the outside.</p>
+  </div>
+
+  <div class="diagram">          ┌──────────────────────────────────────────────────────────┐
+          │              CENTRAL POST OFFICE (The Router)              │
+          ├──────────────────────────────────────────────────────────┤
+          │  📨 Incoming Mail (Incoming Packet)                       │
+          │       │                                                    │
+          │       ▼                                                    │
+          │  ┌────────────────────────┐                                │
+          │  │  READ POSTAL CODE      │ ◄── Destination IP Address     │
+          │  └──────────┬─────────────┘                                │
+          │      ┌──────┼──────┬──────────┐                            │
+          │      ▼      ▼      ▼          ▼                            │
+          │   BIN 1   BIN 2   BIN 3    BIN 4                          │
+          │  H1A-H1Z H2A-H2Z H3A-H3Z  DEFAULT                        │
+          │   (eth0)  (eth1)  (eth2)   (eth3)                         │
+          │      │      │      │          │                            │
+          │      ▼      ▼      ▼          ▼                            │
+          │  Depot A  Depot B Depot C  Airport                         │
+          │  (Hop 1) (Hop 2) (Hop 3)  (Hop 4)                         │
+          └──────────────────────────────────────────────────────────┘</div>
+
+  <!-- CODE EXAMPLE -->
+  <div class="card">
+    <h3>💻 Code Example — Routing Table Simulator (Python)</h3>
+    <p><strong>Task:</strong> Build a Python script that simulates how a router's routing table works — receiving a destination IP and determining the correct exit interface using longest prefix match.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Python 3</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+    <pre><code><span class="code-comment">#!/usr/bin/env python3</span>
+<span class="code-comment"># Routing Table Simulator — Lesson 1</span>
+
+<span class="code-comment"># Import Python's built-in module for working with IP addresses and networks.</span>
+<span class="code-keyword">import</span> ipaddress
+
+<span class="code-comment"># Define the routing table as a list of dictionaries.</span>
+<span class="code-comment"># Each entry mirrors a real router's table row.</span>
+routing_table = [
+    {<span class="code-string">"destination"</span>: <span class="code-string">"192.168.10.0/24"</span>, <span class="code-string">"next_hop"</span>: <span class="code-string">"10.0.0.1"</span>,
+     <span class="code-string">"interface"</span>: <span class="code-string">"eth0"</span>, <span class="code-string">"metric"</span>: <span class="code-number">10</span>, <span class="code-string">"source"</span>: <span class="code-string">"C"</span>},
+    {<span class="code-string">"destination"</span>: <span class="code-string">"172.16.0.0/16"</span>,  <span class="code-string">"next_hop"</span>: <span class="code-string">"10.0.0.2"</span>,
+     <span class="code-string">"interface"</span>: <span class="code-string">"eth1"</span>, <span class="code-string">"metric"</span>: <span class="code-number">20</span>, <span class="code-string">"source"</span>: <span class="code-string">"S"</span>},
+    {<span class="code-string">"destination"</span>: <span class="code-string">"10.10.10.0/24"</span>,  <span class="code-string">"next_hop"</span>: <span class="code-string">"10.0.0.3"</span>,
+     <span class="code-string">"interface"</span>: <span class="code-string">"eth2"</span>, <span class="code-string">"metric"</span>: <span class="code-number">15</span>, <span class="code-string">"source"</span>: <span class="code-string">"O"</span>},
+    <span class="code-comment"># Default route — "everything else" bin</span>
+    {<span class="code-string">"destination"</span>: <span class="code-string">"0.0.0.0/0"</span>,      <span class="code-string">"next_hop"</span>: <span class="code-string">"10.0.0.254"</span>,
+     <span class="code-string">"interface"</span>: <span class="code-string">"eth3"</span>, <span class="code-string">"metric"</span>: <span class="code-number">100</span>, <span class="code-string">"source"</span>: <span class="code-string">"S"</span>},
+]
+
+<span class="code-keyword">def</span> <span class="code-function">lookup</span>(destination_ip, table):
+    <span class="code-comment"># Convert the input string into an IPv4Address object.</span>
+    dest = ipaddress.<span class="code-function">IPv4Address</span>(destination_ip)
+    best_match = <span class="code-keyword">None</span>
+    longest_prefix = <span class="code-number">-1</span>
+
+    <span class="code-comment"># Check every route entry for a match.</span>
+    <span class="code-keyword">for</span> route <span class="code-keyword">in</span> table:
+        network = ipaddress.<span class="code-function">IPv4Network</span>(route[<span class="code-string">"destination"</span>], strict=<span class="code-keyword">False</span>)
+        <span class="code-comment"># Does the destination IP fall within this network?</span>
+        <span class="code-keyword">if</span> dest <span class="code-keyword">in</span> network:
+            <span class="code-comment"># Keep the most specific (longest prefix) match.</span>
+            <span class="code-keyword">if</span> network.prefixlen > longest_prefix:
+                best_match = route
+                longest_prefix = network.prefixlen
+    <span class="code-keyword">return</span> best_match
+
+<span class="code-comment"># Test with several destination IPs.</span>
+<span class="code-keyword">for</span> ip <span class="code-keyword">in</span> [<span class="code-string">"192.168.10.45"</span>, <span class="code-string">"172.16.5.100"</span>, <span class="code-string">"8.8.8.8"</span>]:
+    result = <span class="code-function">lookup</span>(ip, routing_table)
+    <span class="code-keyword">print</span>(f<span class="code-string">"Packet to {ip} → {result['interface']} via {result['next_hop']}"</span>)</code></pre>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-item">
+      <button class="accordion-btn" onclick="toggleAccordion(this)">
+        Step-by-Step Explanation <span class="arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-inner">
+          <div class="steps">
+            <div class="step"><p><strong>Import:</strong> The <code>ipaddress</code> module parses CIDR (Classless Inter-Domain Routing) notation and tests if an IP falls in a range.</p></div>
+            <div class="step"><p><strong>Table definition:</strong> Four route entries as dictionaries — destination, next hop, interface, metric, and source code.</p></div>
+            <div class="step"><p><strong>Lookup function:</strong> Converts the destination IP to an object, loops through routes, checks containment, and tracks the longest prefix match.</p></div>
+            <div class="step"><p><strong>Test loop:</strong> Three IPs are tested. The first two match specific routes; <code>8.8.8.8</code> (Google DNS) falls through to the default route on <code>eth3</code>.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <p>Every router consults its routing table for every packet. The longest prefix match algorithm ensures the most specific route always wins. Without a routing table, a router cannot forward anything.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ LESSON 2 ══════════════════════════════════════ -->
+<section class="section reveal" id="lesson2">
+  <div class="lesson-header">
+    <div class="lesson-num">2</div>
+    <h2>Lesson 2: Static Routing Logic</h2>
+    <span class="time-badge">⏱ 15 min</span>
+  </div>
+
+  <div class="card">
+    <h3>What Is Static Routing?</h3>
+    <p>Static routing is the simplest form of routing. A network administrator <strong>manually types each route</strong> into the router's configuration. The router does not learn anything on its own.</p>
+    <p style="margin-top:1rem">On a <a href="https://www.cisco.com/c/en/us/products/ios-nx-os-software/ios-software-releases-listing.html" target="_blank" rel="noopener" style="color:var(--teal)">Cisco IOS (Internetwork Operating System)</a> router:</p>
+    <div class="code-block" style="margin-top:.75rem">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">Cisco IOS</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>ip route 192.168.20.0 255.255.255.0 10.0.0.2</code></pre>
+    </div>
+    <p style="margin-top:.5rem;font-size:.9rem;color:var(--med-gray)">Translation: "Send any packet destined for 192.168.20.0/24 to the router at 10.0.0.2."</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:1.5rem 0">
+    <div class="card" style="border-left:4px solid var(--mint)">
+      <h3 style="color:var(--mint)">✅ Advantages</h3>
+      <ul style="list-style:none;padding:0">
+        <li style="margin-bottom:.5rem">● <strong>Zero overhead</strong> — no protocol traffic generated</li>
+        <li style="margin-bottom:.5rem">● <strong>Predictable</strong> — admin knows exactly where packets go</li>
+        <li style="margin-bottom:.5rem">● <strong>Simple</strong> — easy for small networks</li>
+        <li>● <strong>Secure</strong> — no route advertisements to intercept</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:4px solid var(--coral)">
+      <h3 style="color:var(--coral)">❌ Disadvantages</h3>
+      <ul style="list-style:none;padding:0">
+        <li style="margin-bottom:.5rem">● <strong>No fault tolerance</strong> — cannot adapt to link failures</li>
+        <li style="margin-bottom:.5rem">● <strong>Unscalable</strong> — hundreds of entries for large networks</li>
+        <li style="margin-bottom:.5rem">● <strong>Error-prone</strong> — one typo creates a black hole</li>
+        <li>● <strong>Maintenance burden</strong> — every change is manual</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <span class="analogy-badge">Real-Life Analogy</span>
+    <h4>🗺️ Hand-Written Driving Directions</h4>
+    <p><strong>Task:</strong> Illustrate how static routing works by comparing it to hand-written directions that never update.</p>
+    <p>Your roommate writes directions to campus on a napkin. Works every day — until Sherbrooke Street closes for a marathon. Your directions still say "Turn left on Sherbrooke" but there is a barricade. A GPS app (dynamic routing) would recalculate. Your napkin (static route) cannot.</p>
+  </div>
+
+  <div class="diagram">  NORMAL DAY (Static route works)         MARATHON DAY (Static route fails)
+  ═══════════════════════════════         ═══════════════════════════════
+
+  [Your Apartment]                        [Your Apartment]
+        │                                       │
+        │ "Turn left on Sherbrooke"              │ "Turn left on Sherbrooke"
+        ▼                                       ▼
+  ══ Sherbrooke St. (OPEN) ══            ══ 🚧 ROAD CLOSED 🚧 ══
+        │                                       │
+        ▼                                       ▼
+  [University] ✅ Arrived!               STUCK! ❌ No alternative</div>
+
+  <div class="card">
+    <h3>💻 Code Example — Static Route Generator & Failure Simulator (Python)</h3>
+    <p><strong>Task:</strong> Generate Cisco IOS static route commands and simulate what happens when a link goes down.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">Python 3</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="code-keyword">import</span> ipaddress
+
+<span class="code-comment"># Define three static routes for a branch office.</span>
+routes = [
+    {<span class="code-string">"dest"</span>: <span class="code-string">"192.168.20.0"</span>, <span class="code-string">"mask"</span>: <span class="code-string">"255.255.255.0"</span>,
+     <span class="code-string">"hop"</span>: <span class="code-string">"10.0.0.2"</span>, <span class="code-string">"desc"</span>: <span class="code-string">"Branch Office LAN"</span>},
+    {<span class="code-string">"dest"</span>: <span class="code-string">"172.16.50.0"</span>,  <span class="code-string">"mask"</span>: <span class="code-string">"255.255.255.0"</span>,
+     <span class="code-string">"hop"</span>: <span class="code-string">"10.0.0.3"</span>, <span class="code-string">"desc"</span>: <span class="code-string">"Data Centre"</span>},
+    {<span class="code-string">"dest"</span>: <span class="code-string">"0.0.0.0"</span>,      <span class="code-string">"mask"</span>: <span class="code-string">"0.0.0.0"</span>,
+     <span class="code-string">"hop"</span>: <span class="code-string">"10.0.0.1"</span>, <span class="code-string">"desc"</span>: <span class="code-string">"Default to ISP"</span>},
+]
+
+<span class="code-comment"># Generate Cisco IOS commands.</span>
+<span class="code-keyword">for</span> r <span class="code-keyword">in</span> routes:
+    <span class="code-keyword">print</span>(f<span class="code-string">"ip route {r['dest']} {r['mask']} {r['hop']}"</span>)
+
+<span class="code-comment"># Simulate link failure: 10.0.0.2 goes down.</span>
+<span class="code-keyword">print</span>(<span class="code-string">"\n⚠️  LINK FAILURE: 10.0.0.2 is DOWN"</span>)
+<span class="code-keyword">for</span> r <span class="code-keyword">in</span> routes:
+    <span class="code-keyword">if</span> r[<span class="code-string">"hop"</span>] == <span class="code-string">"10.0.0.2"</span>:
+        <span class="code-keyword">print</span>(f<span class="code-string">"  ❌ AFFECTED: {r['desc']} — packets DROPPED"</span>)
+    <span class="code-keyword">else</span>:
+        <span class="code-keyword">print</span>(f<span class="code-string">"  ✅ OK: {r['desc']}"</span>)</code></pre>
+  </div>
+
+  <div class="takeaway">
+    <p>Static routing is simple, predictable, and has zero overhead — but it cannot heal itself. Best for small, stable networks or stub connections. For anything larger, dynamic routing is essential.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ LESSON 3 ══════════════════════════════════════ -->
+<section class="section reveal" id="lesson3">
+  <div class="lesson-header">
+    <div class="lesson-num">3</div>
+    <h2>Lesson 3: The Function of a Default Gateway</h2>
+    <span class="time-badge">⏱ 15 min</span>
+  </div>
+
+  <div class="card">
+    <h3>What Is a Default Gateway?</h3>
+    <p>Every device on a network has a configuration parameter called the <strong>default gateway</strong>. It is the IP (Internet Protocol) address of the router that the device should send packets to when the destination is <strong>outside its own local network</strong>.</p>
+    <p style="margin-top:1rem">Without a default gateway, a device is an island: it can talk to neighbors on the same subnet, but it cannot reach the broader internet.</p>
+  </div>
+
+  <div class="card">
+    <h3>Local vs. Remote Communication</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Scenario</th><th>Mechanism</th><th>Gateway Needed?</th></tr></thead>
+        <tbody>
+          <tr><td>Same subnet (laptop → printer at .50)</td><td>Layer 2 — MAC (Media Access Control) address</td><td>No</td></tr>
+          <tr><td>Different network (laptop → google.com)</td><td>Layer 3 — Routed via gateway</td><td><strong>Yes</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Gateway Configuration by OS (Operating System)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>OS</th><th>Method</th></tr></thead>
+        <tbody>
+          <tr><td>Windows</td><td><code>ipconfig</code> / DHCP (Dynamic Host Configuration Protocol)</td></tr>
+          <tr><td>Linux</td><td><code>ip route show default</code> / DHCP</td></tr>
+          <tr><td>macOS</td><td><code>route -n get default</code> / DHCP</td></tr>
+          <tr><td>Cisco Switch</td><td><code>ip default-gateway &lt;address&gt;</code></td></tr>
+          <tr><td>Mobile Devices</td><td>DHCP from Wi-Fi router (automatic)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <span class="analogy-badge">Real-Life Analogy</span>
+    <h4>🏨 The Hotel Reception Desk</h4>
+    <p><strong>Task:</strong> Explain the default gateway by comparing it to the reception desk at a hotel.</p>
+    <p>You are staying on the 5th floor. Walk to Room 512 to borrow a charger? No reception needed — same floor (same subnet). Want sushi from downtown? Call the <strong>reception desk</strong> (default gateway) — they handle everything. If reception is closed (gateway unreachable), you can still visit neighbors but cannot order from outside.</p>
+  </div>
+
+  <div class="diagram">  ┌───────────────────────────────────────────────────────┐
+  │              THE HOTEL (Your LAN: 192.168.1.0/24)     │
+  │                                                        │
+  │  Floor 5 (Local Network)                               │
+  │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │
+  │  │ Room 510 │  │ Room 511 │  │ Room 512 │             │
+  │  │ (Laptop) │  │ (Phone)  │  │(Printer) │             │
+  │  │   .10    │  │   .11    │  │   .50    │             │
+  │  └────┬─────┘  └────┬─────┘  └────┬─────┘             │
+  │       └──────────────┼──────────────┘                   │
+  │            Same-floor visits = Layer 2                  │
+  │                      ▼                                  │
+  │           ┌──────────────────┐                          │
+  │           │  RECEPTION DESK  │                          │
+  │           │  (Default GW)    │                          │
+  │           │  192.168.1.1     │                          │
+  │           └────────┬─────────┘                          │
+  └────────────────────┼────────────────────────────────────┘
+                       ▼
+              🌐 THE INTERNET</div>
+
+  <div class="card">
+    <h3>💻 Code Example — Default Gateway Detector & Tester (Python)</h3>
+    <p><strong>Task:</strong> Detect the system's default gateway and test reachability — the first troubleshooting step when internet access fails.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">Python 3</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="code-keyword">import</span> subprocess, platform, re, sys
+
+<span class="code-keyword">def</span> <span class="code-function">get_default_gateway</span>():
+    <span class="code-comment"># Detect the OS and run the appropriate command.</span>
+    os_name = platform.<span class="code-function">system</span>()
+    <span class="code-keyword">if</span> os_name == <span class="code-string">"Linux"</span>:
+        result = subprocess.<span class="code-function">run</span>([<span class="code-string">"ip"</span>,<span class="code-string">"route"</span>,<span class="code-string">"show"</span>,<span class="code-string">"default"</span>],
+                                 capture_output=<span class="code-keyword">True</span>, text=<span class="code-keyword">True</span>)
+        match = re.<span class="code-function">search</span>(r<span class="code-string">"default via (\S+)"</span>, result.stdout)
+    <span class="code-keyword">elif</span> os_name == <span class="code-string">"Windows"</span>:
+        result = subprocess.<span class="code-function">run</span>([<span class="code-string">"ipconfig"</span>], capture_output=<span class="code-keyword">True</span>, text=<span class="code-keyword">True</span>)
+        match = re.<span class="code-function">search</span>(r<span class="code-string">"Default Gateway.*?:\s*(\d+\.\d+\.\d+\.\d+)"</span>, result.stdout)
+    <span class="code-keyword">return</span> match.<span class="code-function">group</span>(<span class="code-number">1</span>) <span class="code-keyword">if</span> match <span class="code-keyword">else</span> <span class="code-keyword">None</span>
+
+<span class="code-comment"># Detect and test the gateway.</span>
+gw = <span class="code-function">get_default_gateway</span>()
+<span class="code-keyword">if</span> gw:
+    <span class="code-keyword">print</span>(f<span class="code-string">"✅ Gateway found: {gw}"</span>)
+    <span class="code-comment"># Ping the gateway to check reachability.</span>
+    flag = <span class="code-string">"-n"</span> <span class="code-keyword">if</span> platform.<span class="code-function">system</span>() == <span class="code-string">"Windows"</span> <span class="code-keyword">else</span> <span class="code-string">"-c"</span>
+    ok = subprocess.<span class="code-function">run</span>([<span class="code-string">"ping"</span>, flag, <span class="code-string">"3"</span>, gw],
+                         capture_output=<span class="code-keyword">True</span>).returncode == <span class="code-number">0</span>
+    <span class="code-keyword">print</span>(<span class="code-string">"✅ Reachable!"</span> <span class="code-keyword">if</span> ok <span class="code-keyword">else</span> <span class="code-string">"❌ Unreachable!"</span>)
+<span class="code-keyword">else</span>:
+    <span class="code-keyword">print</span>(<span class="code-string">"❌ No gateway configured — local only!"</span>)</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>📐 Troubleshooting Flowchart</h3>
+    <div class="steps">
+      <div class="step"><p>Is a default gateway configured? → <strong>NO:</strong> Check DHCP / manual IP settings</p></div>
+      <div class="step"><p>Can you PING the gateway? → <strong>NO:</strong> Check cable, Wi-Fi, router power</p></div>
+      <div class="step"><p>Can you PING an external IP like <code>8.8.8.8</code>? → <strong>NO:</strong> Upstream / ISP (Internet Service Provider) problem</p></div>
+      <div class="step"><p>Can you PING a domain like <code>www.google.com</code>? → <strong>NO:</strong> DNS (Domain Name System) issue</p></div>
+      <div class="step"><p>All YES → Everything works! 🎉</p></div>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <p>The default gateway is the "reception desk" for every device on a network. First troubleshooting step: can you reach it? No gateway = no internet. Unreachable gateway = check physical layer.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ LESSON 4 ══════════════════════════════════════ -->
+<section class="section reveal" id="lesson4">
+  <div class="lesson-header">
+    <div class="lesson-num">4</div>
+    <h2>Lesson 4: Dynamic Routing Explained</h2>
+    <span class="time-badge">⏱ 15 min</span>
+  </div>
+
+  <div class="card">
+    <h3>What Is Dynamic Routing?</h3>
+    <p>Dynamic routing is the opposite of static routing. Instead of a human typing every route, routers <strong>talk to each other</strong> using a routing protocol — a set of rules that let them share which networks they can reach, how far away those networks are, and which paths are working.</p>
+    <p style="margin-top:1rem">When a link fails, routers detect it, exchange updates, and recalculate their tables — all without human intervention. This is the GPS navigation app from our earlier analogy.</p>
+  </div>
+
+  <div class="card">
+    <h3>How It Works — Four Steps</h3>
+    <div class="steps">
+      <div class="step"><p><strong>Neighbor Discovery:</strong> Routers send "hello" messages to find adjacent routers running the same protocol.</p></div>
+      <div class="step"><p><strong>Information Exchange:</strong> Routers share their known routes (or link states) with their neighbors.</p></div>
+      <div class="step"><p><strong>Route Computation:</strong> Each router independently calculates the best path to each destination.</p></div>
+      <div class="step"><p><strong>Ongoing Updates:</strong> Routers send new updates periodically or upon detecting a change.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Key Dynamic Routing Protocols</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Protocol</th><th>Full Name</th><th>Type</th><th>Key Idea</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://www.rfc-editor.org/rfc/rfc2453" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">RIP</a></td>
+            <td>Routing Information Protocol</td><td>Distance Vector</td>
+            <td>Counts hops (max 15); simple but slow</td><td>Small LANs</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.rfc-editor.org/rfc/rfc2328" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">OSPF</a></td>
+            <td>Open Shortest Path First</td><td>Link State</td>
+            <td>Full map + <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm" target="_blank" rel="noopener" style="color:var(--teal)">Dijkstra's algorithm</a>; fast</td><td>Enterprise</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">EIGRP</a></td>
+            <td>Enhanced Interior Gateway Routing Protocol</td><td>Hybrid</td>
+            <td>DUAL (Diffusing Update Algorithm); Cisco-developed</td><td>Cisco networks</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.rfc-editor.org/rfc/rfc4271" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">BGP</a></td>
+            <td>Border Gateway Protocol</td><td>Path Vector</td>
+            <td>Routes across the entire internet</td><td>ISPs / Internet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Static vs. Dynamic — Head-to-Head</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Static Routing</th><th>Dynamic Routing</th></tr></thead>
+        <tbody>
+          <tr><td>Configuration</td><td>Manual</td><td>Automatic</td></tr>
+          <tr><td>Adapts to failures</td><td>❌ No</td><td>✅ Yes</td></tr>
+          <tr><td>Bandwidth usage</td><td>None</td><td>Some (hellos, updates)</td></tr>
+          <tr><td>CPU (Central Processing Unit)</td><td>Minimal</td><td>Higher</td></tr>
+          <tr><td>Scalability</td><td>Poor for large networks</td><td>Excellent</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <span class="analogy-badge">Real-Life Analogy</span>
+    <h4>🚌 City Bus Network with Live Rerouting</h4>
+    <p><strong>Task:</strong> Explain dynamic routing by comparing it to a smart city bus system.</p>
+    <p>Four bus depots (routers) are connected by roads (links). They radio each other every few minutes. One day the bridge between Depot A and Depot C collapses. With <strong>static schedules</strong>, buses keep driving to the bridge and passengers are stranded. With <strong>live rerouting</strong>, Depot A immediately radios Depot B: "Bridge is down, relay passengers via the highway." Within seconds, a new route is in place.</p>
+  </div>
+
+  <div class="diagram">  BEFORE FAILURE                          AFTER FAILURE
+  ══════════════                          ═════════════
+
+       cost:1         cost:1                   cost:1         cost:1
+  [A] ────────── [B]                     [A] ────────── [B]
+   │               │                      │               │
+   │ cost:1        │ cost:1               │ ✖ DOWN        │ cost:1
+   │               │                      │               │
+  [C] ────────── [D]                     [C] ────────── [D]
+       cost:1                                  cost:1
+
+  A→C = cost 1 (direct)  ✅              A→C = cost 3 (A→B→D→C)  ✅ Auto-healed!</div>
+
+  <div class="card">
+    <h3>💻 Code Example — Dijkstra's Algorithm Simulator (Python)</h3>
+    <p><strong>Task:</strong> Simulate how OSPF finds the shortest path and automatically recalculates when a link fails.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">Python 3</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="code-keyword">import</span> heapq, copy
+
+<span class="code-keyword">class</span> <span class="code-function">Network</span>:
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self):
+        <span class="code-comment"># Adjacency list: router → [(neighbor, cost), ...]</span>
+        self.graph = {}
+
+    <span class="code-keyword">def</span> <span class="code-function">add_link</span>(self, a, b, cost):
+        <span class="code-comment"># Add bidirectional link (full-duplex).</span>
+        self.graph.setdefault(a, []).append((b, cost))
+        self.graph.setdefault(b, []).append((a, cost))
+
+    <span class="code-keyword">def</span> <span class="code-function">remove_link</span>(self, a, b):
+        <span class="code-comment"># Simulate link failure — remove edge in both directions.</span>
+        self.graph[a] = [(n,c) <span class="code-keyword">for</span> n,c <span class="code-keyword">in</span> self.graph[a] <span class="code-keyword">if</span> n != b]
+        self.graph[b] = [(n,c) <span class="code-keyword">for</span> n,c <span class="code-keyword">in</span> self.graph[b] <span class="code-keyword">if</span> n != a]
+
+    <span class="code-keyword">def</span> <span class="code-function">dijkstra</span>(self, source):
+        <span class="code-comment"># Dijkstra's shortest-path algorithm using a min-heap.</span>
+        dist = {r: float(<span class="code-string">"inf"</span>) <span class="code-keyword">for</span> r <span class="code-keyword">in</span> self.graph}
+        prev = {r: <span class="code-keyword">None</span> <span class="code-keyword">for</span> r <span class="code-keyword">in</span> self.graph}
+        dist[source] = <span class="code-number">0</span>
+        pq = [(<span class="code-number">0</span>, source)]
+        <span class="code-keyword">while</span> pq:
+            cost, node = heapq.<span class="code-function">heappop</span>(pq)
+            <span class="code-keyword">if</span> cost > dist[node]: <span class="code-keyword">continue</span>
+            <span class="code-keyword">for</span> nbr, w <span class="code-keyword">in</span> self.graph[node]:
+                <span class="code-keyword">if</span> cost + w < dist[nbr]:
+                    dist[nbr] = cost + w
+                    prev[nbr] = node
+                    heapq.<span class="code-function">heappush</span>(pq, (dist[nbr], nbr))
+        <span class="code-keyword">return</span> dist, prev
+
+<span class="code-comment"># Build a 4-router network, all links cost 1.</span>
+net = <span class="code-function">Network</span>()
+net.<span class="code-function">add_link</span>(<span class="code-string">"A"</span>,<span class="code-string">"B"</span>,<span class="code-number">1</span>); net.<span class="code-function">add_link</span>(<span class="code-string">"A"</span>,<span class="code-string">"C"</span>,<span class="code-number">1</span>)
+net.<span class="code-function">add_link</span>(<span class="code-string">"B"</span>,<span class="code-string">"D"</span>,<span class="code-number">1</span>); net.<span class="code-function">add_link</span>(<span class="code-string">"C"</span>,<span class="code-string">"D"</span>,<span class="code-number">1</span>)
+
+dist, _ = net.<span class="code-function">dijkstra</span>(<span class="code-string">"A"</span>)
+<span class="code-keyword">print</span>(<span class="code-string">"BEFORE:"</span>, dist)  <span class="code-comment"># A→C = 1</span>
+
+<span class="code-comment"># Simulate link failure A↔C.</span>
+net_fail = copy.<span class="code-function">deepcopy</span>(net)
+net_fail.<span class="code-function">remove_link</span>(<span class="code-string">"A"</span>, <span class="code-string">"C"</span>)
+dist2, _ = net_fail.<span class="code-function">dijkstra</span>(<span class="code-string">"A"</span>)
+<span class="code-keyword">print</span>(<span class="code-string">"AFTER:"</span>, dist2)  <span class="code-comment"># A→C = 3 (via B→D→C)</span></code></pre>
+  </div>
+
+  <div class="takeaway">
+    <p>Dynamic routing protocols let routers self-heal without human intervention. They discover neighbors, share information, compute best paths, and adapt to failures automatically. The trade-off: bandwidth and CPU — but the resilience is worth it.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ SUMMARY ══════════════════════════════════════ -->
+<section class="section reveal" id="summary">
+  <div class="divider"><div class="divider-line"></div><div class="divider-icon">📝</div><div class="divider-line"></div></div>
+  <h2 style="font-size:1.8rem;margin-bottom:2rem;text-align:center">Module Summary</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Lesson</th><th>Core Concept</th><th>Analogy</th><th>Key Command / Algorithm</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><strong>Routing Tables</strong></td><td>Router's lookup directory</td><td>Post office sorting bins</td><td><code>show ip route</code></td></tr>
+        <tr><td>2</td><td><strong>Static Routing Logic</strong></td><td>Manual, fixed routes</td><td>Napkin driving directions</td><td><code>ip route &lt;dest&gt; &lt;mask&gt; &lt;hop&gt;</code></td></tr>
+        <tr><td>3</td><td><strong>Default Gateway</strong></td><td>Device's exit door</td><td>Hotel reception desk</td><td><code>ip route show default</code></td></tr>
+        <tr><td>4</td><td><strong>Dynamic Routing</strong></td><td>Self-healing routes</td><td>City bus live rerouting</td><td>Dijkstra's / OSPF</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ RESOURCES ══════════════════════════════════════ -->
+<section class="section reveal" id="resources">
+  <div class="divider"><div class="divider-line"></div><div class="divider-icon">🔗</div><div class="divider-line"></div></div>
+  <h2 style="font-size:1.8rem;margin-bottom:2rem;text-align:center">Hyperlinks &amp; References</h2>
+  <p style="text-align:center;color:var(--med-gray);margin-bottom:2rem;font-size:.9rem">⚠️ Verify all external URLs at <a href="https://www.virustotal.com/gui/home/url" target="_blank" rel="noopener" style="color:var(--teal)">VirusTotal</a> before visiting.</p>
+
+  <div class="link-grid">
+    <a href="https://www.rfc-editor.org/rfc/rfc2328" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">1</span>
+      <div><div class="link-title">RFC 2328 — OSPF v2</div><div class="link-desc">Official specification for OSPF (Open Shortest Path First)</div></div>
+    </a>
+    <a href="https://www.rfc-editor.org/rfc/rfc2453" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">2</span>
+      <div><div class="link-title">RFC 2453 — RIP v2</div><div class="link-desc">Specification for RIP (Routing Information Protocol)</div></div>
+    </a>
+    <a href="https://www.rfc-editor.org/rfc/rfc4271" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">3</span>
+      <div><div class="link-title">RFC 4271 — BGP-4</div><div class="link-desc">Border Gateway Protocol — the internet's backbone</div></div>
+    </a>
+    <a href="https://www.ietf.org/" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">4</span>
+      <div><div class="link-title">IETF</div><div class="link-desc">Internet Engineering Task Force — internet standards body</div></div>
+    </a>
+    <a href="https://www.cisco.com/c/en/us/products/ios-nx-os-software/ios-software-releases-listing.html" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">5</span>
+      <div><div class="link-title">Cisco IOS Documentation</div><div class="link-desc">Official Cisco Internetwork Operating System docs</div></div>
+    </a>
+    <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">6</span>
+      <div><div class="link-title">Dijkstra's Algorithm</div><div class="link-desc">Shortest-path algorithm used by OSPF and link-state protocols</div></div>
+    </a>
+    <a href="https://github.com/ktbyers/netmiko" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">7</span>
+      <div><div class="link-title">Netmiko</div><div class="link-desc">Python SSH library for network device automation</div></div>
+    </a>
+    <a href="https://napalm.readthedocs.io/en/latest/" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">8</span>
+      <div><div class="link-title">NAPALM</div><div class="link-desc">Multi-vendor Python library for network automation</div></div>
+    </a>
+    <a href="https://developers.google.com/speed/public-dns" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">9</span>
+      <div><div class="link-title">Google Public DNS</div><div class="link-desc">Free DNS service at 8.8.8.8 and 8.8.4.4</div></div>
+    </a>
+    <a href="https://www.iana.org/" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">10</span>
+      <div><div class="link-title">IANA</div><div class="link-desc">Internet Assigned Numbers Authority — IP allocation &amp; DNS roots</div></div>
+    </a>
+    <a href="https://www.ieee802.org/" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">11</span>
+      <div><div class="link-title">IEEE 802 Standards</div><div class="link-desc">LAN/MAN standards including Ethernet and Wi-Fi</div></div>
+    </a>
+    <a href="https://www.virustotal.com/gui/home/url" target="_blank" rel="noopener" class="link-card">
+      <span class="link-num">12</span>
+      <div><div class="link-title">VirusTotal</div><div class="link-desc">Free URL scanner for malware and phishing detection</div></div>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ DISCLAIMER ══════════════════════════════════════ -->
+<footer class="disclaimer">
+  <div class="disclaimer-inner">
+    <h2>⚠️ Disclaimer</h2>
+
+    <h3>Intellectual Property</h3>
+    <p>This lecture material, including all text, diagrams, code examples, schematics, and reference tables, is the intellectual property of <strong>Cyber.SoHo</strong>. All rights are reserved. No part of this material may be reproduced, distributed, transmitted, displayed, published, or broadcast in any form without prior written permission, except for brief quotations in critical reviews and non-commercial uses permitted by applicable law.</p>
+
+    <h3>Copyright &amp; Non-Affiliation</h3>
+    <p>This material is produced independently and is <strong>not affiliated with, endorsed by, sponsored by, or associated with</strong> Cisco Systems Inc., Google LLC, the Internet Engineering Task Force (IETF), the Internet Assigned Numbers Authority (IANA), the Institute of Electrical and Electronics Engineers (IEEE), or any other organization mentioned herein. All trademarks are the property of their respective owners. References are made solely for educational purposes.</p>
+
+    <h3>External Links — Security Advisory</h3>
+    <p>This document contains hyperlinks to external websites not controlled by Cyber.SoHo. Users are <strong>strongly advised to verify all external URLs</strong> using a reputable scanner such as <a href="https://www.virustotal.com/gui/home/url" target="_blank" rel="noopener">VirusTotal</a> before visiting. Cyber.SoHo accepts no responsibility for external site content, availability, or security.</p>
+
+    <h3>Limitation of Liability</h3>
+    <p>Provided "as is" for educational purposes only. Code examples are for learning and demonstration — not production-ready. Cyber.SoHo shall not be liable for any damages arising from the use of this material.</p>
+
+    <h3>Ethics Statement</h3>
+    <p>Created with the sole intention of advancing education in computer networking. Techniques described herein are intended exclusively for lawful, authorized, and ethical use. Unauthorized use is strictly prohibited.</p>
+
+    <div class="disclaimer-footer">
+      Module 5 — The Network Layer &amp; Routing · Prepared by Cyber.SoHo · All Rights Reserved
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── PROGRESS BAR ──
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+});
+
+// ── TOC ACTIVE STATE ──
+const tocDots = document.querySelectorAll('.toc-dot');
+const tocSections = ['hero','lesson1','lesson2','lesson3','lesson4','summary','resources'];
+function updateToc() {
+  let current = '';
+  tocSections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < window.innerHeight * 0.4) current = id;
+  });
+  tocDots.forEach(dot => {
+    dot.classList.toggle('active', dot.dataset.target === current);
+  });
+}
+window.addEventListener('scroll', updateToc);
+updateToc();
+
+// ── SMOOTH SCROLL ──
+function scrollTo(selector) {
+  document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── REVEAL ON SCROLL ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── ACCORDION ──
+function toggleAccordion(btn) {
+  const item = btn.parentElement;
+  item.classList.toggle('open');
+}
+
+// ── COPY CODE ──
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

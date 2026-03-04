@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: The Network Layer & Routing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS for the 3D Flip Card Effect */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        /* FIXED: Target the element that has both classes, not a child element */
+        .flip-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Module 5: The Network Layer & Routing</h1>
+            <p class="text-slate-500">Interactive Study Guide</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-6 justify-center">
+            <button id="tab-btn-flashcards" onclick="switchTab('flashcards')" class="px-6 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600 hover:text-blue-800 transition-colors focus:outline-none">
+                Flashcards (25)
+            </button>
+            <button id="tab-btn-quiz" onclick="switchTab('quiz')" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors focus:outline-none">
+                Application Quiz (10)
+            </button>
+        </div>
+
+        <!-- Flashcards Section -->
+        <section id="flashcards-section" class="block">
+            <div class="bg-white rounded-xl shadow-lg p-6 min-h-[400px] flex flex-col">
+                <div class="text-center text-sm text-gray-400 font-semibold mb-4 tracking-wider uppercase">
+                    Card <span id="fc-current">1</span> of <span id="fc-total">25</span>
+                </div>
+                
+                <!-- Flashcard Container -->
+                <div class="flex-grow flex items-center justify-center cursor-pointer perspective-1000" onclick="flipCard()">
+                    <div id="flashcard" class="w-full max-w-lg h-64 flip-card-inner">
+                        <!-- Front of Card -->
+                        <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200 shadow-inner flex items-center justify-center p-8 text-center">
+                            <div>
+                                <span class="block text-xs font-bold text-blue-500 uppercase tracking-widest mb-3">Front (Term/Concept)</span>
+                                <h2 id="fc-front-text" class="text-2xl font-semibold text-slate-800 leading-tight"></h2>
+                            </div>
+                        </div>
+                        <!-- Back of Card -->
+                        <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border-2 border-emerald-200 shadow-inner flex items-center justify-center p-8 text-center rotate-y-180">
+                            <div>
+                                <span class="block text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">Back (Definition/Answer)</span>
+                                <p id="fc-back-text" class="text-xl text-slate-700 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flashcard Controls -->
+                <div class="mt-8 flex justify-between items-center max-w-lg mx-auto w-full">
+                    <button onclick="prevCard()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors focus:ring-4 focus:ring-gray-200">
+                        &larr; Previous
+                    </button>
+                    <button onclick="flipCard()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors focus:ring-4 focus:ring-blue-300">
+                        Flip Card
+                    </button>
+                    <button onclick="nextCard()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors focus:ring-4 focus:ring-gray-200">
+                        Next &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section id="quiz-section" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 min-h-[400px]">
+                
+                <div id="quiz-intro" class="text-center py-10">
+                    <h2 class="text-2xl font-bold mb-4">Module 5 Practical Application Quiz</h2>
+                    <p class="text-gray-600 mb-8 max-w-2xl mx-auto">Test your understanding of Network Layer concepts, routing tables, and protocols in practical scenarios.</p>
+                    <button onclick="startQuiz()" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition">Start Quiz</button>
+                </div>
+
+                <div id="quiz-active" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Question <span id="q-current">1</span> of <span id="q-total">10</span></span>
+                        <span class="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Score: <span id="q-score">0</span></span>
+                    </div>
+
+                    <!-- Question -->
+                    <h3 id="q-text" class="text-xl font-medium text-slate-800 mb-4 leading-relaxed"></h3>
+                    
+                    <!-- Hint Toggle -->
+                    <div class="mb-6">
+                        <button onclick="toggleHint()" class="text-sm text-amber-600 font-medium hover:text-amber-700 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            Show Hint
+                        </button>
+                        <div id="q-hint" class="hidden mt-2 p-3 bg-amber-50 text-amber-800 text-sm rounded border border-amber-200"></div>
+                    </div>
+
+                    <!-- Options -->
+                    <div id="q-options" class="space-y-3 mb-8">
+                        <!-- Options generated via JS -->
+                    </div>
+
+                    <!-- Feedback Area -->
+                    <div id="q-feedback" class="hidden p-4 rounded-lg mb-6 shadow-sm border">
+                        <p id="q-feedback-status" class="font-bold mb-1"></p>
+                        <p id="q-feedback-rationale" class="text-sm"></p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex justify-end">
+                        <button id="btn-next-question" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md">
+                            Next Question &rarr;
+                        </button>
+                        <button id="btn-finish-quiz" onclick="finishQuiz()" class="hidden px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-md">
+                            See Final Results
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results -->
+                <div id="quiz-results" class="hidden text-center py-10">
+                    <h2 class="text-3xl font-bold mb-2">Quiz Completed!</h2>
+                    <p class="text-xl text-gray-600 mb-6">You scored <span id="res-score" class="font-bold text-blue-600"></span> out of <span id="res-total"></span>.</p>
+                    <div id="res-message" class="mb-8 p-4 rounded-lg font-medium inline-block"></div>
+                    <br>
+                    <button onclick="startQuiz()" class="px-8 py-3 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition">Retake Quiz</button>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const flashcards = [
+            { front: "Primary purpose of a routing table", back: "To answer the question 'Where do I send this packet next?' by serving as an internal reference list." },
+            { front: "'Next Hop' in a routing table", back: "The IP address of the adjacent router that will receive the packet next." },
+            { front: "Metric or Cost in a routing table", back: "A preference value used when multiple routes exist; a lower value indicates a better route." },
+            { front: "Route Source Code 'C'", back: "Connected — meaning the network is directly attached to the router." },
+            { front: "Route Source Code 'S'", back: "Static — meaning the route was manually configured by an administrator." },
+            { front: "Longest Prefix Match algorithm", back: "The core forwarding algorithm where a router selects the most specific matching network route to forward a packet." },
+            { front: "Tie-breaker if routing prefix lengths are identical", back: "The router chooses the route with the lower metric." },
+            { front: "Definition of Static Routing", back: "Routes manually typed into the router by an administrator; the router learns nothing on its own." },
+            { front: "Primary disadvantage of static routing", back: "No fault tolerance; it cannot automatically adapt or reroute if a network link fails." },
+            { front: "Best network scenarios for static routing", back: "Small offices, stub networks (one way in/out), and default routes to an ISP." },
+            { front: "Cisco IOS command to add a static route", back: "ip route <destination_network> <subnet_mask> <next_hop>" },
+            { front: "Default Gateway", back: "The IP address of the router that a device sends packets to when the destination is outside its local network." },
+            { front: "Mechanism for same-subnet (local) communication", back: "Layer 2 / MAC addresses (no gateway needed)." },
+            { front: "First step in network troubleshooting if the gateway is configured", back: "Attempt to PING the default gateway to check physical connection, cable, or Wi-Fi." },
+            { front: "Definition of Dynamic Routing", back: "Routers automatically share route information using a routing protocol to discover and maintain routes." },
+            { front: "Distance Vector routing protocol", back: "Routers share their routing table with neighbors, counting hops like passing rumors (e.g., RIP)." },
+            { front: "Link State routing protocol", back: "Routers share a map of all directly connected links to build a complete network topology (e.g., OSPF)." },
+            { front: "BGP (Border Gateway Protocol)", back: "A Path Vector protocol used to exchange paths across different organizations and the internet (ISPs)." },
+            { front: "OSPF (Open Shortest Path First) algorithm", back: "Uses Dijkstra's shortest-path algorithm to compute the lowest-cost path from a Link-State Database (LSDB)." },
+            { front: "Main trade-off of using dynamic routing over static", back: "Dynamic routing consumes more network bandwidth and CPU resources to send updates and calculate paths." },
+            { front: "Cisco command to display the routing table", back: "show ip route" },
+            { front: "Abbreviation: DHCP", back: "Dynamic Host Configuration Protocol." },
+            { front: "Abbreviation: ICMP", back: "Internet Control Message Protocol." },
+            { front: "Abbreviation: EIGRP", back: "Enhanced Interior Gateway Routing Protocol (a hybrid protocol developed by Cisco)." },
+            { front: "Default Route IP and Prefix", back: "0.0.0.0/0 (acts as the 'everything else' bin for packets with no specific route)." }
+        ];
+
+        const quizData = [
+            {
+                question: "A router receives a packet destined for IP address 192.168.10.55. Its routing table has two matching entries: 192.168.10.0/24 and 192.168.10.0/26. Which route will the router choose for this packet?",
+                hint: "Think about which routing table description is the most specific to the destination address.",
+                options: [
+                    { text: "192.168.10.0/26", rationale: "The core forwarding algorithm mandates selecting the most specific match, which is indicated by the longest subnet mask prefix.", isCorrect: true },
+                    { text: "192.168.10.0/24", rationale: "While this network encompasses the destination IP, there is a more precise subnet match available in the routing table.", isCorrect: false },
+                    { text: "The Default Route (0.0.0.0/0)", rationale: "The default 'everything else' bin is only utilized as a last resort when no specific matching network is found in the table.", isCorrect: false },
+                    { text: "It will drop the packet.", rationale: "The router has valid matching entries in its internal reference list, so the packet will be forwarded rather than discarded.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You are configuring a router for a small retail store with a single, stable connection back to the corporate headquarters. You want to ensure zero routing overhead is generated on the WAN link. What is the best configuration approach?",
+                hint: "Consider the simplest routing method for a 'stub network' that only has one way in and one way out.",
+                options: [
+                    { text: "Configure a static default route pointing to the headquarters router.", rationale: "A stub network with a single exit path only requires manual configuration, providing total predictability without generating any protocol traffic.", isCorrect: true },
+                    { text: "Enable OSPF on the retail router and the headquarters router.", rationale: "Implementing a link-state protocol introduces unnecessary complexity and CPU usage for a network that only has one possible path.", isCorrect: false },
+                    { text: "Run RIPv2 to pass distance vector routes across the link.", rationale: "Distance vector protocols still generate periodic broadcast updates, violating the requirement for zero routing overhead.", isCorrect: false },
+                    { text: "Set up BGP to advertise the retail subnet.", rationale: "Path vector protocols are designed for complex inter-ISP routing across the internet, making them vastly overcomplicated for a simple branch connection.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A user's laptop cannot load `www.google.com`. Following standard troubleshooting, they successfully PING their default gateway, and then successfully PING `8.8.8.8`. What does this indicate is the most likely issue?",
+                hint: "Reaching a public IP address means external routing works, but failing to reach a hostname indicates a translation failure.",
+                options: [
+                    { text: "A Domain Name System (DNS) resolution issue.", rationale: "Successfully reaching an external IP like 8.8.8.8 proves Layer 3 routing works perfectly, isolating the failure to the service that translates names to IPs.", isCorrect: true },
+                    { text: "A disconnected physical Ethernet cable.", rationale: "Pinging the local default gateway already confirmed the physical layer connection and local subnet are fully functional.", isCorrect: false },
+                    { text: "An upstream ISP routing failure.", rationale: "Reaching an external address proves the local router has a functional path to the internet through the upstream provider.", isCorrect: false },
+                    { text: "An incorrect default gateway IP on the laptop.", rationale: "The initial successful ping to the gateway confirms it is properly configured and reachable on the local subnet.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A router learns about the `10.0.0.0/8` network from two different OSPF neighbors. The route through Interface A has a cost of 50, and the route through Interface B has a cost of 110. How will the router forward traffic destined for `10.5.5.5`?",
+                hint: "When prefix lengths are completely identical, the router must evaluate a preference value to break the tie.",
+                options: [
+                    { text: "It will forward the packets exclusively through Interface A.", rationale: "When prefix lengths tie, the forwarding algorithm selects the route with the lower metric, indicating a more preferred or efficient path.", isCorrect: true },
+                    { text: "It will forward the packets exclusively through Interface B.", rationale: "A higher routing cost indicates a less optimal path according to the routing protocol's internal calculations.", isCorrect: false },
+                    { text: "It will drop the packets to prevent a routing loop.", rationale: "Receiving multiple valid routes for the exact same destination is normal network behavior and simply requires a tie-breaker, not a packet drop.", isCorrect: false },
+                    { text: "It will send the packets to the default gateway.", rationale: "The router has specific, matching routes for the destination network, meaning the catch-all default route is bypassed entirely.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A workstation configured with IP `192.168.1.15/24` needs to send a document to a network printer located at `192.168.1.50/24`. How does the workstation deliver the data?",
+                hint: "Look closely at the IP addresses and subnet masks to determine if the devices share the same 'hotel floor' or are on entirely different networks.",
+                options: [
+                    { text: "It uses Layer 2 MAC addresses to communicate directly.", rationale: "Because both devices share the exact same network prefix, they can communicate locally without requiring intervention from a Layer 3 router.", isCorrect: true },
+                    { text: "It sends the packet to its default gateway to be routed.", rationale: "Gateways are only utilized when a destination IP address falls outside of the sender's local subnet.", isCorrect: false },
+                    { text: "It broadcasts an OSPF hello message to discover the printer.", rationale: "End devices like workstations and printers do not participate in dynamic routing protocols to find one another.", isCorrect: false },
+                    { text: "It relies on a static route manually entered by the user.", rationale: "Host operating systems automatically know how to reach directly connected subnets without requiring manual static route entries.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You are tasked with designing the network for a massive enterprise campus connecting dozens of corporate buildings. You require a protocol that builds a complete, fast-converging map of the entire topology. Which protocol should you implement?",
+                hint: "Think about which dynamic protocol type acts like a GPS app by using Dijkstra's algorithm on a full network database.",
+                options: [
+                    { text: "OSPF (Open Shortest Path First)", rationale: "Link-state protocols build a comprehensive Link-State Database, allowing fast and efficient shortest-path calculations across large enterprises.", isCorrect: true },
+                    { text: "RIP (Routing Information Protocol)", rationale: "Distance vector protocols count hops and are limited to small LANs, making them too slow and restricted for a massive enterprise campus.", isCorrect: false },
+                    { text: "BGP (Border Gateway Protocol)", rationale: "Path vector protocols are optimized for routing between completely different autonomous systems over the internet, not for internal enterprise mapping.", isCorrect: false },
+                    { text: "Manual static routes", rationale: "A network spanning dozens of buildings requires constant self-healing updates, making manual administration an unmanageable burden.", isCorrect: false }
+                ]
+            },
+            {
+                question: "An administrator executes the `show ip route` command and observes a routing entry that begins with the letter 'C'. What does this source code indicate about how the router handles this network?",
+                hint: "This code signifies that the router is physically touching this network with one of its own cables.",
+                options: [
+                    { text: "The router has a physical interface directly attached to this network.", rationale: "The 'C' stands for Connected, indicating the network is actively attached to one of the router's local physical ports.", isCorrect: true },
+                    { text: "The route was manually typed into the configuration by an administrator.", rationale: "Routes manually entered by an administrator are designated with an 'S' to indicate they are Static.", isCorrect: false },
+                    { text: "The route was automatically discovered via an OSPF neighbor.", rationale: "Routes learned dynamically through OSPF's shortest-path algorithm are marked with an 'O' in the table.", isCorrect: false },
+                    { text: "The router is using this path as its default 'catch-all' route.", rationale: "A default route is typically represented by the 0.0.0.0/0 prefix and an 'S*' flag, not a 'C'.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A construction crew accidentally severs the primary fiber link between your data center and a remote site. Your network utilizes EIGRP. What happens to the network traffic?",
+                hint: "Recall the analogy of a city bus system equipped with live rerouting capabilities when a bridge collapses.",
+                options: [
+                    { text: "The routers dynamically recalculate and shift traffic to a backup link.", rationale: "Dynamic protocols process ongoing updates, allowing them to instantly detect link failures and self-heal by finding alternate paths.", isCorrect: true },
+                    { text: "An administrator must log in and manually apply a new `ip route` command.", rationale: "Requiring manual intervention is the primary drawback of static routing, which lacks the self-healing capability of a dynamic protocol.", isCorrect: false },
+                    { text: "The routers drop all packets indefinitely until the fiber is physically repaired.", rationale: "As long as a backup physical path exists and is advertised, dynamic protocols prevent prolonged routing black holes.", isCorrect: false },
+                    { text: "The routers flood the network with DHCP requests to find a new path.", rationale: "Dynamic Host Configuration Protocol assigns IP addresses to end devices; it does not compute Layer 3 routing paths.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A router receives a packet destined for `203.0.113.5`. Its routing table contains specific routes for `10.0.0.0/8` and `192.168.1.0/24`, as well as a static route for `0.0.0.0/0` pointing to `198.51.100.1`. What does the router do with the packet?",
+                hint: "Think of a postal sorting clerk encountering a ZIP code that doesn't match any specific labelled bin on the wall.",
+                options: [
+                    { text: "It forwards the packet to 198.51.100.1.", rationale: "The 0.0.0.0/0 prefix acts as the default route, catching any packet that does not match a more specific network entry in the table.", isCorrect: true },
+                    { text: "It drops the packet because 203.0.113.5 is not explicitly in the table.", rationale: "Routers only drop packets when they lack a specific route AND do not have a default route configured to handle unknown traffic.", isCorrect: false },
+                    { text: "It returns the packet directly to the sender.", rationale: "Routers forward traffic toward a destination and do not return undeliverable packets directly, though they may generate an ICMP error message.", isCorrect: false },
+                    { text: "It broadcasts the packet out of all active interfaces.", rationale: "Routers strictly isolate broadcast domains and never blindly flood unicast packets out all interfaces to find a destination.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You observe a routing protocol where routers periodically share their entire routing table only with immediate neighbors, effectively 'passing rumors' about network distances. Which type of dynamic protocol is this?",
+                hint: "This type of protocol determines paths by counting the number of router 'hops' required to reach a destination.",
+                options: [
+                    { text: "Distance Vector", rationale: "Protocols like RIP operate by exclusively trusting routing table information handed to them by adjacent neighbors.", isCorrect: true },
+                    { text: "Link State", rationale: "These protocols share individual connection statuses so every router can independently draw a full network map, rather than just passing tables.", isCorrect: false },
+                    { text: "Path Vector", rationale: "This type shares lists of entire organizations or autonomous systems it must cross, commonly used on the global internet.", isCorrect: false },
+                    { text: "Static Configuration", rationale: "Manual configurations do not involve sharing tables, neighbor discovery, or passing periodic updates between routers.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // --- TAB LOGIC ---
+        function switchTab(tabId) {
+            const fcSection = document.getElementById('flashcards-section');
+            const qzSection = document.getElementById('quiz-section');
+            const fcTabBtn = document.getElementById('tab-btn-flashcards');
+            const qzTabBtn = document.getElementById('tab-btn-quiz');
+
+            if (tabId === 'flashcards') {
+                fcSection.classList.remove('hidden');
+                qzSection.classList.add('hidden');
+                fcTabBtn.classList.replace('border-transparent', 'border-blue-600');
+                fcTabBtn.classList.replace('text-gray-500', 'text-blue-600');
+                qzTabBtn.classList.replace('border-blue-600', 'border-transparent');
+                qzTabBtn.classList.replace('text-blue-600', 'text-gray-500');
+            } else {
+                qzSection.classList.remove('hidden');
+                fcSection.classList.add('hidden');
+                qzTabBtn.classList.replace('border-transparent', 'border-blue-600');
+                qzTabBtn.classList.replace('text-gray-500', 'text-blue-600');
+                fcTabBtn.classList.replace('border-blue-600', 'border-transparent');
+                fcTabBtn.classList.replace('text-blue-600', 'text-gray-500');
+            }
+        }
+
+        // --- FLASHCARD LOGIC ---
+        let currentCardIndex = 0;
+        const flashcardEl = document.getElementById('flashcard');
+
+        function renderCard() {
+            const card = flashcards[currentCardIndex];
+            document.getElementById('fc-front-text').innerText = card.front;
+            document.getElementById('fc-back-text').innerText = card.back;
+            document.getElementById('fc-current').innerText = currentCardIndex + 1;
+            document.getElementById('fc-total').innerText = flashcards.length;
+            flashcardEl.classList.remove('flipped');
+        }
+
+        function flipCard() {
+            flashcardEl.classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+            flashcardEl.classList.remove('flipped');
+            setTimeout(renderCard, 150); // wait briefly for rotation reset before changing text
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length;
+            flashcardEl.classList.remove('flipped');
+            setTimeout(renderCard, 150);
+        }
+
+        // --- QUIZ LOGIC ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnsweredCurrent = false;
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            hasAnsweredCurrent = false;
+            const q = quizData[currentQuestionIndex];
+            
+            document.getElementById('q-current').innerText = currentQuestionIndex + 1;
+            document.getElementById('q-total').innerText = quizData.length;
+            document.getElementById('q-score').innerText = score;
+            document.getElementById('q-text').innerText = q.question;
+            
+            // Reset hint
+            document.getElementById('q-hint').innerText = q.hint;
+            document.getElementById('q-hint').classList.add('hidden');
+
+            // Reset feedback
+            document.getElementById('q-feedback').classList.add('hidden');
+            document.getElementById('btn-next-question').classList.add('hidden');
+            document.getElementById('btn-finish-quiz').classList.add('hidden');
+
+            // Render options
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = '';
+            
+            // We want to randomize options visually
+            let optionsWithIndex = q.options.map((opt, idx) => ({...opt, originalIndex: idx}));
+            // Fisher-Yates shuffle
+            for (let i = optionsWithIndex.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [optionsWithIndex[i], optionsWithIndex[j]] = [optionsWithIndex[j], optionsWithIndex[i]];
+            }
+
+            optionsWithIndex.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white shadow-sm';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(btn, opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function toggleHint() {
+            const hintEl = document.getElementById('q-hint');
+            hintEl.classList.toggle('hidden');
+        }
+
+        function selectOption(clickedBtn, selectedOption) {
+            if (hasAnsweredCurrent) return;
+            hasAnsweredCurrent = true;
+
+            const buttons = document.getElementById('q-options').children;
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-blue-50', 'hover:border-blue-300');
+            }
+
+            const feedbackContainer = document.getElementById('q-feedback');
+            const feedbackStatus = document.getElementById('q-feedback-status');
+            const feedbackRationale = document.getElementById('q-feedback-rationale');
+
+            if (selectedOption.isCorrect) {
+                score++;
+                document.getElementById('q-score').innerText = score;
+                clickedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                
+                feedbackContainer.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800');
+                feedbackContainer.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                feedbackStatus.innerText = "✓ Correct!";
+            } else {
+                clickedBtn.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
+                
+                feedbackContainer.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                feedbackContainer.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+                feedbackStatus.innerText = "✗ Incorrect";
+
+                // highlight correct answer
+                const q = quizData[currentQuestionIndex];
+                for (let i=0; i < buttons.length; i++) {
+                    if (buttons[i].innerText === q.options.find(o => o.isCorrect).text) {
+                        buttons[i].classList.add('border-emerald-500', 'border-2');
+                    }
+                }
+            }
+
+            feedbackRationale.innerText = selectedOption.rationale;
+
+            if (currentQuestionIndex < quizData.length - 1) {
+                document.getElementById('btn-next-question').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-finish-quiz').classList.remove('hidden');
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-active').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-total').innerText = quizData.length;
+
+            const msgEl = document.getElementById('res-message');
+            const percentage = score / quizData.length;
+            
+            msgEl.className = 'mb-8 p-4 rounded-lg font-medium inline-block'; // reset
+            if (percentage >= 0.9) {
+                msgEl.innerText = "Excellent work! You have a solid grasp of routing concepts.";
+                msgEl.classList.add('bg-emerald-100', 'text-emerald-800');
+            } else if (percentage >= 0.7) {
+                msgEl.innerText = "Good job! You understand the core concepts well, just a few details to brush up on.";
+                msgEl.classList.add('bg-blue-100', 'text-blue-800');
+            } else {
+                msgEl.innerText = "Keep studying! Review the flashcards and try the quiz again.";
+                msgEl.classList.add('bg-amber-100', 'text-amber-800');
+            }
+        }
+
+        // Initialize App
+        renderCard();
+    </script>
+</body>
+</html>

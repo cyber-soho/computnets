@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Resolution & Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 3D Flip Card Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        
+        /* Custom Scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-6 text-center">
+            <h1 class="text-3xl font-bold tracking-tight">Network Resolution & Diagnostics</h1>
+            <p class="text-blue-100 mt-2 text-sm sm:text-base">Master Module 6 concepts with flashcards and a practice quiz.</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col items-center">
+        
+        <!-- Tab Navigation -->
+        <div class="flex space-x-2 bg-white p-1 rounded-lg shadow-sm mb-8 w-full max-w-md mx-auto border border-slate-200">
+            <button id="btn-tab-flashcards" onclick="switchTab('flashcards')" class="flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-colors duration-200 bg-blue-600 text-white shadow">
+                Flashcards (25)
+            </button>
+            <button id="btn-tab-quiz" onclick="switchTab('quiz')" class="flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-colors duration-200 bg-transparent text-slate-600 hover:bg-slate-100">
+                Practice Quiz (10)
+            </button>
+        </div>
+
+        <!-- Flashcards Tab -->
+        <div id="tab-flashcards" class="w-full max-w-2xl w-full tab-content">
+            
+            <div class="mb-4 flex justify-between items-center text-sm font-medium text-slate-500 px-2">
+                <span id="fc-progress">Card 1 of 25</span>
+                <button onclick="shuffleFlashcards()" class="flex items-center hover:text-blue-600 transition-colors">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Shuffle
+                </button>
+            </div>
+
+            <!-- Flashcard Container -->
+            <div class="perspective-1000 w-full h-80 sm:h-96 cursor-pointer" onclick="flipCard()">
+                <div id="flashcard-inner" class="card-inner w-full h-full relative transform-style-3d shadow-xl rounded-2xl">
+                    
+                    <!-- Front -->
+                    <div class="backface-hidden absolute w-full h-full bg-white rounded-2xl border-2 border-slate-100 flex items-center justify-center p-8 text-center">
+                        <div>
+                            <span class="uppercase tracking-widest text-xs font-bold text-blue-500 mb-4 block">Term</span>
+                            <h2 id="fc-front-text" class="text-2xl sm:text-4xl font-bold text-slate-800 leading-tight"></h2>
+                        </div>
+                        <div class="absolute bottom-4 right-4 text-slate-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- Back -->
+                    <div class="backface-hidden rotate-y-180 absolute w-full h-full bg-blue-50 rounded-2xl border-2 border-blue-200 flex items-center justify-center p-8 text-center overflow-y-auto">
+                        <div>
+                            <span class="uppercase tracking-widest text-xs font-bold text-blue-500 mb-4 block">Definition</span>
+                            <p id="fc-back-text" class="text-lg sm:text-xl font-medium text-slate-700 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-between items-center mt-8">
+                <button onclick="prevCard()" class="px-5 py-3 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:bg-slate-50 font-medium transition flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Previous
+                </button>
+                <button onclick="flipCard()" class="px-6 py-3 rounded-lg bg-blue-100 text-blue-700 font-bold hover:bg-blue-200 transition">
+                    Flip Card
+                </button>
+                <button onclick="nextCard()" class="px-5 py-3 rounded-lg bg-blue-600 text-white shadow-md hover:bg-blue-700 font-medium transition flex items-center">
+                    Next
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Tab -->
+        <div id="tab-quiz" class="w-full max-w-3xl hidden tab-content">
+            
+            <div id="quiz-container" class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                
+                <!-- Quiz Header -->
+                <div class="bg-slate-50 border-b border-slate-200 p-4 sm:p-6 flex justify-between items-center">
+                    <span id="quiz-progress" class="text-sm font-bold text-slate-500 uppercase tracking-wider">Question 1 / 10</span>
+                    <span id="quiz-score" class="text-sm font-bold text-blue-600 bg-blue-100 py-1 px-3 rounded-full">Score: 0</span>
+                </div>
+
+                <!-- Quiz Body -->
+                <div class="p-4 sm:p-8">
+                    <h3 id="quiz-question" class="text-xl sm:text-2xl font-semibold text-slate-800 mb-6 leading-snug"></h3>
+                    
+                    <div id="quiz-options" class="space-y-3 mb-8">
+                        <!-- Options injected via JS -->
+                    </div>
+
+                    <div id="quiz-feedback" class="hidden rounded-xl p-5 mb-6 text-sm sm:text-base border">
+                        <!-- Feedback injected via JS -->
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <button id="btn-hint" onclick="toggleHint()" class="text-amber-600 font-medium text-sm flex items-center hover:text-amber-700">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            Show Hint
+                        </button>
+                        <button id="btn-quiz-next" onclick="nextQuestion()" class="hidden px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow flex items-center">
+                            Next Question
+                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Hint Container -->
+                    <div id="quiz-hint-container" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                        <strong class="font-semibold block mb-1">Hint:</strong>
+                        <span id="quiz-hint-text"></span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Quiz Results (Hidden initially) -->
+            <div id="quiz-results" class="hidden bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Quiz Complete!</h2>
+                <p class="text-lg text-slate-600 mb-6">You scored <strong id="final-score" class="text-blue-600 text-2xl"></strong> out of 10.</p>
+                <button onclick="restartQuiz()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md">
+                    Restart Quiz
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Data and Application Logic -->
+    <script>
+        // --- DATA PAYLOADS --- //
+
+        const originalFlashcards = [
+            { front: "MAC Address", back: "The Layer 2 (Data Link) physical identity burned into a device's hardware." },
+            { front: "IP Address", back: "The Layer 3 (Network) logical identity assigned via configuration or DHCP." },
+            { front: "Address Resolution Protocol (ARP)", back: "A protocol that translates Layer 3 IP addresses to Layer 2 MAC addresses within a single broadcast domain." },
+            { front: "ARP Request transmission type", back: "Broadcast (sent to MAC address FF:FF:FF:FF:FF:FF so all devices on the LAN process it)." },
+            { front: "ARP Reply transmission type", back: "Unicast (sent directly back to the requester)." },
+            { front: "Dynamic vs. Static ARP Cache Entries", back: "Dynamic entries are learned automatically and expire after a TTL; static entries are manually configured and permanent." },
+            { front: "Primary ARP security vulnerability", back: "Lack of authentication, allowing attackers to send fake replies for Man-in-the-Middle (MitM) attacks." },
+            { front: "Internet Control Message Protocol (ICMP)", back: "A Layer 3 protocol that carries network control and error messages, used by tools like Ping and Traceroute." },
+            { front: "Mechanism of the Ping command", back: "Sends an ICMP Echo Request (Type 8) and waits for an ICMP Echo Reply (Type 0)." },
+            { front: "Round-Trip Time (RTT)", back: "The total delay for a request to reach a destination and for the reply to return." },
+            { front: "Mechanism of the Traceroute command", back: "Sends packets with sequentially increasing TTLs to force each router along the path to reply with ICMP Time Exceeded messages." },
+            { front: "ICMP Type 8", back: "Echo Request." },
+            { front: "ICMP Type 0", back: "Echo Reply." },
+            { front: "ICMP Type 11", back: "Time Exceeded." },
+            { front: "Golden Rule of Network Troubleshooting", back: "Always diagnose from nearest to farthest to narrow the fault domain." },
+            { front: "Domain Name System (DNS)", back: "The system that resolves human-readable hostnames to IP addresses." },
+            { front: "First step in the DNS resolution flow", back: "Checking the local operating system's DNS cache." },
+            { front: "Neighbor Discovery Protocol (NDP)", back: "The IPv6 replacement for ARP, which operates using ICMPv6 messages." },
+            { front: "Primary transmission difference between ARP and NDP", back: "ARP uses network broadcasts, whereas NDP reduces network noise by using multicast." },
+            { front: "SLAAC (Stateless Address Autoconfiguration)", back: "An IPv6 feature that allows devices to automatically self-configure their IP addresses without a DHCP server." },
+            { front: "DAD (Duplicate Address Detection)", back: "A built-in NDP feature that resolves IP address conflicts on an IPv6 network." },
+            { front: "The 5-Step Network Resolution Chain", back: "1) DNS Resolution, 2) Routing Decision, 3) ARP Resolution, 4) Frame Construction, 5) Packet Transmission." },
+            { front: "Command to view the ARP cache (All OS)", back: "arp -a" },
+            { front: "Command for DNS lookup on Linux/macOS", back: "dig" },
+            { front: "Wireshark", back: "An open-source packet analyzer used to capture and inspect raw packets on the wire." }
+        ];
+
+        const originalQuiz = [
+            {
+                question: "A user complains they cannot reach 'intranet.company.local'. Following the 4-step diagnostic framework, which command should you run first to rule out the most fundamental connectivity issue?",
+                hint: "Consider the 'Golden Rule' of troubleshooting distances.",
+                options: [
+                    { text: "ping <default gateway>", rationale: "Testing the local router verifies the physical connection, cabling, and local LAN configuration before moving outward.", isCorrect: true },
+                    { text: "ping 8.8.8.8", rationale: "Testing an external server checks the ISP connection, skipping over potential local hardware or switch failures.", isCorrect: false },
+                    { text: "traceroute intranet.company.local", rationale: "Mapping the full path is useful for finding specific broken hops, but is too complex for an initial baseline check.", isCorrect: false },
+                    { text: "dig intranet.company.local", rationale: "Checking name resolution is a higher-level test that relies on the underlying network connection already functioning.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You suspect a Man-in-the-Middle (MitM) attack is intercepting traffic intended for your router (192.168.1.1). You run 'arp -a'. Which output strongly indicates active ARP spoofing?",
+                hint: "Think about how physical hardware addresses correlate to logical network assignments in a normal environment.",
+                options: [
+                    { text: "The IP address 192.168.1.1 and another IP address sharing the exact same MAC address.", rationale: "A malicious device is likely broadcasting fake replies to associate its own physical address with the router's logical address.", isCorrect: true },
+                    { text: "The IP address 192.168.1.1 having a MAC address of FF:FF:FF:FF:FF:FF.", rationale: "This specific hardware address is reserved strictly for broadcasting requests to all devices, not for assigning to a single host.", isCorrect: false },
+                    { text: "The IP address 192.168.1.1 listed as a 'Static' type.", rationale: "Manual configuration actually prevents spoofing by hardcoding the mapping, making it a defensive measure rather than a sign of attack.", isCorrect: false },
+                    { text: "The IP address 192.168.1.1 having a TTL of 0.", rationale: "A time-to-live of zero simply means the cached entry has expired and the device will need to query the network again.", isCorrect: false }
+                ]
+            },
+            {
+                question: "While running a traceroute to a remote server, the output shows '* * *' for hop 4, but successfully completes hops 5 through 12. What is the most likely technical reason for the blank output at hop 4?",
+                hint: "Consider how network administrators might configure intermediate devices for security or performance reasons.",
+                options: [
+                    { text: "The router at hop 4 is configured to drop or ignore packets requiring ICMP Time Exceeded generation.", rationale: "Network administrators frequently disable certain control messages on intermediate devices to save processing power or obscure network topology.", isCorrect: true },
+                    { text: "The router at hop 4 is completely offline or experiencing a critical hardware failure.", rationale: "If the device were entirely offline, the packets would never reach hops 5 through 12 to complete the path.", isCorrect: false },
+                    { text: "The packet's Time To Live (TTL) expired permanently before reaching hop 4.", rationale: "Traceroute intentionally increments the limit step-by-step; the limit expiring at a specific hop is exactly what triggers a response.", isCorrect: false },
+                    { text: "The destination server at hop 12 is blocking incoming ICMP traffic.", rationale: "Filtering at the final destination would prevent the final success message, but would not affect an intermediate router in the middle of the path.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A developer updates a domain to point to a new server IP. They complain their laptop still connects to the old IP, but a colleague on a different network reaches the new IP perfectly. What is the first place the developer's machine checks that is likely causing this stale routing?",
+                hint: "Think about the very first step in the resolution hierarchy designed to save time and bandwidth.",
+                options: [
+                    { text: "The local operating system's DNS cache.", rationale: "Machines save recent lookups locally to speed up browsing, and this memory must expire or be flushed before the machine queries external servers again.", isCorrect: true },
+                    { text: "The Root nameservers.", rationale: "These top-level servers only direct queries to the appropriate domain extensions (.com, .org) and do not store individual website addresses.", isCorrect: false },
+                    { text: "The ISP's recursive resolver.", rationale: "While internet providers do cache records, the colleague's success suggests the external servers have likely updated, pointing the issue to the user's specific machine.", isCorrect: false },
+                    { text: "The Authoritative nameserver.", rationale: "This is the ultimate source of truth for the domain and was explicitly updated by the developer, so it holds the correct, fresh record.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Host A (10.0.0.5) needs to send a file to Host B (10.0.0.20) on the same switch. Host A's ARP cache is currently empty. What is the specific destination MAC address of the very first frame Host A places on the wire?",
+                hint: "If you are trying to find someone in a crowded room but don't know what they look like, how do you communicate?",
+                options: [
+                    { text: "FF:FF:FF:FF:FF:FF", rationale: "Because the exact physical hardware address is unknown, the protocol requires querying every device on the local network simultaneously.", isCorrect: true },
+                    { text: "The specific MAC address of Host B.", rationale: "The sender does not yet possess the target's hardware address, which is the entire reason the protocol is being utilized in the first place.", isCorrect: false },
+                    { text: "The MAC address of the default gateway.", rationale: "Traffic is only sent to the router when the destination resides on a completely different subnet, not when both devices share the same local network.", isCorrect: false },
+                    { text: "00:00:00:00:00:00", rationale: "An empty hardware address is occasionally used in the sender fields of specific protocol checks, but never as a valid destination to reach other devices.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You are migrating a campus network from IPv4 to IPv6. You notice a significant reduction in overall background network noise. Which specific protocol change primarily accounts for this reduction?",
+                hint: "Consider how the methods of asking 'who has this address' differ between the old and new protocols.",
+                options: [
+                    { text: "Replacing broadcast-based requests with multicast-based Neighbor Solicitation messages.", rationale: "Targeting queries to specific subscribed groups prevents every single machine on the network from having to process irrelevant requests.", isCorrect: true },
+                    { text: "Using ICMPv6 Echo Requests instead of ICMPv4 Echo Requests.", rationale: "Diagnostic pings function almost identically in both IP versions and do not account for passive background traffic reduction.", isCorrect: false },
+                    { text: "Implementing Stateless Address Autoconfiguration (SLAAC).", rationale: "While allowing devices to self-assign addresses is efficient, it primarily replaces DHCP rather than reducing the constant chatter of hardware address lookups.", isCorrect: false },
+                    { text: "Replacing DNS queries with direct IP routing.", rationale: "Domain name resolution functions similarly in both versions, and human-readable names are still translated to numbers before routing.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You test a newly deployed web server via the CLI: 'ping 203.0.113.50' yields 100% packet loss. However, you can successfully open 'http://203.0.113.50' in your web browser. What explains this discrepancy?",
+                hint: "Think about the specific types of traffic and how security perimeters might treat them differently.",
+                options: [
+                    { text: "A firewall is blocking incoming ICMP Type 8 messages but allowing TCP user data.", rationale: "Security appliances often intentionally drop diagnostic network control packets to prevent reconnaissance while leaving standard application ports open.", isCorrect: true },
+                    { text: "The server's ARP cache has a stale entry for your IP address.", rationale: "If the physical mapping was broken, the server would be unable to return the webpage data just as it is unable to return the diagnostic replies.", isCorrect: false },
+                    { text: "The DNS resolution for the server's IP failed.", rationale: "Because the tests are being performed using the raw numbers rather than a domain name, the translation system is entirely bypassed.", is   : false },
+                    { text: "The network path has asymmetric routing causing the ping replies to drop.", rationale: "While mismatched return paths can cause issues, they would typically disrupt the complex handshake required for the webpage to load as well.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A user types 'https://server.local' into their browser. Assuming no cached entries exist on their machine, what is the sequence of protocols used to successfully initiate the very first packet of web traffic?",
+                hint: "Identify the name, determine the location, and then find the physical hardware.",
+                options: [
+                    { text: "DNS, IP Routing, ARP", rationale: "The system must first translate the name to a number, decide if that number is local or remote, and finally find the physical address to build the frame.", isCorrect: true },
+                    { text: "ARP, DNS, IP Routing", rationale: "A device cannot ask for a physical hardware address without first knowing the logical network number it is looking for.", isCorrect: false },
+                    { text: "IP Routing, ARP, DNS", rationale: "The operating system cannot make a routing decision without first translating the human-readable text into a routable format.", isCorrect: false },
+                    { text: "DNS, ARP, IP Routing", rationale: "The system must determine if the destination is on the local subnet or across the internet before it knows whether to request the physical address of the host or the gateway.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A laptop is disconnected from a home Wi-Fi network and plugged into a corporate Ethernet switch. Which identifier will remain exactly the same before and after this move?",
+                hint: "Differentiate between an address assigned by your location versus an identity tied to the physical equipment.",
+                options: [
+                    { text: "The MAC address of the laptop's network interface card.", rationale: "This identifier is burned into the physical hardware at the factory and travels with the device regardless of the network it joins.", isCorrect: true },
+                    { text: "The IP address assigned to the laptop.", rationale: "This logical identifier changes based on the local subnet to allow external networks to route traffic back to the correct geographical location.", isCorrect: false },
+                    { text: "The default gateway IP address.", rationale: "The local router facilitating outside connection changes entirely when moving between a residential ISP and a corporate environment.", isCorrect: false },
+                    { text: "The DNS server IP address.", rationale: "The servers handling name resolution are provided dynamically by the local network and will change when moving to a new environment.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You initiate a traceroute to map a path to a remote web server. What specific value will be placed in the IP header of the very first packet sent out by your machine?",
+                hint: "How does the tool intentionally force the very first router it encounters to send back an error message?",
+                options: [
+                    { text: "A Time To Live (TTL) of 1.", rationale: "By setting the limit to the absolute minimum, the tool ensures the very first router in the chain drops the packet and reveals its identity.", isCorrect: true },
+                    { text: "A destination IP address of the first hop router.", rationale: "The packets are always addressed to the final target server; the tool relies on intermediate routers intercepting expired packets along the way.", isCorrect: false },
+                    { text: "An ICMP Type 11 message.", rationale: "This specific code represents the 'Time Exceeded' error returned by the routers, not the outbound probe sent by the user's machine.", isCorrect: false },
+                    { text: "A MAC address of FF:FF:FF:FF:FF:FF.", rationale: "Diagnostic path mapping uses unicast traffic directed specifically toward the final destination, rather than broadcasting to the local subnet.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // --- APP LOGIC --- //
+
+        // Helpers
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Tab Management
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('[id^="btn-tab-"]').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                b.classList.add('bg-transparent', 'text-slate-600');
+            });
+            
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-tab-' + tabId);
+            activeBtn.classList.remove('bg-transparent', 'text-slate-600');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow');
+        }
+
+        // --- FLASHCARDS LOGIC ---
+        let flashcards = [...originalFlashcards];
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function renderCard() {
+            const card = flashcards[currentCardIndex];
+            document.getElementById('fc-front-text').innerText = card.front;
+            document.getElementById('fc-back-text').innerText = card.back;
+            document.getElementById('fc-progress').innerText = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
+            
+            if (isFlipped) {
+                isFlipped = false;
+                document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+            }
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            const inner = document.getElementById('flashcard-inner');
+            if (isFlipped) {
+                inner.classList.add('rotate-y-180');
+            } else {
+                inner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcards.length - 1) {
+                currentCardIndex++;
+            } else {
+                currentCardIndex = 0; // loop back
+            }
+            // Temporarily unflip immediately without transition to hide answer quickly
+            document.getElementById('flashcard-inner').style.transition = 'none';
+            document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+            isFlipped = false;
+            
+            setTimeout(() => {
+                document.getElementById('flashcard-inner').style.transition = '';
+                renderCard();
+            }, 50);
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+            } else {
+                currentCardIndex = flashcards.length - 1; // loop to end
+            }
+            document.getElementById('flashcard-inner').style.transition = 'none';
+            document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+            isFlipped = false;
+            
+            setTimeout(() => {
+                document.getElementById('flashcard-inner').style.transition = '';
+                renderCard();
+            }, 50);
+        }
+
+        function shuffleFlashcards() {
+            flashcards = shuffleArray(originalFlashcards);
+            currentCardIndex = 0;
+            renderCard();
+        }
+
+        // --- QUIZ LOGIC ---
+        let quizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        function initQuiz() {
+            // Setup quiz array and shuffle options for each question
+            quizQuestions = originalQuiz.map(q => ({
+                ...q,
+                options: shuffleArray(q.options)
+            }));
+            currentQIndex = 0;
+            score = 0;
+            
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            
+            updateScoreDisplay();
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            answered = false;
+            const q = quizQuestions[currentQIndex];
+            
+            document.getElementById('quiz-progress').innerText = `Question ${currentQIndex + 1} / ${quizQuestions.length}`;
+            document.getElementById('quiz-question').innerText = q.question;
+            
+            // Render options
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition font-medium text-slate-700 option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Reset UI states
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-hint-container').classList.add('hidden');
+            document.getElementById('btn-quiz-next').classList.add('hidden');
+            document.getElementById('btn-hint').classList.remove('hidden');
+            document.getElementById('quiz-hint-text').innerText = q.hint;
+        }
+
+        function selectOption(selectedIndex, buttonEl) {
+            if (answered) return;
+            answered = true;
+            
+            const q = quizQuestions[currentQIndex];
+            const selectedOpt = q.options[selectedIndex];
+            const isCorrect = selectedOpt.isCorrect;
+            
+            // Disable all buttons
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-blue-400', 'hover:bg-blue-50', 'cursor-pointer');
+                btn.classList.add('opacity-75');
+            });
+
+            // Highlight selected and find correct
+            if (isCorrect) {
+                buttonEl.classList.remove('border-slate-200', 'opacity-75');
+                buttonEl.classList.add('border-green-500', 'bg-green-50', 'text-green-800', 'opacity-100');
+                score++;
+                updateScoreDisplay();
+                showFeedback(true, selectedOpt.rationale);
+            } else {
+                buttonEl.classList.remove('border-slate-200', 'opacity-75');
+                buttonEl.classList.add('border-red-500', 'bg-red-50', 'text-red-800', 'opacity-100');
+                
+                // Highlight the correct one
+                const correctIndex = q.options.findIndex(o => o.isCorrect);
+                if (correctIndex !== -1) {
+                    buttons[correctIndex].classList.remove('border-slate-200', 'opacity-75');
+                    buttons[correctIndex].classList.add('border-green-500', 'bg-green-50', 'opacity-100');
+                }
+                
+                showFeedback(false, selectedOpt.rationale);
+            }
+
+            document.getElementById('btn-hint').classList.add('hidden');
+            document.getElementById('btn-quiz-next').classList.remove('hidden');
+        }
+
+        function showFeedback(isCorrect, rationale) {
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.classList.remove('hidden', 'bg-green-100', 'border-green-300', 'text-green-800', 'bg-red-100', 'border-red-300', 'text-red-800');
+            
+            if (isCorrect) {
+                feedbackEl.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                feedbackEl.innerHTML = `<strong class="block mb-1 text-green-900">Correct!</strong> ${rationale}`;
+            } else {
+                feedbackEl.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                feedbackEl.innerHTML = `<strong class="block mb-1 text-red-900">Incorrect.</strong> ${rationale}`;
+            }
+        }
+
+        function toggleHint() {
+            const hintCont = document.getElementById('quiz-hint-container');
+            hintCont.classList.toggle('hidden');
+        }
+
+        function nextQuestion() {
+            if (currentQIndex < quizQuestions.length - 1) {
+                currentQIndex++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('quiz-score').innerText = `Score: ${score}`;
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+        }
+
+        function restartQuiz() {
+            initQuiz();
+        }
+
+        // Initialize App
+        renderCard();
+        initQuiz();
+
+    </script>
+</body>
+</html>
+
+
+

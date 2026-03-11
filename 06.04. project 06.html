@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 6 | Connectivity Verification — Computer Networks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #0f1520;
+    --bg3: #141c2b;
+    --surface: #1a2436;
+    --surface2: #1f2d42;
+    --border: #253347;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #39ff14;
+    --accent4: #bd93f9;
+    --text: #e8edf5;
+    --text-dim: #7a8fa8;
+    --text-muted: #4a5e78;
+    --warning: #ffb347;
+    --danger: #ff4757;
+    --success: #39ff14;
+    --mono: 'Space Mono', monospace;
+    --head: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 8rem 8vw 6rem;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 30%, rgba(0,212,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 20% 80%, rgba(189,147,249,0.06) 0%, transparent 50%),
+      linear-gradient(180deg, #0a0e14 0%, #0d1520 100%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-tag {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid rgba(0,212,255,0.3);
+    padding: 0.35em 0.9em;
+    display: inline-block;
+    margin-bottom: 2rem;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-tag::before {
+    content: '> ';
+    opacity: 0.5;
+  }
+
+  .hero h1 {
+    font-family: var(--head);
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero h1 span.accent { color: var(--accent); }
+  .hero h1 span.muted { color: var(--text-muted); font-weight: 400; display: block; font-size: 0.5em; letter-spacing: 0.05em; margin-top: 0.3em; }
+
+  .hero-sub {
+    font-family: var(--body);
+    font-weight: 300;
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    max-width: 560px;
+    margin-top: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .meta-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-family: var(--head);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .meta-value span { color: var(--accent); }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeIn 1s 1.5s forwards;
+  }
+
+  .hero-scroll span {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(180deg, var(--accent), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* ── NAV SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 3px;
+    z-index: 100;
+  }
+
+  .sidebar-track {
+    width: 100%;
+    height: 100%;
+    background: var(--border);
+  }
+
+  .sidebar-progress {
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(180deg, var(--accent), var(--accent4));
+    transition: height 0.1s;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 6vw;
+  }
+
+  /* ── SECTION STRUCTURE ── */
+  .section {
+    padding: 5rem 6vw;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+
+  .section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section + .section {
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    background: linear-gradient(135deg, rgba(255,71,87,0.08), rgba(255,71,87,0.04));
+    border: 1px solid rgba(255,71,87,0.3);
+    border-left: 4px solid var(--danger);
+    padding: 1.5rem 2rem;
+    border-radius: 0 8px 8px 0;
+    margin: 0 6vw 4rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 1s forwards;
+  }
+
+  .disclaimer-header {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--danger);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .disclaimer-header::before {
+    content: '⚠';
+    font-size: 1em;
+  }
+
+  .disclaimer p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .disclaimer a {
+    color: var(--warning);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,179,71,0.3);
+  }
+
+  .disclaimer a:hover {
+    color: #fff;
+    border-color: var(--warning);
+  }
+
+  /* ── SECTION HEADINGS ── */
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-eyebrow::after {
+    content: '';
+    flex: 1;
+    max-width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .section-title {
+    font-family: var(--head);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title .num {
+    color: var(--text-muted);
+    font-size: 0.7em;
+    font-weight: 400;
+    display: inline-block;
+    margin-right: 0.3em;
+  }
+
+  .section-intro {
+    font-size: 1rem;
+    color: var(--text-dim);
+    max-width: 700px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+
+  /* ── PROJECT TIMELINE ── */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 1.5rem;
+    position: relative;
+  }
+
+  .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 29px;
+    top: 40px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .timeline-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .timeline-item.current .timeline-dot {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.1);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+
+  .timeline-item.complete .timeline-dot {
+    border-color: var(--success);
+    background: rgba(57,255,20,0.1);
+    color: var(--success);
+  }
+
+  .timeline-content {
+    padding: 0.5rem 0 2rem;
+  }
+
+  .timeline-phase {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .timeline-title {
+    font-family: var(--head);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0.2rem 0;
+  }
+
+  .timeline-item.current .timeline-title { color: var(--accent); }
+
+  .timeline-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ── CONCEPT CARDS ── */
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .concept-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .concept-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(0,212,255,0.1);
+  }
+
+  .concept-header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+  }
+
+  .concept-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .concept-name {
+    font-family: var(--head);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .concept-abbr {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .concept-toggle {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+  }
+
+  .concept-card.open .concept-toggle {
+    transform: rotate(45deg);
+    color: var(--accent);
+  }
+
+  .concept-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+
+  .concept-card.open .concept-body {
+    max-height: 600px;
+  }
+
+  .concept-inner {
+    padding: 1.25rem 1.5rem 1.5rem;
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+    border-top: 1px solid var(--border);
+  }
+
+  .concept-inner strong { color: var(--text); font-weight: 500; }
+
+  .concept-inner .highlight {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    font-style: italic;
+    font-size: 0.8rem;
+  }
+
+  /* ── ICMP TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 1.25rem 0;
+  }
+
+  .data-table th {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    background: var(--bg3);
+  }
+
+  .data-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(37,51,71,0.5);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+
+  .data-table tr:hover td { background: rgba(0,212,255,0.03); }
+
+  .data-table .code-val {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ── LAB PARTS ── */
+  .lab-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+    overflow-x: auto;
+  }
+
+  .lab-tab {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 0.85rem 1.5rem;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .lab-tab:hover { color: var(--text); }
+
+  .lab-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .lab-pane { display: none; }
+  .lab-pane.active { display: block; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 2rem; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .step-num {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .step-title {
+    font-family: var(--head);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  .step-body {
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .step-body p { margin-bottom: 0.75rem; }
+  .step-body p:last-child { margin-bottom: 0; }
+
+  .step-body strong { color: var(--text); font-weight: 500; }
+
+  .step-body a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,212,255,0.3);
+    transition: all 0.2s;
+  }
+
+  .step-body a:hover {
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .code-copy {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .code-copy:hover { color: var(--accent); }
+
+  .code-block pre {
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: #cdd6f4;
+  }
+
+  .code-block code .kw { color: #cba6f7; }
+  .code-block code .cm { color: #6c7086; font-style: italic; }
+  .code-block code .st { color: #a6e3a1; }
+  .code-block code .num { color: #fab387; }
+  .code-block code .prompt { color: var(--accent); user-select: none; }
+
+  /* ── FAILURE TABLE ── */
+  .failure-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .failure-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .failure-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .failure-header:hover { background: var(--surface); }
+
+  .failure-num {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,53,0.3);
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .failure-name {
+    font-family: var(--head);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .failure-chevron {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+  }
+
+  .failure-item.open .failure-chevron { transform: rotate(180deg); }
+
+  .failure-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+
+  .failure-item.open .failure-details { max-height: 400px; }
+
+  .failure-inner {
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.875rem;
+    color: var(--text-dim);
+  }
+
+  .failure-steps { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .failure-steps li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .failure-steps li::before {
+    content: '→';
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  /* ── WIRESHARK VISUAL ── */
+  .wireshark-mock {
+    background: #1e1e2e;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
+
+  .ws-toolbar {
+    background: #313244;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ws-title {
+    font-size: 0.65rem;
+    color: #cdd6f4;
+    letter-spacing: 0.1em;
+  }
+
+  .ws-filter-bar {
+    background: #181825;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ws-filter-label {
+    font-size: 0.6rem;
+    color: #6c7086;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .ws-filter-input {
+    background: #1e1e2e;
+    border: 1px solid rgba(203,166,247,0.3);
+    color: #cba6f7;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    flex: 1;
+    max-width: 200px;
+  }
+
+  .ws-packets {
+    overflow-x: auto;
+  }
+
+  .ws-row {
+    display: grid;
+    grid-template-columns: 40px 80px 130px 130px 60px 80px 1fr;
+    gap: 0;
+    padding: 0.3rem 0.75rem;
+    transition: background 0.15s;
+    cursor: default;
+    white-space: nowrap;
+    align-items: center;
+  }
+
+  .ws-row:hover { background: rgba(255,255,255,0.05); }
+  .ws-row.header { background: #313244; color: #6c7086; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .ws-row.arp { color: #f9e2af; }
+  .ws-row.arp.reply { color: #a6e3a1; }
+  .ws-row.icmp-req { color: #89dceb; }
+  .ws-row.icmp-rep { color: #cba6f7; }
+  .ws-row.selected { background: rgba(0,212,255,0.1); }
+
+  .ws-cell { padding: 0 0.3rem; overflow: hidden; text-overflow: ellipsis; font-size: 0.7rem; }
+
+  /* ── CHECKLIST ── */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1.25rem 0;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .check-item:hover { border-color: rgba(0,212,255,0.3); }
+
+  .check-item.done {
+    border-color: rgba(57,255,20,0.3);
+    background: rgba(57,255,20,0.04);
+  }
+
+  .check-box {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+  }
+
+  .check-item.done .check-box {
+    background: var(--success);
+    border-color: var(--success);
+    color: #000;
+  }
+
+  .check-text {
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+
+  .check-item.done .check-text {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  /* ── REPORT SECTION ── */
+  .report-box {
+    background: var(--bg2);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 1.5rem;
+  }
+
+  .report-header {
+    background: rgba(0,212,255,0.07);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0,212,255,0.15);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .report-title {
+    font-family: var(--head);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .report-badge {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: #000;
+    background: var(--accent);
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  .report-body {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .report-section-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+
+  .report-section-row:last-child { border-bottom: none; }
+
+  .rs-num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .rs-name {
+    font-family: var(--head);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .rs-content {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* ── RESOURCES ── */
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .resource-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    text-decoration: none;
+    display: block;
+    transition: all 0.25s;
+  }
+
+  .resource-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0,212,255,0.08);
+  }
+
+  .resource-type {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+
+  .resource-name {
+    font-family: var(--head);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .resource-url {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 0.8; }
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cursor-blink::after {
+    content: '█';
+    animation: blink 1s step-end infinite;
+    color: var(--accent);
+    font-size: 0.8em;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .time-allocation {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .time-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem;
+    text-align: center;
+  }
+
+  .time-hours {
+    font-family: var(--head);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.2rem;
+  }
+
+  .time-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ── TOOL NOTE ── */
+  .tool-note {
+    background: linear-gradient(135deg, rgba(57,255,20,0.06), rgba(57,255,20,0.02));
+    border: 1px solid rgba(57,255,20,0.2);
+    border-left: 3px solid var(--success);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.25rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin: 1rem 0;
+  }
+
+  .tool-note strong { color: var(--success); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem 6vw;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  footer .footer-left {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+  }
+
+  footer .footer-right {
+    font-family: var(--head);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: -0.02em;
+  }
+
+  footer .footer-right span { color: var(--accent); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .concepts-grid { grid-template-columns: 1fr; }
+    .time-allocation { grid-template-columns: repeat(2, 1fr); }
+    .ws-row { grid-template-columns: 30px 70px 100px 100px 50px 60px 1fr; }
+    .report-section-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="sidebar">
+  <div class="sidebar-track">
+    <div class="sidebar-progress" id="progress"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ HERO ════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+
+  <div style="position:relative; z-index:2;">
+    <div class="hero-tag">Computer Networks · Week 6 of 16</div>
+
+    <h1>
+      <span class="accent">Connectivity</span>
+      Verification
+      <span class="muted">Module 6 — Phase 6 of 11</span>
+    </h1>
+
+    <p class="hero-sub">
+      You built the network. Now you prove it works — and you break it on purpose to see what happens when it doesn't.
+    </p>
+
+    <div class="hero-meta">
+      <div class="meta-item">
+        <span class="meta-label">Ponderation</span>
+        <span class="meta-value"><span>1</span>h · <span>2</span>h · <span>1</span>h</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Total Hours</span>
+        <span class="meta-value">~<span>6</span>h / week</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Report</span>
+        <span class="meta-value">Max <span>3</span> pages A4</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <span>Scroll to begin</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ══ DISCLAIMER ══ -->
+<div class="disclaimer">
+  <div class="disclaimer-header">Academic & Legal Notice</div>
+  <p>
+    All tools and techniques in this lab are presented <strong style="color:var(--text)">strictly for educational purposes</strong> within a controlled simulation environment.
+    They are <strong style="color:var(--text)">open suggestions</strong> — you are actively encouraged to research, substitute, or invent your own tools.
+    Techniques such as packet capture are regulated by laws including the
+    <a href="https://www.justice.gov/jm/jm-9-48000-computer-fraud" target="_blank">Computer Fraud and Abuse Act (CFAA)</a> and equivalent legislation worldwide.
+    <strong style="color:var(--text)">Never apply these techniques to networks you do not own or have explicit written permission to test.</strong>
+    The instructor and institution bear no responsibility for misuse outside this academic context.
+  </p>
+</div>
+
+<!-- ════════════════════════════ WHERE WE ARE ════════════════════════════ -->
+<section class="section" id="project">
+  <div class="container">
+    <div class="section-eyebrow">Project Context</div>
+    <h2 class="section-title"><span class="num">01</span>Where We Are in the Project</h2>
+    <p class="section-intro">
+      You have been building a Multi-Branch Campus Network since Week 1. Phases 1–5 were about construction. Phase 6 is about <em>proof</em>.
+    </p>
+
+    <div class="time-allocation">
+      <div class="time-block">
+        <div class="time-hours" style="color:var(--accent)">1h</div>
+        <div class="time-label">Lecture</div>
+      </div>
+      <div class="time-block">
+        <div class="time-hours" style="color:var(--accent2)">2h</div>
+        <div class="time-label">Lab / Project</div>
+      </div>
+      <div class="time-block">
+        <div class="time-hours" style="color:var(--accent4)">1h</div>
+        <div class="time-label">Independent</div>
+      </div>
+      <div class="time-block">
+        <div class="time-hours" style="color:var(--success)">~6h</div>
+        <div class="time-label">Total / Week</div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item complete">
+        <div class="timeline-dot">✓</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 1</div>
+          <div class="timeline-title">Topology Design</div>
+          <div class="timeline-desc">Network diagram in simulation software · HQ + Branch requirements</div>
+        </div>
+      </div>
+      <div class="timeline-item complete">
+        <div class="timeline-dot">✓</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 2</div>
+          <div class="timeline-title">IP Planning (VLSM)</div>
+          <div class="timeline-desc">Variable Length Subnet Masking addressing scheme · Subnet-to-VLAN mapping</div>
+        </div>
+      </div>
+      <div class="timeline-item complete">
+        <div class="timeline-dot">✓</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 3</div>
+          <div class="timeline-title">Initial Device Configuration</div>
+          <div class="timeline-desc">Hostnames, passwords, management IPs via IOS CLI</div>
+        </div>
+      </div>
+      <div class="timeline-item complete">
+        <div class="timeline-dot">✓</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 4</div>
+          <div class="timeline-title">Layer 2 Segmentation</div>
+          <div class="timeline-desc">VLANs for HR, Engineering, Guest · Trunk links · 802.1Q</div>
+        </div>
+      </div>
+      <div class="timeline-item complete">
+        <div class="timeline-dot">✓</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 5</div>
+          <div class="timeline-title">Inter-VLAN Routing</div>
+          <div class="timeline-desc">Router-on-a-Stick or Layer 3 Switching · Cross-VLAN communication enabled</div>
+        </div>
+      </div>
+      <div class="timeline-item current">
+        <div class="timeline-dot">⟶</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phase 6 — Current</div>
+          <div class="timeline-title">Connectivity Verification</div>
+          <div class="timeline-desc">Packet tracing · Failure simulation · Wireshark ARP &amp; ICMP analysis</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">7</div>
+        <div class="timeline-content">
+          <div class="timeline-phase">Phases 7–11</div>
+          <div class="timeline-title">Services, Hardening &amp; Integration</div>
+          <div class="timeline-desc">DHCP, DNS, ACLs, WAN expansion, SSH, TFTP, final documentation</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ CONCEPTS ════════════════════════════ -->
+<section class="section" id="concepts">
+  <div class="container">
+    <div class="section-eyebrow">Concept Primer</div>
+    <h2 class="section-title"><span class="num">02</span>Know These Before the CLI</h2>
+    <p class="section-intro">
+      Click each concept to expand its explanation. These are not definitions to memorize — they are mental models you will need while you work.
+    </p>
+
+    <div class="concepts-grid">
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(0,212,255,0.1)">📦</div>
+          <div>
+            <div class="concept-name">The Packet</div>
+            <div class="concept-abbr">The atom of networking</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            Everything that travels across a network does so in <strong>packets</strong> — small, discrete units of data. Think of a packet like a postcard: it has a destination address, it travels through several "post offices" (routers), and each router decides where to forward it next.
+            <br><br>
+            Each packet contains a <strong>header</strong> (source IP, destination IP, protocol type, TTL — <em>Time To Live</em>), a <strong>payload</strong> (the actual data), and sometimes a <strong>trailer</strong> (error-checking information).
+            <div class="highlight">TTL (Time To Live) is a counter. Each router that forwards the packet decrements it by 1. If it reaches 0, the packet is discarded. This prevents lost packets from circling the internet forever.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(255,107,53,0.1)">🔍</div>
+          <div>
+            <div class="concept-name">ARP</div>
+            <div class="concept-abbr">Address Resolution Protocol</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            Your computer thinks in <strong>IP addresses</strong> (e.g., <code>192.168.10.5</code>), but the physical network hardware thinks in <strong>MAC (Media Access Control) addresses</strong> (e.g., <code>AA:BB:CC:DD:EE:FF</code>). ARP is the bridge between these two worlds.
+            <br><br>
+            When your computer wants to reach another device on the same local segment, it <strong>broadcasts</strong> (shouts to everyone): <em>"Who has IP 192.168.10.1? Tell me your MAC address."</em> The correct device replies with its MAC. Your computer caches this mapping in its <strong>ARP cache</strong> for a few minutes.
+            <div class="highlight">⚠️ ARP has no authentication. A malicious device can send fake ARP replies to redirect traffic — this is called <strong>ARP Spoofing / ARP Poisoning</strong>. Understanding ARP is the first step to understanding this attack and its defenses (Dynamic ARP Inspection, static ARP entries).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(189,147,249,0.1)">📡</div>
+          <div>
+            <div class="concept-name">ICMP</div>
+            <div class="concept-abbr">Internet Control Message Protocol</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            ICMP is the "voice" of the network — it carries error messages and operational information between devices. When a router cannot forward a packet, it sends an ICMP message back to the sender explaining why.
+            <br><br>
+            <table class="data-table" style="margin:0.5rem 0">
+              <thead><tr><th>Type</th><th>Name</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td class="code-val">Type 8</td><td>Echo Request</td><td>Sent by <code>ping</code> — "Are you there?"</td></tr>
+                <tr><td class="code-val">Type 0</td><td>Echo Reply</td><td>Response to ping — "Yes, I'm here."</td></tr>
+                <tr><td class="code-val">Type 3</td><td>Dest. Unreachable</td><td>Router cannot reach destination</td></tr>
+                <tr><td class="code-val">Type 11</td><td>Time Exceeded</td><td>TTL hit zero — used by traceroute</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(57,255,20,0.1)">🔔</div>
+          <div>
+            <div class="concept-name">Ping</div>
+            <div class="concept-abbr">The simplest reachability test</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            <code>ping</code> sends ICMP Echo Requests to a destination and reports whether replies were received, the <strong>RTT (Round-Trip Time)</strong> in milliseconds, and packet loss percentage.
+            <br><br>
+            A successful ping tells you: <em>a packet can travel from here to there and back.</em> A failed ping tells you something is blocking the path — but not <em>where</em>. That is what traceroute is for.
+            <div class="highlight">Ping is the "can you hear me?" of networking. It is usually the first diagnostic tool a network engineer reaches for.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(255,179,71,0.1)">🗺️</div>
+          <div>
+            <div class="concept-name">Traceroute / Tracert</div>
+            <div class="concept-abbr">Following the packet's path</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            <code>traceroute</code> (Linux/macOS) or <code>tracert</code> (Windows) sends packets with incrementally increasing <strong>TTL</strong> values. The first packet has TTL=1, so the first router decrements it to 0 and sends back an <em>ICMP Time Exceeded</em> message — revealing its own address. Each subsequent packet travels one hop further.
+            <br><br>
+            Result: a <strong>hop-by-hop map</strong> of every router the packet crosses, with latency at each hop.
+            <div class="highlight">
+              <code style="color:var(--accent)">traceroute 10.10.30.1</code><br>
+              1 &nbsp;10.10.10.1 &nbsp;1ms &nbsp;— default gateway<br>
+              2 &nbsp;10.10.20.1 &nbsp;2ms &nbsp;— core router<br>
+              3 &nbsp;10.10.30.1 &nbsp;3ms &nbsp;— destination
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(255,71,87,0.1)">💥</div>
+          <div>
+            <div class="concept-name">Fault Injection</div>
+            <div class="concept-abbr">Why chaos is your friend</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            A network engineer who has only ever tested a <em>working</em> network is like a pilot who has only ever flown in perfect weather. <strong>Deliberately breaking things</strong> in simulation teaches you which redundant paths exist, how fast the network detects failures, and which subnets lose reachability.
+            <br><br>
+            This discipline is called <strong>chaos engineering</strong> in professional contexts. Organizations like <a href="https://netflix.github.io/chaosmonkey/" target="_blank">Netflix (Chaos Monkey)</a> have built entire engineering practices around deliberately injecting failures into production systems to discover weaknesses before customers do.
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card" onclick="toggleCard(this)">
+        <div class="concept-header">
+          <div class="concept-icon" style="background:rgba(0,212,255,0.1)">🦈</div>
+          <div>
+            <div class="concept-name">Wireshark</div>
+            <div class="concept-abbr">Packet analyzer / protocol sniffer</div>
+          </div>
+          <div class="concept-toggle">+</div>
+        </div>
+        <div class="concept-body">
+          <div class="concept-inner">
+            <a href="https://www.wireshark.org" target="_blank">Wireshark</a> is a free, open-source <strong>packet analyzer</strong> that captures all network traffic passing through an interface and displays it decoded layer by layer. It lets you see every ARP broadcast, every ICMP exchange, every TCP handshake — in real time.
+            <br><br>
+            Key display filters:
+            <div class="highlight">
+              <code style="color:#cba6f7">arp</code> &nbsp;→ show only ARP frames<br>
+              <code style="color:#cba6f7">icmp</code> &nbsp;→ show only ICMP packets<br>
+              <code style="color:#cba6f7">ip.addr == 10.10.10.5</code> &nbsp;→ filter by IP
+            </div>
+            <br>
+            ⚠️ Capturing traffic not destined for your machine requires <strong>promiscuous mode</strong> (NIC — Network Interface Card — captures all packets on the segment, not just its own) and may be legally regulated. Always use only on authorized networks.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tool-note" style="margin-top:1.5rem">
+      <strong>🔧 Tool Freedom Reminder:</strong> Wireshark is a suggestion. <a href="https://www.tcpdump.org/" target="_blank" style="color:var(--accent)">tcpdump</a>, <a href="https://scapy.net/" target="_blank" style="color:var(--accent)">Scapy</a>, <a href="https://zeek.org/" target="_blank" style="color:var(--accent)">Zeek</a>, or a custom Python script can all capture and analyze packets. Research your options. Consider building your own. <strong>The tool is secondary — the understanding is primary.</strong>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ LAB PROCEDURE ════════════════════════════ -->
+<section class="section" id="lab">
+  <div class="container">
+    <div class="section-eyebrow">Lab Procedure</div>
+    <h2 class="section-title"><span class="num">03</span>Step-by-Step Lab</h2>
+    <p class="section-intro">
+      Follow the parts in order. The environment assumed is a network simulator — adapt all commands to your setup.
+    </p>
+
+    <div class="lab-tabs">
+      <button class="lab-tab active" onclick="switchTab(this,'partA')">Part A — Baseline</button>
+      <button class="lab-tab" onclick="switchTab(this,'partB')">Part B — Failure Testing</button>
+      <button class="lab-tab" onclick="switchTab(this,'partC')">Part C — Packet Analysis</button>
+      <button class="lab-tab" onclick="switchTab(this,'partD')">Part D — Independent Work</button>
+    </div>
+
+    <!-- PART A -->
+    <div class="lab-pane active" id="partA">
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">A1</div>
+          <div>
+            <div class="step-title">Verify Routing Tables</div>
+            <div class="step-body">
+              <p>On every router in your topology, display the routing table. For every subnet that should exist, confirm there is a route to it, the next-hop address makes sense, and the outgoing interface is correct.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">Cisco IOS CLI</span>
+                  <button class="code-copy" onclick="copyCode(this)">copy</button>
+                </div>
+                <pre><code><span class="prompt">Router# </span>show ip route
+
+<span class="cm">-- Example output excerpt --</span>
+C   10.10.10.0/24 is directly connected, Gig0/0.10
+C   10.10.20.0/24 is directly connected, Gig0/0.20
+S   10.20.0.0/24 [1/0] via 203.0.113.2
+</code></pre>
+              </div>
+              <p><strong>Document:</strong> Screenshot or copy-paste the routing table of every router. Label each one clearly by hostname.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">A2</div>
+          <div>
+            <div class="step-title">Build a Ping Connectivity Matrix</div>
+            <div class="step-body">
+              <p>Create a table with every subnet as both source and destination. Systematically ping every combination and mark each cell ✓ (reachable) or ✗ (not reachable). Note the RTT (Round-Trip Time) for successful pings.</p>
+              <table class="data-table" style="margin:1rem 0">
+                <thead>
+                  <tr><th>From → To</th><th>HR VLAN (10.10.10.x)</th><th>Eng VLAN (10.10.20.x)</th><th>Guest VLAN (10.10.30.x)</th><th>Branch (10.20.0.x)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>HR PC</td><td style="color:var(--text-muted)">—</td><td>✓ / ✗</td><td>✓ / ✗</td><td>✓ / ✗</td></tr>
+                  <tr><td>Engineering PC</td><td>✓ / ✗</td><td style="color:var(--text-muted)">—</td><td>✓ / ✗</td><td>✓ / ✗</td></tr>
+                  <tr><td>Guest PC</td><td>✓ / ✗</td><td>✓ / ✗</td><td style="color:var(--text-muted)">—</td><td>✓ / ✗</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">A3</div>
+          <div>
+            <div class="step-title">Run Traceroute for At Least 3 Paths</div>
+            <div class="step-body">
+              <p>Pick at least three paths that cross a router boundary. Record complete output — every hop, every address. Annotate each hop: what device is it? What interface? Why does the packet go that way?</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">CLI</span>
+                  <button class="code-copy" onclick="copyCode(this)">copy</button>
+                </div>
+                <pre><code><span class="cm">-- Linux / macOS --</span>
+<span class="prompt">$ </span>traceroute 10.20.0.10
+
+<span class="cm">-- Windows --</span>
+<span class="prompt">C:\> </span>tracert 10.20.0.10
+
+<span class="cm">-- Cisco IOS (from router) --</span>
+<span class="prompt">Router# </span>traceroute 10.20.0.10</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">A4</div>
+          <div>
+            <div class="step-title">Capture Baseline ARP &amp; ICMP in Wireshark</div>
+            <div class="step-body">
+              <p>Open your packet analyzer on an interface in your simulated network. Generate traffic by pinging across subnets. Capture at least one complete ARP exchange and one complete ICMP ping sequence.</p>
+
+              <!-- Mock Wireshark UI -->
+              <div class="wireshark-mock">
+                <div class="ws-toolbar">
+                  <div class="ws-title">● Wireshark — Packet Capture (simulated view)</div>
+                </div>
+                <div class="ws-filter-bar">
+                  <span class="ws-filter-label">Filter</span>
+                  <input class="ws-filter-input" value="arp or icmp" readonly>
+                </div>
+                <div class="ws-packets">
+                  <div class="ws-row header">
+                    <div class="ws-cell">#</div>
+                    <div class="ws-cell">Time</div>
+                    <div class="ws-cell">Source</div>
+                    <div class="ws-cell">Destination</div>
+                    <div class="ws-cell">Proto</div>
+                    <div class="ws-cell">Length</div>
+                    <div class="ws-cell">Info</div>
+                  </div>
+                  <div class="ws-row arp">
+                    <div class="ws-cell">1</div>
+                    <div class="ws-cell">0.000000</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">Broadcast</div>
+                    <div class="ws-cell">ARP</div>
+                    <div class="ws-cell">42</div>
+                    <div class="ws-cell">Who has 10.10.10.1? Tell 10.10.10.5</div>
+                  </div>
+                  <div class="ws-row arp reply">
+                    <div class="ws-cell">2</div>
+                    <div class="ws-cell">0.000812</div>
+                    <div class="ws-cell">10.10.10.1</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">ARP</div>
+                    <div class="ws-cell">42</div>
+                    <div class="ws-cell">10.10.10.1 is at AA:BB:CC:11:22:33</div>
+                  </div>
+                  <div class="ws-row icmp-req">
+                    <div class="ws-cell">3</div>
+                    <div class="ws-cell">0.001100</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">10.10.20.10</div>
+                    <div class="ws-cell">ICMP</div>
+                    <div class="ws-cell">74</div>
+                    <div class="ws-cell">Echo (ping) request  id=0x0001, seq=1/256, ttl=128</div>
+                  </div>
+                  <div class="ws-row icmp-rep">
+                    <div class="ws-cell">4</div>
+                    <div class="ws-cell">0.002340</div>
+                    <div class="ws-cell">10.10.20.10</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">ICMP</div>
+                    <div class="ws-cell">74</div>
+                    <div class="ws-cell">Echo (ping) reply    id=0x0001, seq=1/256, ttl=127</div>
+                  </div>
+                  <div class="ws-row icmp-req">
+                    <div class="ws-cell">5</div>
+                    <div class="ws-cell">0.003100</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">10.10.20.10</div>
+                    <div class="ws-cell">ICMP</div>
+                    <div class="ws-cell">74</div>
+                    <div class="ws-cell">Echo (ping) request  id=0x0001, seq=2/512, ttl=128</div>
+                  </div>
+                  <div class="ws-row icmp-rep selected">
+                    <div class="ws-cell">6</div>
+                    <div class="ws-cell">0.004180</div>
+                    <div class="ws-cell">10.10.20.10</div>
+                    <div class="ws-cell">10.10.10.5</div>
+                    <div class="ws-cell">ICMP</div>
+                    <div class="ws-cell">74</div>
+                    <div class="ws-cell">Echo (ping) reply    id=0x0001, seq=2/512, ttl=127</div>
+                  </div>
+                </div>
+              </div>
+
+              <p>Save screenshots with annotations identifying: source MAC, destination MAC, source IP, destination IP, ARP operation type, and ICMP type for each captured frame.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PART B -->
+    <div class="lab-pane" id="partB">
+      <p style="font-size:0.875rem; color:var(--text-dim); margin-bottom:1.5rem;">
+        <strong style="color:var(--text)">Before you break anything:</strong> write your hypothesis for each scenario first. Engineering is structured inquiry, not random experimentation.
+      </p>
+
+      <div class="failure-grid">
+
+        <div class="failure-item" onclick="toggleFailure(this)">
+          <div class="failure-header">
+            <div class="failure-num">F-1</div>
+            <div class="failure-name">Shut down the Access-to-Core uplink</div>
+            <div class="failure-chevron">▼</div>
+          </div>
+          <div class="failure-details">
+            <div class="failure-inner">
+              <ul class="failure-steps">
+                <li>Write hypothesis: which subnets do you predict will lose connectivity?</li>
+                <li>Apply: <code style="color:var(--accent)">interface GigX/X → shutdown</code></li>
+                <li>Re-run your ping matrix — mark which cells change from ✓ to ✗</li>
+                <li>Run traceroute to an affected destination — note the <code>* * *</code> timeouts</li>
+                <li>Capture in Wireshark — look for ICMP Destination Unreachable (Type 3) messages</li>
+                <li>Restore: <code style="color:var(--success)">no shutdown</code> → confirm baseline returns</li>
+                <li>Record: was your hypothesis correct? If not, why not?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="failure-item" onclick="toggleFailure(this)">
+          <div class="failure-header">
+            <div class="failure-num">F-2</div>
+            <div class="failure-name">Shut down one VLAN sub-interface on Router-on-a-Stick</div>
+            <div class="failure-chevron">▼</div>
+          </div>
+          <div class="failure-details">
+            <div class="failure-inner">
+              <ul class="failure-steps">
+                <li>Write hypothesis: which VLAN loses inter-VLAN routing? Which are unaffected?</li>
+                <li>Apply: <code style="color:var(--accent)">interface Gig0/0.20 → shutdown</code></li>
+                <li>Re-run ping matrix — note that only one VLAN should be affected</li>
+                <li>Verify: can devices in the disabled VLAN still reach other devices in the <em>same</em> VLAN?</li>
+                <li>Check the routing table with <code>show ip route</code> — what changed?</li>
+                <li>Restore and verify</li>
+              </ul>
+              <div class="code-block" style="margin-top:1rem">
+                <div class="code-header"><span class="code-lang">Cisco IOS CLI</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre><code><span class="prompt">Router(config)# </span>interface GigabitEthernet0/0.20
+<span class="prompt">Router(config-subif)# </span>shutdown
+<span class="cm">-- test -- then restore:</span>
+<span class="prompt">Router(config-subif)# </span>no shutdown</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="failure-item" onclick="toggleFailure(this)">
+          <div class="failure-header">
+            <div class="failure-num">F-3</div>
+            <div class="failure-name">Disconnect the WAN link to the Branch</div>
+            <div class="failure-chevron">▼</div>
+          </div>
+          <div class="failure-details">
+            <div class="failure-inner">
+              <ul class="failure-steps">
+                <li>Write hypothesis: which subnets at HQ can still communicate? What happens to Branch reachability?</li>
+                <li>Apply: shut down or disconnect the serial / WAN interface connecting HQ to the Branch</li>
+                <li>Re-run the full ping matrix — note which rows/columns now show ✗</li>
+                <li>Does HQ-to-HQ communication remain fully functional?</li>
+                <li>What ICMP message type does the HQ router send back to a pinging host?</li>
+                <li>Document whether your network has a redundant WAN path — if not, this is a single point of failure</li>
+                <li>Restore and verify</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:1.5rem; padding:1.25rem; background:var(--bg2); border:1px solid var(--border); border-radius:10px;">
+        <p style="font-family:var(--head); font-weight:700; margin-bottom:0.5rem;">Failure Analysis (include in report)</p>
+        <p style="font-size:0.875rem; color:var(--text-dim)">After testing all scenarios: Which parts of your topology have <strong style="color:var(--text)">single points of failure</strong>? What redundancy improvements would you recommend for a real organization? Reference the <a href="https://www.cisco.com/c/en/us/td/docs/solutions/Enterprise/Data_Center/HA_Clusters/ha.html" target="_blank" style="color:var(--accent)">Cisco High Availability Design Guide</a> or equivalent documentation in your analysis.</p>
+      </div>
+    </div>
+
+    <!-- PART C -->
+    <div class="lab-pane" id="partC">
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">C1</div>
+          <div>
+            <div class="step-title">ARP Dissection</div>
+            <div class="step-body">
+              <p>Capture a fresh ARP exchange. Expand the ARP layer in your analyzer. Answer in your report:</p>
+              <div class="checklist" id="arpQuestions">
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What is the destination MAC of the ARP Request? Why is it <code>FF:FF:FF:FF:FF:FF</code>?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What fields identify the sender and target in the ARP packet?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">Run <code>arp -a</code> on a host after a successful ping — what do you see in the ARP cache?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">C2</div>
+          <div>
+            <div class="step-title">ICMP Dissection</div>
+            <div class="step-body">
+              <p>Capture a ping session (4 packets) across a routed boundary. Answer:</p>
+              <div class="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What is the TTL (Time To Live) value? How does it change at each hop?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What is the ICMP Identifier field? Why might it be useful?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">Compare the RTT (Round-Trip Time) shown by ping to the timestamps in Wireshark — are they consistent?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">C3</div>
+          <div>
+            <div class="step-title">Failure Traffic Analysis</div>
+            <div class="step-body">
+              <p>With a link shut down, initiate a ping to an unreachable host. Capture the traffic. Answer:</p>
+              <div class="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What ICMP message type does the router generate to inform the sender?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What information is included in the Data section of that ICMP error message?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">Can you see ARP requests even when the destination is unreachable? What does this tell you about the network stack's order of operations?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PART D -->
+    <div class="lab-pane" id="partD">
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">D1</div>
+          <div>
+            <div class="step-title">IANA Registry Research</div>
+            <div class="step-body">
+              <p>The <a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml" target="_blank">IANA (Internet Assigned Numbers Authority)</a> maintains the official registry of all ICMP message types.</p>
+              <p>Browse the registry. Find <strong>3 ICMP message types you have not yet encountered</strong> in this lab. For each, write two sentences: what network event generates this message, and why it would be useful to a network engineer.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">D2</div>
+          <div>
+            <div class="step-title">Alternative Tool Exploration</div>
+            <div class="step-body">
+              <p>Choose one alternative to Wireshark, install it, capture some traffic, and compare it. Write 3 sentences: what you chose, one thing it does better, one thing it does worse.</p>
+              <div class="resources-grid" style="margin-top:1rem">
+                <a href="https://www.tcpdump.org/" target="_blank" class="resource-card">
+                  <div class="resource-type">CLI Tool</div>
+                  <div class="resource-name">tcpdump</div>
+                  <div class="resource-url">tcpdump.org</div>
+                </a>
+                <a href="https://scapy.net/" target="_blank" class="resource-card">
+                  <div class="resource-type">Python Library</div>
+                  <div class="resource-name">Scapy</div>
+                  <div class="resource-url">scapy.net</div>
+                </a>
+                <a href="https://zeek.org/" target="_blank" class="resource-card">
+                  <div class="resource-type">Analysis Framework</div>
+                  <div class="resource-name">Zeek (formerly Bro)</div>
+                  <div class="resource-url">zeek.org</div>
+                </a>
+                <a href="https://www.wireshark.org/docs/man-pages/tshark.html" target="_blank" class="resource-card">
+                  <div class="resource-type">CLI Version</div>
+                  <div class="resource-name">tshark</div>
+                  <div class="resource-url">wireshark.org/docs</div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">D3</div>
+          <div>
+            <div class="step-title">Gratuitous ARP (GARP)</div>
+            <div class="step-body">
+              <p>Research the concept of <strong>gratuitous ARP (GARP)</strong>. Write in your report:</p>
+              <div class="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">What is a gratuitous ARP? When is it sent?</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">One legitimate use case (hint: consider what happens when a device's IP address changes)</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <div class="check-box"></div>
+                  <span class="check-text">One way gratuitous ARP can be abused by an attacker</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════ REPORT ════════════════════════════ -->
+<section class="section" id="report">
+  <div class="container">
+    <div class="section-eyebrow">Deliverable</div>
+    <h2 class="section-title"><span class="num">04</span>Your Report</h2>
+    <p class="section-intro">One document. Maximum 3 pages A4. Quality over length — every sentence should carry information.</p>
+
+    <div class="report-box">
+      <div class="report-header">
+        <div class="report-title">Phase 6 Report — Connectivity Verification</div>
+        <div class="report-badge">Max 3 pages A4</div>
+      </div>
+      <div class="report-body">
+        <div class="report-section-row">
+          <div>
+            <div class="rs-num">Section 1</div>
+            <div class="rs-name">Baseline State</div>
+          </div>
+          <div class="rs-content">
+            Routing table summary (one screenshot or copy per router) · Completed ping matrix (✓/✗ table) · One annotated Wireshark screenshot of an ARP exchange · One annotated Wireshark screenshot of an ICMP ping sequence. Use labels or arrows to identify key fields.
+          </div>
+        </div>
+        <div class="report-section-row">
+          <div>
+            <div class="rs-num">Section 2</div>
+            <div class="rs-name">Failure Scenarios</div>
+          </div>
+          <div class="rs-content">
+            Table format preferred: failure applied / observed impact / hypothesis correct? Minimum three scenarios (F-1, F-2, F-3). Include one observation about single points of failure in your topology.
+          </div>
+        </div>
+        <div class="report-section-row">
+          <div>
+            <div class="rs-num">Section 3</div>
+            <div class="rs-name">Packet Analysis Answers</div>
+          </div>
+          <div class="rs-content">
+            Answers to ARP Dissection questions (C1) and ICMP Dissection questions (C2 and C3). Concise — 1–3 sentences per question.
+          </div>
+        </div>
+        <div class="report-section-row">
+          <div>
+            <div class="rs-num">Section 4</div>
+            <div class="rs-name">Reflection</div>
+          </div>
+          <div class="rs-content">
+            One IANA finding (2 sentences) · Alternative tool comparison (3 sentences: tool chosen, one advantage, one disadvantage) · Gratuitous ARP explanation (what it is + legitimate use + abuse vector).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-note" style="margin-top:1.5rem">
+      <strong>💡 Formatting tip:</strong> Use tables wherever possible to compress information. A well-structured table communicates more than three paragraphs. Reserve prose for analysis and interpretation. The 3-page limit is a design constraint — treat it like one.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ RESOURCES ════════════════════════════ -->
+<section class="section" id="resources">
+  <div class="container">
+    <div class="section-eyebrow">References</div>
+    <h2 class="section-title"><span class="num">05</span>Resources &amp; Further Reading</h2>
+    <p class="section-intro">All tools are open suggestions. Substitute freely. Build your own. Research deeply.</p>
+
+    <div class="resources-grid">
+      <a href="https://www.wireshark.org/docs/" target="_blank" class="resource-card">
+        <div class="resource-type">Packet Analyzer</div>
+        <div class="resource-name">Wireshark Documentation</div>
+        <div class="resource-url">wireshark.org/docs</div>
+      </a>
+      <a href="https://www.netacad.com/courses/packet-tracer" target="_blank" class="resource-card">
+        <div class="resource-type">Simulator</div>
+        <div class="resource-name">Cisco Packet Tracer</div>
+        <div class="resource-url">netacad.com</div>
+      </a>
+      <a href="https://www.gns3.com/" target="_blank" class="resource-card">
+        <div class="resource-type">Emulator</div>
+        <div class="resource-name">GNS3</div>
+        <div class="resource-url">gns3.com</div>
+      </a>
+      <a href="https://containerlab.dev/" target="_blank" class="resource-card">
+        <div class="resource-type">Container-based Labs</div>
+        <div class="resource-name">Containerlab</div>
+        <div class="resource-url">containerlab.dev</div>
+      </a>
+      <a href="https://scapy.net/" target="_blank" class="resource-card">
+        <div class="resource-type">Python / Packets</div>
+        <div class="resource-name">Scapy</div>
+        <div class="resource-url">scapy.net</div>
+      </a>
+      <a href="https://zeek.org/" target="_blank" class="resource-card">
+        <div class="resource-type">Network Analysis</div>
+        <div class="resource-name">Zeek (formerly Bro)</div>
+        <div class="resource-url">zeek.org</div>
+      </a>
+      <a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml" target="_blank" class="resource-card">
+        <div class="resource-type">Official Registry</div>
+        <div class="resource-name">IANA ICMP Parameters</div>
+        <div class="resource-url">iana.org</div>
+      </a>
+      <a href="https://datatracker.ietf.org/doc/html/rfc826" target="_blank" class="resource-card">
+        <div class="resource-type">RFC / IETF Standard</div>
+        <div class="resource-name">RFC 826 — ARP</div>
+        <div class="resource-url">datatracker.ietf.org</div>
+      </a>
+      <a href="https://datatracker.ietf.org/doc/html/rfc792" target="_blank" class="resource-card">
+        <div class="resource-type">RFC / IETF Standard</div>
+        <div class="resource-name">RFC 792 — ICMP</div>
+        <div class="resource-url">datatracker.ietf.org</div>
+      </a>
+      <a href="https://www.tcpdump.org/" target="_blank" class="resource-card">
+        <div class="resource-type">CLI Capture</div>
+        <div class="resource-name">tcpdump</div>
+        <div class="resource-url">tcpdump.org</div>
+      </a>
+      <a href="https://www.eve-ng.net/" target="_blank" class="resource-card">
+        <div class="resource-type">Emulator</div>
+        <div class="resource-name">EVE-NG</div>
+        <div class="resource-url">eve-ng.net</div>
+      </a>
+      <a href="https://netflix.github.io/chaosmonkey/" target="_blank" class="resource-card">
+        <div class="resource-type">Chaos Engineering</div>
+        <div class="resource-name">Netflix Chaos Monkey</div>
+        <div class="resource-url">netflix.github.io</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ FOOTER ════════════════════════════ -->
+<footer>
+  <div class="footer-left">
+    Computer Networks — Project-Based Learning<br>
+    Week 6 of 16 · Module 6: Connectivity Verification<br>
+    Ponderation 1·2·1 · Report max 3 pages A4<br>
+    All tools are open — substitute, research, and build your own.
+  </div>
+  <div class="footer-right">
+    CN<span>·</span>W6
+  </div>
+</footer>
+
+<script>
+  // ── Scroll Progress ──
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = (scrolled / max) * 100;
+    document.getElementById('progress').style.height = pct + '%';
+  });
+
+  // ── Intersection Observer for fade-in ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+  // ── Concept Cards ──
+  function toggleCard(card) {
+    const wasOpen = card.classList.contains('open');
+    document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('open'));
+    if (!wasOpen) card.classList.add('open');
+  }
+
+  // ── Failure Items ──
+  function toggleFailure(item) {
+    item.classList.toggle('open');
+  }
+
+  // ── Lab Tabs ──
+  function switchTab(btn, paneId) {
+    document.querySelectorAll('.lab-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.lab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(paneId).classList.add('active');
+  }
+
+  // ── Checklist ──
+  function toggleCheck(item) {
+    item.classList.toggle('done');
+    const box = item.querySelector('.check-box');
+    box.textContent = item.classList.contains('done') ? '✓' : '';
+  }
+
+  // ── Copy Code ──
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText.replace(/^[►$#>]\s*/gm, '');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1800);
+    });
+  }
+
+  // ── Open first concept card on load ──
+  setTimeout(() => {
+    const firstCard = document.querySelector('.concept-card');
+    if (firstCard) firstCard.classList.add('open');
+  }, 1200);
+</script>
+</body>
+</html>

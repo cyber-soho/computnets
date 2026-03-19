@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Networks — Mid-Term Examination Review</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --navy: #1B2A4A;
+  --blue: #2E75B6;
+  --lightblue: #D6E4F0;
+  --accent: #C45911;
+  --green: #2D7D46;
+  --lightgreen: #E8F5E9;
+  --gold: #BF8F00;
+  --lightgold: #FFF8E1;
+  --gray: #5A6270;
+  --lightgray: #F5F6F8;
+  --white: #FFFFFF;
+  --text: #1E1E1E;
+  --bg: #FAFBFC;
+  --card: #FFFFFF;
+  --shadow: 0 2px 12px rgba(27,42,74,0.08);
+  --radius: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- NAV --- */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: var(--navy);
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+.topnav .logo { color: #fff; font-family: 'Crimson Pro', serif; font-size: 1.25rem; font-weight: 700; letter-spacing: .02em; }
+.topnav .logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 4px; }
+.nav-links button {
+  background: transparent; border: none; color: rgba(255,255,255,0.7);
+  font-family: 'Source Sans 3', sans-serif; font-size: .85rem; font-weight: 600;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .2s;
+}
+.nav-links button:hover, .nav-links button.active { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* --- HERO --- */
+.hero {
+  margin-top: 56px;
+  background: linear-gradient(135deg, var(--navy) 0%, #2a4576 50%, var(--blue) 100%);
+  padding: 80px 24px 60px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+}
+.hero h1 { font-family: 'Crimson Pro', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; margin-bottom: 8px; }
+.hero h2 { font-size: 1.2rem; font-weight: 400; opacity: .85; margin-bottom: 12px; }
+.hero .badge {
+  display: inline-block; background: var(--accent); color: #fff;
+  padding: 6px 18px; border-radius: 20px; font-size: .85rem; font-weight: 700; letter-spacing: .04em;
+}
+.hero .meta { margin-top: 20px; font-size: .9rem; opacity: .7; }
+
+/* --- CONTAINER --- */
+.container { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* --- SECTIONS --- */
+.section { display: none; }
+.section.active { display: block; animation: fadeUp .4s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- CARDS --- */
+.card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 28px 32px; margin-bottom: 24px; border-left: 4px solid var(--blue);
+  transition: box-shadow .2s;
+}
+.card:hover { box-shadow: 0 4px 24px rgba(27,42,74,0.12); }
+.card.accent-border { border-left-color: var(--accent); }
+.card.green-border { border-left-color: var(--green); }
+.card.gold-border { border-left-color: var(--gold); }
+
+.card h3 {
+  font-family: 'Crimson Pro', serif; font-size: 1.45rem; color: var(--navy);
+  margin-bottom: 12px; font-weight: 700;
+}
+.card h4 {
+  font-size: 1.05rem; color: var(--blue); margin-bottom: 8px; font-weight: 700;
+}
+.card p, .card li { margin-bottom: 8px; color: var(--text); }
+.card a { color: var(--blue); text-decoration: underline; font-weight: 600; }
+.card a:hover { color: var(--accent); }
+
+.chip {
+  display: inline-block; font-size: .75rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 12px; margin-bottom: 10px; letter-spacing: .03em;
+}
+.chip-module { background: var(--lightblue); color: var(--navy); }
+.chip-answer { background: var(--lightgreen); color: var(--green); }
+.chip-explain { background: var(--lightgold); color: #7A6200; }
+
+/* --- QUESTION STYLES --- */
+.q-block { margin-bottom: 20px; }
+.q-text { font-weight: 600; color: var(--navy); margin-bottom: 6px; white-space: pre-line; line-height: 1.65; }
+.q-options { margin-left: 16px; margin-bottom: 8px; white-space: pre-line; color: var(--text); }
+.answer-toggle {
+  background: var(--lightgray); border: 1px solid #dde; color: var(--navy);
+  padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: .88rem;
+  font-weight: 600; font-family: inherit; transition: all .2s;
+}
+.answer-toggle:hover { background: var(--lightblue); }
+.answer-content { display: none; margin-top: 12px; padding: 16px; background: var(--lightgray); border-radius: 8px; }
+.answer-content.visible { display: block; animation: fadeUp .25s ease; }
+
+/* --- PROGRESS BAR --- */
+.progress-bar-wrap {
+  background: #E0E4EA; border-radius: 8px; height: 8px; margin: 16px 0 24px; overflow: hidden;
+}
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 8px; transition: width .5s ease; }
+
+/* --- TABS --- */
+.tab-row { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 8px 20px; border: 2px solid var(--navy); border-radius: 8px;
+  background: transparent; color: var(--navy); font-weight: 700; font-family: inherit;
+  cursor: pointer; font-size: .88rem; transition: all .2s;
+}
+.tab-btn.active, .tab-btn:hover { background: var(--navy); color: #fff; }
+
+/* --- MODULE ACCORDION --- */
+.module-header {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; padding: 18px 24px; background: var(--card);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-bottom: 8px; border-left: 5px solid var(--blue); transition: all .2s;
+}
+.module-header:hover { border-left-color: var(--accent); }
+.module-header h3 { font-family: 'Crimson Pro', serif; font-size: 1.2rem; color: var(--navy); margin: 0; }
+.module-header .arrow { font-size: 1.2rem; color: var(--gray); transition: transform .3s; }
+.module-header.open .arrow { transform: rotate(180deg); }
+.module-body { display: none; padding: 8px 24px 24px; }
+.module-body.open { display: block; animation: fadeUp .3s ease; }
+.module-body p { margin-bottom: 12px; text-align: justify; }
+
+/* --- QUIZ MODE --- */
+.quiz-btn {
+  display: inline-block; padding: 10px 24px; margin: 4px;
+  border: 2px solid var(--navy); border-radius: 8px;
+  background: #fff; color: var(--navy); font-weight: 700;
+  cursor: pointer; font-size: .92rem; transition: all .15s; font-family: inherit;
+}
+.quiz-btn:hover { background: var(--lightblue); }
+.quiz-btn.correct { background: var(--lightgreen); border-color: var(--green); color: var(--green); }
+.quiz-btn.wrong { background: #FDECEA; border-color: #D32F2F; color: #D32F2F; }
+.quiz-btn:disabled { cursor: default; opacity: .85; }
+
+.score-display {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--navy); color: #fff; padding: 8px 20px;
+  border-radius: 20px; font-weight: 700; font-size: .95rem;
+}
+
+/* --- TABLE --- */
+table.data-table {
+  width: 100%; border-collapse: collapse; margin: 16px 0;
+  font-size: .92rem;
+}
+table.data-table th {
+  background: var(--navy); color: #fff; padding: 10px 14px;
+  text-align: left; font-weight: 700;
+}
+table.data-table td {
+  padding: 10px 14px; border-bottom: 1px solid #E0E4EA; color: var(--text);
+}
+table.data-table tr:nth-child(even) td { background: var(--lightgray); }
+
+/* --- SEARCH --- */
+.search-wrap {
+  position: relative; margin-bottom: 20px;
+}
+.search-wrap input {
+  width: 100%; padding: 12px 16px 12px 44px;
+  border: 2px solid #D0D5DD; border-radius: 10px;
+  font-size: 1rem; font-family: inherit; color: var(--text);
+  background: #fff; transition: border .2s;
+}
+.search-wrap input:focus { outline: none; border-color: var(--blue); }
+.search-wrap .icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--gray); font-size: 1.1rem;
+}
+
+/* --- SCROLL TOP --- */
+.scroll-top {
+  position: fixed; bottom: 28px; right: 28px; z-index: 999;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--navy); color: #fff; border: none;
+  font-size: 1.3rem; cursor: pointer; display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity .2s;
+}
+.scroll-top:hover { background: var(--blue); }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 700px) {
+  .topnav { padding: 0 12px; }
+  .nav-links button { padding: 6px 8px; font-size: .75rem; }
+  .hero { padding: 60px 16px 40px; }
+  .container { padding: 20px 12px 60px; }
+  .card { padding: 20px 18px; }
+}
+
+/* --- PRINT --- */
+@media print {
+  .topnav, .hero, .scroll-top, .answer-toggle, .nav-links { display: none; }
+  .section { display: block !important; }
+  .answer-content { display: block !important; }
+  .module-body { display: block !important; }
+  body { font-size: 11pt; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="topnav">
+  <div class="logo">Net<span>Review</span> — Mid-Term</div>
+  <div class="nav-links">
+    <button class="active" onclick="showSection('review')">Review</button>
+    <button onclick="showSection('cases')">Cases</button>
+    <button onclick="showSection('mcq')">MCQs</button>
+    <button onclick="showSection('msq')">MSQs</button>
+    <button onclick="showSection('essay')">Essays</button>
+    <button onclick="showSection('quiz')">Quiz Mode</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>Computer Networks</h1>
+  <h2>Mid-Term Examination Review — 3-Hour Comprehensive Study Guide</h2>
+  <div class="badge">MODULES 1 – 6 | FOUNDATION &amp; CONNECTIVITY</div>
+  <p class="meta">Department of Computer Science | College-Level Introductory Course | Spring 2026</p>
+</header>
+
+<main class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION: REVIEW -->
+<!-- ============================================================ -->
+<div id="review" class="section active">
+  <h2 style="font-family:'Crimson Pro',serif;font-size:1.8rem;color:var(--navy);margin-bottom:20px;">Comprehensive Content Review</h2>
+  <p style="margin-bottom:24px;color:var(--gray);">Expand each module below to review the key concepts, terms, and protocols covered in Weeks 1 through 6.</p>
+
+  <!-- MODULE 1 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 1 — Network Architecture &amp; Modern Paradigms</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p>Module 1 establishes the foundation for modern network design through the <strong>three-tier hierarchical model</strong>, standardized by the <a href="https://www.ieee.org/" target="_blank">IEEE (Institute of Electrical and Electronics Engineers)</a> and <a href="https://www.cisco.com/" target="_blank">Cisco Systems</a>.</p>
+    <p><strong>Access Layer</strong> — Where end-user devices connect. Features include high port density, PoE (Power over Ethernet), VLAN (Virtual Local Area Network) assignment, 802.1X authentication, and DHCP (Dynamic Host Configuration Protocol) snooping. Speeds: 1–10 Gbps (Gigabit per second).</p>
+    <p><strong>Distribution Layer</strong> — Aggregates access connections and enforces policies via routing, ACLs (Access Control Lists), and QoS (Quality of Service). Typically deployed in redundant pairs. Speeds: 10–40 Gbps.</p>
+    <p><strong>Core Layer</strong> — The high-speed backbone optimized purely for throughput (40–400+ Gbps). No policy enforcement or packet inspection. Targets 99.999% uptime ("five nines"). Real-world examples: ISP (Internet Service Provider) backbone routers, undersea fiber-optic cables.</p>
+    <p><strong>On-Premise vs. Cloud</strong> — On-premise: organization owns hardware (control, compliance, no internet dependency). Cloud: resources as a service from AWS, Azure, or Google Cloud (scalability, reduced CapEx, pay-as-you-go). Hybrid combines both.</p>
+    <p><strong>Virtualization</strong> — A hypervisor allows one physical machine to run multiple virtual machines (VMs). Type 1 (bare-metal, e.g., VMware ESXi) runs directly on hardware. Type 2 (hosted, e.g., VirtualBox) runs on a host OS. Virtualization is the foundation of cloud computing.</p>
+  </div>
+
+  <!-- MODULE 2 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 2 — The Language of Networks (Binary, Hex, IPv4)</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p><strong>Binary (Base-2)</strong> — All network hardware communicates in binary: 1 (voltage on) and 0 (voltage off). Each position represents a power of 2. Example: 11000000 = 128+64 = 192.</p>
+    <p><strong>Hexadecimal (Base-16)</strong> — Uses symbols 0–9 and A–F. Each hex digit maps to 4 binary bits (a nibble). MAC (Media Access Control) addresses (e.g., A4:5E:60:B7:3C:12) use hex. Managed by the <a href="https://www.ieee.org/" target="_blank">IEEE</a>.</p>
+    <p><strong>Bitwise AND</strong> — Routers extract the network ID by AND-ing the destination IP with the subnet mask. Rule: both bits must be 1 for the result to be 1.</p>
+    <p><strong>IPv4 Classes</strong> — Class A: 1–126 (/8); Class B: 128–191 (/16); Class C: 192–223 (/24); Class D: 224–239 (multicast); Class E: 240–255 (experimental). Address 127.x.x.x = loopback.</p>
+    <p><strong>Subnet Masks &amp; CIDR</strong> — A 32-bit mask with contiguous 1s (network) and 0s (host). /24 = 255.255.255.0. CIDR (Classless Inter-Domain Routing) notation replaces verbose masks with prefix lengths.</p>
+    <p><strong>Private Ranges (</strong><a href="https://datatracker.ietf.org/doc/html/rfc1918" target="_blank">RFC 1918</a><strong>)</strong> — 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16. NAT (Network Address Translation) bridges private to public.</p>
+  </div>
+
+  <!-- MODULE 3 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 3 — The Operating System: Cisco IOS</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p><a href="https://www.cisco.com/" target="_blank">Cisco</a> IOS (Internetwork Operating System) powers most enterprise routers and switches. The CLI (Command-Line Interface) is organized in hierarchical modes:</p>
+    <table class="data-table">
+      <tr><th>Prompt</th><th>Mode</th><th>Purpose</th></tr>
+      <tr><td><code>Router&gt;</code></td><td>User EXEC</td><td>Basic read-only commands (ping, show version)</td></tr>
+      <tr><td><code>Router#</code></td><td>Privileged EXEC</td><td>Full diagnostics (show running-config, debug)</td></tr>
+      <tr><td><code>Router(config)#</code></td><td>Global Config</td><td>Device-wide settings (hostname, routing)</td></tr>
+      <tr><td><code>Router(config-if)#</code></td><td>Interface Config</td><td>Per-port settings (IP address, no shutdown)</td></tr>
+      <tr><td><code>Router(config-line)#</code></td><td>Line Config</td><td>Access methods (console/VTY passwords)</td></tr>
+    </table>
+    <p><strong>Memory:</strong> RAM (volatile — running-config); NVRAM (Non-Volatile RAM — startup-config, survives reboot); Flash (IOS image). <em>Always</em> run <code>copy running-config startup-config</code> after changes.</p>
+    <p><strong>Device Hardening Baseline:</strong> enable secret (hashed), console &amp; VTY passwords with <code>login</code>, <code>service password-encryption</code>, MOTD (Message of the Day) banner, SSH-only via <code>transport input ssh</code>, RSA (Rivest-Shamir-Adleman) 2048-bit keys, SSH version 2, disable unused services.</p>
+  </div>
+
+  <!-- MODULE 4 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 4 — Ethernet Switching</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p><strong>Ethernet Frame</strong> (IEEE 802.3): Preamble (8B) + Destination MAC (6B) + Source MAC (6B) + EtherType (2B) + Payload (46–1500B) + FCS (Frame Check Sequence, 4B).</p>
+    <p><strong>Three Switch Actions:</strong> <em>Flood</em> (destination unknown — send to all ports except source), <em>Forward</em> (destination known — send to correct port only), <em>Filter</em> (source &amp; destination on same port — drop).</p>
+    <p><strong>MAC Address Table (CAM Table)</strong> — Maps MAC→Port. Entries learned dynamically, age out after 300 seconds (Cisco default). Full table → MAC flooding attack vulnerability.</p>
+    <p><strong>VLANs</strong> — Logically segment one switch into multiple broadcast domains. IDs 1–4094. Devices in different VLANs need L3 routing. Benefits: security, performance, flexibility.</p>
+    <p><strong>802.1Q Trunking</strong> (<a href="https://standards.ieee.org/ieee/802.1Q/6844/" target="_blank">IEEE 802.1Q</a>) — 4-byte tag: TPID (0x8100) + TCI (PCP 3 bits + DEI 1 bit + VLAN ID 12 bits). Access ports = 1 VLAN (untagged). Trunk ports = multiple VLANs (tagged). Native VLAN travels untagged (change from default VLAN 1 for security).</p>
+  </div>
+
+  <!-- MODULE 5 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 5 — The Network Layer &amp; Routing</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p><strong>Routing Table</strong> — Stored in RAM. Each entry: destination network, subnet mask, next hop, exit interface, metric, route source (C=Connected, S=Static, O=OSPF, R=RIP).</p>
+    <p><strong>Longest Prefix Match</strong> — Router selects the most specific (longest prefix) matching route. /24 beats /16 beats /0. Default route (0.0.0.0/0) = catch-all.</p>
+    <p><strong>Static Routing</strong> — Manually configured: <code>ip route &lt;dest&gt; &lt;mask&gt; &lt;next_hop&gt;</code>. Zero overhead, predictable, but does not adapt to failures. Best for small/stub networks.</p>
+    <p><strong>Default Gateway</strong> — The router IP a host sends non-local traffic to. Must be on same subnet. Configured manually or via DHCP. Without it: no external communication.</p>
+    <p><strong>Dynamic Routing</strong> — OSPF (<a href="https://www.rfc-editor.org/rfc/rfc2328" target="_blank">RFC 2328</a>): link-state, Dijkstra's SPF algorithm, full topology map, fast convergence, no hop limit. RIP: distance-vector, max 15 hops, slower convergence. OSPF preferred in enterprise.</p>
+  </div>
+
+  <!-- MODULE 6 -->
+  <div class="module-header" onclick="toggleModule(this)">
+    <h3>Module 6 — Resolution &amp; Diagnostics</h3>
+    <span class="arrow">&#9660;</span>
+  </div>
+  <div class="module-body">
+    <p><strong>ARP (Address Resolution Protocol)</strong> (<a href="https://datatracker.ietf.org/doc/html/rfc826" target="_blank">RFC 826</a>) — Resolves IP→MAC on local LAN. Request = broadcast (FF:FF:FF:FF:FF:FF). Reply = unicast. Cache stores entries with TTL (Time To Live). Vulnerability: ARP Spoofing → MitM (Man-in-the-Middle). Mitigation: DAI (Dynamic ARP Inspection), static entries.</p>
+    <p><strong>ICMP (Internet Control Message Protocol)</strong> (RFC 792) — Layer 3 diagnostic protocol. <em>Ping:</em> Echo Request (Type 8) &amp; Echo Reply (Type 0); measures RTT (Round-Trip Time), TTL, packet loss. <em>Traceroute:</em> increments TTL from 1; each router sends ICMP Time Exceeded (Type 11), mapping the path hop by hop.</p>
+    <p><strong>DNS (Domain Name System)</strong> — Resolves hostnames→IP addresses. Troubleshooting flow: ping gateway → ping public IP (8.8.8.8) → ping hostname → traceroute.</p>
+    <p><strong>NDP (Neighbor Discovery Protocol)</strong> — IPv6 equivalent of ARP, using ICMPv6 (Internet Control Message Protocol version 6) messages instead of broadcasts.</p>
+    <table class="data-table">
+      <tr><th>Protocol</th><th>Layer</th><th>Resolves</th><th>Tool</th></tr>
+      <tr><td>ARP</td><td>L2↔L3</td><td>IP → MAC</td><td>arp -a, show arp</td></tr>
+      <tr><td>ICMP</td><td>L3</td><td>Reachability + Path</td><td>ping, traceroute</td></tr>
+      <tr><td>DNS</td><td>L7→L3</td><td>Hostname → IP</td><td>nslookup, dig</td></tr>
+      <tr><td>NDP</td><td>L2↔L3 (IPv6)</td><td>IPv6 → MAC</td><td>ip -6 neigh</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: CASE STUDIES -->
+<!-- ============================================================ -->
+<div id="cases" class="section"></div>
+
+<!-- ============================================================ -->
+<!-- SECTION: MCQs -->
+<!-- ============================================================ -->
+<div id="mcq" class="section"></div>
+
+<!-- ============================================================ -->
+<!-- SECTION: MSQs -->
+<!-- ============================================================ -->
+<div id="msq" class="section"></div>
+
+<!-- ============================================================ -->
+<!-- SECTION: ESSAYS -->
+<!-- ============================================================ -->
+<div id="essay" class="section"></div>
+
+<!-- ============================================================ -->
+<!-- SECTION: QUIZ MODE -->
+<!-- ============================================================ -->
+<div id="quiz" class="section"></div>
+
+</main>
+
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#9650;</button>
+
+<script>
+// ===================== DATA =====================
+const caseStudies = [
+  {t:"Case Study 1: The Library Wi-Fi Outage",ch:"Module 1 (Network Architecture) & Module 6 (Resolution & Diagnostics)",sc:"Students at a university library report that they can connect to the campus Wi-Fi network, but no web pages load. The Wi-Fi icon on their laptops shows a connected status. A network technician arrives and must determine where the problem lies.",ans:"The technician follows layered troubleshooting: (1) Ping the default gateway (e.g., 192.168.1.1). Success = access layer OK. (2) Ping a public IP (8.8.8.8). Failure = problem between distribution/core and ISP. (3) Ping a hostname (www.google.com). If 8.8.8.8 works but hostname fails = DNS (Domain Name System) issue. (4) Traceroute to pinpoint the exact hop where packets stop. This maps to the three-tier hierarchy: access (local), distribution/core (ISP path), application services (DNS)."},
+  {t:"Case Study 2: The New Branch Office Switch",ch:"Module 4 (Ethernet Switching)",sc:"On the first day at a new branch office, when Employee A sends a file to Employee B, several other employees report brief network slowness. By the second day, the slowness disappears.",ans:"Day 1: The switch's MAC (Media Access Control) address table (CAM table) was empty. When Employee A sent a frame to Employee B, the switch did not know Employee B's port, so it flooded the frame to all ports, consuming bandwidth everywhere. As devices communicated throughout the day, the switch learned each MAC address and port. By Day 2, the switch forwarded frames directly (unicast) instead of flooding, eliminating unnecessary bandwidth consumption."},
+  {t:"Case Study 3: The Unsaved Configuration Disaster",ch:"Module 3 (Cisco IOS — Saving Configurations)",sc:"A junior engineer spends three hours configuring a new Cisco router. That night, the building loses power. The next morning, the router has reverted to factory defaults.",ans:"The engineer modified the running-config (stored in volatile RAM) but never ran copy running-config startup-config to save it to NVRAM (Non-Volatile RAM). When power was lost, RAM was cleared. On reboot, the router loaded the empty startup-config from NVRAM. Lesson: always save to NVRAM after changes and verify with show startup-config."},
+  {t:"Case Study 4: VLAN Misconfiguration Isolates a Department",ch:"Module 4 (Ethernet Switching — VLANs & Trunking)",sc:"The marketing department (VLAN 20) suddenly cannot communicate with sales (VLAN 30) after a trunk link was recently reconfigured.",ans:"The trunk port was reconfigured with a restricted allowed VLAN list that excluded VLAN 20 or 30. Verify with show interfaces trunk, then fix with switchport trunk allowed vlan add 20,30. Also confirm that inter-VLAN routing (router-on-a-stick or SVI) is configured for both VLANs."},
+  {t:"Case Study 5: The Subnet Mask Mistake",ch:"Module 2 (The Language of Networks — IPv4 & Subnetting)",sc:"Computer A (192.168.1.50, mask 255.255.255.0) and Computer B (192.168.1.200, mask 255.255.0.0) on the same switch cannot communicate.",ans:"The mismatched subnet masks cause each computer to interpret its network boundaries differently. While both IPs fall within 192.168.1.0/24, the inconsistent masks create ambiguous ARP (Address Resolution Protocol) and gateway behavior. Fix: ensure both use the same subnet mask. All hosts on a subnet must share an identical mask."},
+  {t:"Case Study 6: SSH Lockout After Hardening",ch:"Module 3 (Cisco IOS — Device Hardening)",sc:"After hardening a router, the administrator can no longer SSH (Secure Shell) in remotely but can still access via console.",ans:"SSH requires: (1) a non-default hostname, (2) an ip domain-name, and (3) a generated RSA (Rivest-Shamir-Adleman) key pair of at least 1024 bits (2048 recommended). Without the domain name and RSA keys, SSH cannot establish sessions. Fix: configure ip domain-name then crypto key generate rsa modulus 2048, and verify ip ssh version 2."},
+  {t:"Case Study 7: The Routing Black Hole",ch:"Module 5 (Network Layer — Static Routes)",sc:"R1 has a static route to R2 for 10.10.10.0/24. Users on R1's network can send packets but never receive replies.",ans:"This is a missing return-route problem. R1 forwards packets to R2, but R2 has no route back to R1's network. Reply packets are dropped. Fix: add a static route on R2 pointing back to R1's network (e.g., ip route 192.168.1.0 255.255.255.0 <R1-IP>). Static routes must be configured in both directions."},
+  {t:"Case Study 8: ARP Spoofing Attack in the Campus Lab",ch:"Module 6 (Resolution & Diagnostics — ARP Security)",sc:"Students notice slow internet and HTTPS certificate warnings. Running arp -a reveals the gateway's MAC address has changed to an unfamiliar address.",ans:"An attacker sent gratuitous ARP replies advertising their MAC as the gateway's IP. All devices updated their ARP caches, routing traffic through the attacker (MitM — Man-in-the-Middle attack). Certificate warnings appeared because the attacker couldn't forge TLS certificates. Fix: clear ARP caches, add static ARP entry for gateway, enable DAI (Dynamic ARP Inspection)."},
+  {t:"Case Study 9: Cloud Migration Bandwidth Planning",ch:"Module 1 (Network Architecture — On-Premise vs. Cloud)",sc:"After migrating email to the cloud, both cloud email and on-premise apps become sluggish. The company has a single 100 Mbps internet link.",ans:"Previously, email traffic stayed on the internal LAN. After migration, that traffic now traverses the 100 Mbps internet link, saturating it. Solutions: upgrade bandwidth, implement QoS (Quality of Service), use a dedicated cloud interconnect, or phase the migration gradually."},
+  {t:"Case Study 10: Traceroute Reveals an ISP Problem",ch:"Module 6 (Resolution & Diagnostics — ICMP Traceroute)",sc:"VoIP (Voice over Internet Protocol) calls have choppy audio. Ping shows 350 ms latency and 8% packet loss. The local network appears healthy.",ans:"Traceroute reveals a latency jump at hop 5 (an ISP router). Hops 1-4 are under 5 ms, but hop 5 shows 280 ms. The bottleneck is at the ISP, not the company network. Contact the ISP with traceroute evidence. Internally, apply QoS to prioritize VoIP traffic."},
+];
+
+const mcqs = [
+  {q:"Which layer of the three-tier model is optimized purely for speed?",o:["Access Layer","Distribution Layer","Core Layer","Application Layer"],a:2,ch:"Module 1",e:"The Core Layer is the backbone designed for maximum throughput with no policy enforcement."},
+  {q:"What is the primary function of the Distribution Layer?",o:["Connecting end-user devices","Aggregating access connections and enforcing policies","Providing maximum-speed backbone transport","Assigning IP addresses via DHCP"],a:1,ch:"Module 1",e:"The Distribution Layer aggregates access connections and implements routing, ACLs, and QoS."},
+  {q:"A Type 1 hypervisor runs:",o:["On top of a host OS","Directly on bare-metal hardware","Inside a web browser","Only on cloud servers"],a:1,ch:"Module 1",e:"Type 1 (bare-metal) hypervisors run directly on hardware for better performance."},
+  {q:"What is the decimal value of binary 11001010?",o:["192","200","202","210"],a:2,ch:"Module 2",e:"128+64+0+0+8+0+2+0 = 202."},
+  {q:"Hexadecimal is used in networking primarily because:",o:["It is faster for computers to process","It provides a compact, human-readable shorthand for binary","It can represent negative numbers","It is required by TCP/IP"],a:1,ch:"Module 2",e:"Each hex digit maps to exactly 4 binary bits, making long binary strings human-readable."},
+  {q:"What is the result of AND between 11010100 and 11110000?",o:["11000000","11010000","11110100","11100000"],a:1,ch:"Module 2",e:"AND bit-by-bit: 1&1=1,1&1=1,0&1=0,1&1=1,0&0=0,1&0=0,0&0=0,0&0=0 → 11010000."},
+  {q:"Which IPv4 class has default mask 255.255.0.0 (/16)?",o:["Class A","Class B","Class C","Class D"],a:1,ch:"Module 2",e:"Class B (128-191) uses /16 by default."},
+  {q:"172.16.5.100 belongs to which RFC 1918 private range?",o:["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16"],a:1,ch:"Module 2",e:"172.16.0.0/12 covers 172.16.0.0–172.31.255.255."},
+  {q:"Router# indicates which IOS mode?",o:["User EXEC","Privileged EXEC","Global Config","Interface Config"],a:1,ch:"Module 3",e:"The # symbol = Privileged EXEC. > = User EXEC."},
+  {q:"Which command saves running-config to non-volatile storage?",o:["write erase","show running-config","copy running-config startup-config","reload"],a:2,ch:"Module 3",e:"Copies active config from volatile RAM to persistent NVRAM."},
+  {q:"The running-config is stored in:",o:["Flash","NVRAM","RAM","ROM"],a:2,ch:"Module 3",e:"Running-config lives in volatile RAM; lost on reboot unless saved."},
+  {q:"Which command sets a cryptographically hashed enable password?",o:["enable password","enable secret","service password-encryption","password enable-hash"],a:1,ch:"Module 3",e:"enable secret stores as MD5/SCRYPT hash; much more secure than enable password."},
+  {q:"A switch's three actions on receiving a frame are:",o:["Forward, Flood, Filter","Forward, Drop, Encapsulate","Route, Flood, Fragment","Broadcast, Unicast, Multicast"],a:0,ch:"Module 4",e:"Forward (known dest), Flood (unknown dest), Filter (same-port src & dest)."},
+  {q:"A switch floods a frame when:",o:["Source MAC is unknown","Destination MAC is unknown","Frame has FCS error","VLAN ID is invalid"],a:1,ch:"Module 4",e:"Unknown destination MAC → flood to all ports except ingress."},
+  {q:"Default MAC table aging time on Cisco switches:",o:["60 seconds","120 seconds","300 seconds","600 seconds"],a:2,ch:"Module 4",e:"300 seconds (5 minutes) is the Cisco default."},
+  {q:"The purpose of a VLAN is to:",o:["Increase all port speeds","Segment a switch into multiple logical broadcast domains","Encrypt all switch traffic","Replace the need for a router"],a:1,ch:"Module 4",e:"VLANs create separate broadcast domains on one physical switch."},
+  {q:"The 802.1Q TPID value is:",o:["0x0800","0x0806","0x8100","0x86DD"],a:2,ch:"Module 4",e:"0x8100 identifies an 802.1Q-tagged frame."},
+  {q:"On a trunk, the native VLAN's traffic travels:",o:["Always encrypted","Untagged by default","Only on VLAN 0","Tagged with double headers"],a:1,ch:"Module 4",e:"Native VLAN (default VLAN 1) crosses trunks untagged."},
+  {q:"Longest prefix match selects:",o:["Route with lowest metric","Most specific (longest) subnet prefix","First route in table","Default route always"],a:1,ch:"Module 5",e:"A /24 is more specific than /16 → the longer prefix wins."},
+  {q:"A default route (0.0.0.0/0) matches:",o:["Nothing","Any destination not covered by a more specific route","Only local traffic","Only broadcast traffic"],a:1,ch:"Module 5",e:"/0 matches everything; used as gateway of last resort."},
+  {q:"Static routes must be:",o:["Learned via OSPF","Automatically discovered","Manually configured by an administrator","Generated by DHCP"],a:2,ch:"Module 5",e:"Static routes are manually entered and produce zero overhead."},
+  {q:"Without a default gateway, a host can reach:",o:["Any internet device","Only its own local subnet","Only the DNS server","No devices at all"],a:1,ch:"Module 5",e:"No gateway = no path for traffic outside the local subnet."},
+  {q:"OSPF uses which algorithm?",o:["Bellman-Ford","Dijkstra's algorithm","Floyd-Warshall","Kruskal's"],a:1,ch:"Module 5",e:"OSPF uses Dijkstra's SPF (Shortest Path First) algorithm."},
+  {q:"Maximum hop count for RIP is:",o:["8","15","32","255"],a:1,ch:"Module 5",e:"RIP considers 16+ hops as unreachable. Max = 15."},
+  {q:"ARP resolves:",o:["Hostnames → IPs","IPs → MACs","MACs → IPs","IPs → port numbers"],a:1,ch:"Module 6",e:"ARP discovers the L2 MAC for a known L3 IP."},
+  {q:"An ARP Request is sent as:",o:["Unicast","Multicast","Broadcast to FF:FF:FF:FF:FF:FF","Anycast"],a:2,ch:"Module 6",e:"ARP Requests are broadcast; only the target replies (unicast)."},
+  {q:"ARP Spoofing is mitigated by:",o:["OSPF authentication","DAI (Dynamic ARP Inspection)","Longer subnet masks","Disabling ICMP"],a:1,ch:"Module 6",e:"DAI validates ARP against DHCP snooping binding tables."},
+  {q:"Ping uses ICMP types:",o:["Type 3 & 11","Type 8 & 0","Type 5 & 13","Type 9 & 10"],a:1,ch:"Module 6",e:"Echo Request (Type 8) and Echo Reply (Type 0)."},
+  {q:"Traceroute maps paths by:",o:["Reading router tables","Incrementally increasing TTL","Broadcasting to all routers","Querying DNS per hop"],a:1,ch:"Module 6",e:"Each router that decrements TTL to 0 sends ICMP Time Exceeded, revealing itself."},
+  {q:"A failed ping doesn't necessarily mean host is down because:",o:["Ping only works on IPv6","Many firewalls block ICMP","Ping requires a VLAN trunk","Ping only works within same subnet"],a:1,ch:"Module 6",e:"Firewalls often block ICMP deliberately for security."},
+  {q:"DNS resolves:",o:["MACs → IPs","IPs → MACs","Hostnames → IPs","Ports → services"],a:2,ch:"Module 6",e:"DNS translates domain names to IP addresses."},
+  {q:"Typing ? in Cisco IOS will:",o:["Delete config","Show context-sensitive help","Reboot device","Enable debug mode"],a:1,ch:"Module 3",e:"? is the built-in help system. It lists valid commands without changing anything."},
+  {q:"transport input ssh on VTY lines:",o:["Enables Telnet only","Allows only SSH, blocking Telnet","Configures SSH port","Generates RSA keys"],a:1,ch:"Module 3",e:"Restricts remote access to SSH only, blocking insecure Telnet."},
+  {q:"The OUI in a MAC address is:",o:["Last 3 bytes (device ID)","First 3 bytes (manufacturer ID)","The VLAN tag","The IP address"],a:1,ch:"Module 4",e:"First 3 bytes = OUI, assigned by IEEE to identify the manufacturer."},
+  {q:"255.255.255.0 in CIDR notation is:",o:["/8","/16","/24","/32"],a:2,ch:"Module 2",e:"24 consecutive 1-bits in binary = /24."},
+  {q:"no shutdown on a Cisco interface:",o:["Saves config","Disables interface","Enables (activates) interface","Removes IP address"],a:2,ch:"Module 3",e:"Router interfaces are shut down by default; no shutdown activates them."},
+  {q:"The FCS (Frame Check Sequence) is used for:",o:["Encrypting payload","Identifying VLAN","Error detection","Routing the frame"],a:2,ch:"Module 4",e:"FCS is a CRC value for detecting frame corruption."},
+  {q:"A MAC flooding attack targets:",o:["Router routing table","Host ARP cache","Switch CAM table","Server DNS cache"],a:2,ch:"Module 4",e:"Filling the CAM table forces the switch to flood all traffic."},
+  {q:"NDP is the IPv6 equivalent of:",o:["DNS","ARP","OSPF","DHCP"],a:1,ch:"Module 6",e:"NDP resolves IPv6→MAC using ICMPv6, replacing broadcast-based ARP."},
+  {q:"Which is NOT a valid RFC 1918 private range?",o:["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16"],a:3,ch:"Module 2",e:"169.254.0.0/16 is APIPA/link-local, not RFC 1918."},
+  {q:"show arp displays information about:",o:["OSPF","ARP (Address Resolution Protocol)","DNS","STP"],a:1,ch:"Module 6 & 3",e:"show arp lists IP-to-MAC mappings in the router's ARP cache."},
+  {q:"AND-ing an IP with a subnet mask yields:",o:["Broadcast address","Host portion","Network ID","Default gateway"],a:2,ch:"Module 2",e:"The mask's 1-bits preserve the network portion, zeroing host bits."},
+  {q:"127.0.0.1 is used for:",o:["Default gateway","Broadcast","Loopback testing","DNS resolution"],a:2,ch:"Module 2",e:"127.0.0.0/8 is reserved for loopback testing."},
+  {q:"show ip interface brief shows:",o:["IOS version","All interfaces with status in one-line summary","Full running-config","ARP table"],a:1,ch:"Module 3",e:"Compact table of interface names, IPs, and up/down status."},
+  {q:"When an OSPF link fails, what happens?",o:["Admin must update tables manually","Router floods LSA and all routers recalculate","All traffic dropped until recovery","Router switches to static routing"],a:1,ch:"Module 5",e:"OSPF detects failure, floods an LSA, and all routers re-run Dijkstra's algorithm."},
+];
+
+const essays = [
+  {q:"Explain the three-tier hierarchical network model and describe the primary function of each layer.",ch:"Module 1",a:"The three-tier model divides networks into Access (end-device connections with PoE, VLANs, port security), Distribution (policy enforcement with routing, ACLs, QoS), and Core (high-speed backbone at 40-400+ Gbps with no policy enforcement). This hierarchy enables scalability, performance, security, and cost efficiency."},
+  {q:"Describe how binary numbering works and why it is fundamental to network communication.",ch:"Module 2",a:"Binary (base-2) uses 0 and 1, with each position representing a power of 2. Example: 11000000 = 128+64 = 192. It is fundamental because all digital hardware operates on two voltage states. Every IP, MAC, and packet is binary. Routers perform bitwise AND operations in binary to extract network IDs."},
+  {q:"Compare on-premise vs. cloud infrastructure with two advantages of each.",ch:"Module 1",a:"On-premise: full hardware control (compliance), no internet dependency (predictable performance). Cloud: elastic scalability on demand, reduced CapEx with pay-as-you-go pricing. Hybrid models combine both for optimal balance."},
+  {q:"Explain the Cisco IOS mode hierarchy with at least four modes and navigation between them.",ch:"Module 3",a:"User EXEC (>): read-only basics. enable → Privileged EXEC (#): full diagnostics. configure terminal → Global Config ((config)#): device-wide changes. interface → Interface Config ((config-if)#): per-port settings. line → Line Config ((config-line)#): access methods. exit moves up one level; end/Ctrl+Z jumps to Privileged EXEC."},
+  {q:"Explain why copy running-config startup-config is critically important.",ch:"Module 3",a:"running-config lives in volatile RAM; startup-config lives in non-volatile NVRAM. Without saving, all configuration changes are lost on reboot or power loss. This is one of the most common and costly errors in network administration."},
+  {q:"Describe flood, forward, and filter actions of a switch.",ch:"Module 4",a:"The switch first learns the source MAC+port. Then: Flood = destination unknown, send to all ports except source. Forward = destination known, send to correct port only. Filter = source and destination on same port, drop the frame."},
+  {q:"Explain VLANs: what they are, why they're used, and how inter-VLAN traffic flows.",ch:"Module 4",a:"VLANs logically segment a switch into separate broadcast domains. Benefits: security (isolation), performance (smaller broadcast domains), flexibility (group by function not location). Inter-VLAN traffic requires a Layer 3 device (router-on-a-stick or L3 switch with SVIs)."},
+  {q:"Describe how ARP works, including request-reply and the ARP cache.",ch:"Module 6",a:"ARP resolves IP→MAC. Host A broadcasts an ARP Request (FF:FF:FF:FF:FF:FF) asking 'Who has this IP?' Only the target replies with a unicast ARP Reply containing its MAC. Host A caches the mapping; dynamic entries expire after a TTL period."},
+  {q:"Explain longest prefix match and why it matters for routing.",ch:"Module 5",a:"Routers compare destination IPs against all routing table entries. The longest (most specific) prefix wins: /24 beats /16 beats /0. If tied, lower metric wins. Default route (0.0.0.0/0) is least specific, used only when nothing else matches."},
+  {q:"Compare static and dynamic routing with appropriate use cases.",ch:"Module 5",a:"Static: manually configured, zero overhead, predictable, but cannot self-heal. Best for small/stub networks. Dynamic (OSPF/RIP): automatic route discovery, adapts to failures, but consumes resources. Best for medium-large networks needing resilience."},
+  {q:"Describe ICMP's role in diagnostics: Ping and Traceroute.",ch:"Module 6",a:"ICMP (RFC 792) carries control messages at L3. Ping: Echo Request (Type 8) + Echo Reply (Type 0); measures RTT, TTL, packet loss. Traceroute: incrementally increases TTL; each router sends Time Exceeded (Type 11), mapping every hop to the destination."},
+  {q:"Explain 802.1Q trunking, tag structure, and native VLAN security.",ch:"Module 4",a:"802.1Q enables one physical link to carry multiple VLANs. The 4-byte tag contains TPID (0x8100) and TCI (PCP 3 bits + DEI 1 bit + VLAN ID 12 bits). The native VLAN travels untagged; defaulting to VLAN 1 is a security risk (VLAN hopping). Change it to an unused VLAN."},
+  {q:"What is ARP Spoofing and how is it prevented?",ch:"Module 6",a:"ARP Spoofing: attacker sends fake ARP replies, poisoning victims' caches to redirect traffic through the attacker (MitM attack). ARP lacks authentication. Prevention: DAI (Dynamic ARP Inspection), static ARP entries for gateways, network monitoring."},
+  {q:"Describe RAM, NVRAM, and Flash on a Cisco router.",ch:"Module 3",a:"RAM: volatile, stores running-config, routing tables, ARP cache. Lost on reboot. NVRAM: non-volatile, stores startup-config. Survives reboot. Flash: non-volatile, stores IOS image. Boot process: IOS loaded from Flash → startup-config copied from NVRAM → becomes running-config in RAM."},
+  {q:"Explain subnetting with CIDR, demonstrating how /24 determines network and host portions.",ch:"Module 2",a:"/24 means first 24 bits = network, remaining 8 = host. For 192.168.1.100/24: mask = 255.255.255.0. AND yields network ID 192.168.1.0. Host portion = last octet (100). Usable hosts: 2^8 - 2 = 254."},
+  {q:"Explain the default gateway's role when a host reaches an external IP.",ch:"Module 5",a:"The default gateway is the router IP for non-local traffic. Host compares destination with its subnet mask; if remote, it sends the packet to the gateway's MAC (via ARP). The gateway router then consults its routing table for the next hop. Without a gateway, no external communication is possible."},
+  {q:"Describe MAC address format, OUI significance, and switch MAC table operation.",ch:"Module 4",a:"MAC = 48-bit hex address (6 pairs). First 3 bytes = OUI (manufacturer ID, assigned by IEEE). Last 3 bytes = device ID. Switches build CAM tables by learning source MACs from incoming frames. Entries include MAC, port, and age timer (default 300s aging)."},
+  {q:"How does Traceroute use TTL manipulation to map paths?",ch:"Module 6",a:"Each IP packet has a TTL decremented by 1 per hop. When TTL reaches 0, the router drops the packet and sends ICMP Time Exceeded (Type 11) with its IP. Traceroute sends probes with TTL 1, 2, 3... Each successive router reveals itself. The destination replies with Echo Reply."},
+  {q:"Discuss the security baseline for a new Cisco router before production.",ch:"Module 3",a:"Minimum: enable secret (hashed password), console/VTY passwords with login, service password-encryption, MOTD legal banner, transport input ssh (block Telnet), RSA 2048-bit keys + SSH v2, disable HTTP server and CDP, save with copy running-config startup-config."},
+  {q:"Explain how OSPF differs from RIP and why OSPF is preferred.",ch:"Module 5",a:"OSPF: link-state protocol, full topology map, Dijkstra's algorithm, fast convergence, no hop limit. RIP: distance-vector, relies on hop count, max 15 hops, slow convergence. OSPF scales better and adapts faster to changes, making it the standard for enterprise networks."},
+];
+
+// ===================== RENDER FUNCTIONS =====================
+function renderCases() {
+  const el = document.getElementById('cases');
+  let h = '<h2 style="font-family:\'Crimson Pro\',serif;font-size:1.8rem;color:var(--navy);margin-bottom:20px;">Case Studies (10 Scenarios)</h2>';
+  caseStudies.forEach((c, i) => {
+    h += `<div class="card accent-border"><h3>${c.t}</h3><span class="chip chip-module">${c.ch}</span><h4>Scenario</h4><p>${c.sc}</p><button class="answer-toggle" onclick="toggleAnswer(this)">Show Analysis &amp; Solution</button><div class="answer-content"><span class="chip chip-answer">Answer</span><p>${c.ans}</p></div></div>`;
+  });
+  el.innerHTML = h;
+}
+
+function renderMCQs() {
+  const el = document.getElementById('mcq');
+  let h = '<h2 style="font-family:\'Crimson Pro\',serif;font-size:1.8rem;color:var(--navy);margin-bottom:8px;">Multiple-Choice Questions (45 MCQs)</h2>';
+  h += '<p style="color:var(--gray);margin-bottom:16px;">Each question has exactly one correct answer. Click "Show Answer" to reveal.</p>';
+  h += '<div class="search-wrap"><span class="icon">&#128269;</span><input type="text" placeholder="Search questions..." oninput="filterQuestions(\'mcq\',this.value)"></div>';
+  mcqs.forEach((m, i) => {
+    const opts = m.o.map((o, j) => String.fromCharCode(65+j)+') '+o).join('\n');
+    h += `<div class="card q-item" data-search="${(m.q+' '+m.o.join(' ')+' '+m.ch).toLowerCase()}"><div class="q-block"><span class="chip chip-module">${m.ch}</span><p class="q-text">MCQ ${i+1}. ${m.q}</p><p class="q-options">${opts}</p><button class="answer-toggle" onclick="toggleAnswer(this)">Show Answer</button><div class="answer-content"><span class="chip chip-answer">Answer: ${String.fromCharCode(65+m.a)}) ${m.o[m.a]}</span><p style="margin-top:8px;"><span class="chip chip-explain">Explanation</span> ${m.e}</p></div></div></div>`;
+  });
+  el.innerHTML = h;
+}
+
+function renderMSQs() {
+  // We'll inline the MSQs from the DOCX data
+  const msqData = [
+    {q:"Which are characteristics of the Access Layer?",o:["High port density","PoE support","400 Gbps backbone","VLAN assignment","802.1X auth"],a:[0,1,3,4],ch:"Module 1",e:"Access Layer features: high density, PoE, VLANs, 802.1X. 400 Gbps is Core Layer."},
+    {q:"Advantages of cloud over on-premise?",o:["Scalability on demand","Reduced CapEx","Complete hardware control","Pay-as-you-go","No internet dependency"],a:[0,1,3],ch:"Module 1",e:"Cloud: scalable, lower CapEx, usage-based pricing. Hardware control & no internet dependency = on-premise."},
+    {q:"Which statements about hex are TRUE?",o:["Each hex digit = 4 binary bits","Uses 0-9 and A-F","Hex is base-8","MAC addresses use hex","F = decimal 15"],a:[0,1,3,4],ch:"Module 2",e:"Hex is base-16 (not 8). Each digit = 4 bits. F=15. MACs are written in hex."},
+    {q:"Valid RFC 1918 private ranges?",o:["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16","224.0.0.0/4"],a:[0,1,2],ch:"Module 2",e:"RFC 1918: 10/8, 172.16/12, 192.168/16 only. 169.254 = APIPA. 224 = multicast."},
+    {q:"Which IOS modes allow configuration changes?",o:["User EXEC","Privileged EXEC","Global Config","Interface Config","Line Config"],a:[2,3,4],ch:"Module 3",e:"User EXEC & Privileged EXEC are read-only. Changes require Config modes."},
+    {q:"What is stored in NVRAM?",o:["Running-config","Startup-config","IOS image","Boot system variable","ARP cache"],a:[1,3],ch:"Module 3",e:"NVRAM: startup-config + boot variables. Running-config & ARP = RAM. IOS = Flash."},
+    {q:"Steps required to enable SSH?",o:["Non-default hostname","ip domain-name","Generate RSA keys","transport input telnet","ip ssh version 2"],a:[0,1,2,4],ch:"Module 3",e:"SSH needs hostname, domain-name, RSA keys, and SSH v2. Telnet is the opposite."},
+    {q:"What causes a switch to FLOOD?",o:["Unknown destination MAC","Broadcast destination","Unknown source MAC","Unregistered multicast","Same-port src & dest"],a:[0,1,3],ch:"Module 4",e:"Flood: unknown unicast dest, broadcasts, unregistered multicast. Unknown src = learn. Same-port = filter."},
+    {q:"Correct statements about VLANs?",o:["Reduce broadcast domains","Different VLANs need a router","IDs range 1-4094","VLAN 1 recommended for production","Improve security"],a:[0,1,2,4],ch:"Module 4",e:"VLANs segment broadcasts, need L3 routing, range 1-4094, improve security. VLAN 1 should be avoided."},
+    {q:"Fields in the 802.1Q tag?",o:["TPID (0x8100)","12-bit VLAN ID","3-bit Priority (PCP)","Source MAC address","DEI bit"],a:[0,1,2,4],ch:"Module 4",e:"Tag = TPID + TCI (PCP + DEI + VLAN ID). Source MAC is the original frame, not the tag."},
+    {q:"A routing table entry includes?",o:["Destination network","Next hop IP","Exit interface","Destination MAC","Metric/cost"],a:[0,1,2,4],ch:"Module 5",e:"Routing entries: dest network, next hop, interface, metric. MAC = L2, resolved via ARP separately."},
+    {q:"Disadvantages of static routing?",o:["No auto-adaptation to failures","Excessive protocol overhead","Unmanageable in large networks","Error-prone manual config","Requires expensive licenses"],a:[0,2,3],ch:"Module 5",e:"Static: no self-heal, poor scalability, error-prone. Zero overhead (not B). No licenses needed (not E)."},
+    {q:"Link-state routing protocols include?",o:["OSPF","RIP","IS-IS","EIGRP","BGP"],a:[0,2],ch:"Module 5",e:"OSPF & IS-IS are link-state. RIP = distance-vector. EIGRP = hybrid. BGP = path-vector."},
+    {q:"ICMP types used by Traceroute?",o:["Echo Request (Type 8)","Echo Reply (Type 0)","Time Exceeded (Type 11)","Dest Unreachable (Type 3)","Redirect (Type 5)"],a:[0,2,3],ch:"Module 6",e:"Traceroute sends Echo Requests; routers return Time Exceeded; final dest may return Dest Unreachable."},
+    {q:"Tools to view the ARP cache?",o:["arp -a (Windows/Linux)","show arp (Cisco IOS)","traceroute","ip neigh (Linux)","nslookup"],a:[0,1,3],ch:"Module 6",e:"arp -a, show arp, and ip neigh all show ARP/neighbor entries."},
+    {q:"TRUE statements about ARP?",o:["Request is broadcast","Reply is unicast","ARP has authentication","Operates at L3","Cache entries can be static or dynamic"],a:[0,1,4],ch:"Module 6",e:"ARP: broadcast request, unicast reply, NO authentication, bridges L2/L3, supports static & dynamic entries."},
+    {q:"Basic IOS hardening measures?",o:["enable secret","MOTD banner","SSH + disable Telnet","service password-encryption","OSPF authentication"],a:[0,1,2,3],ch:"Module 3",e:"Basic hardening: enable secret, MOTD, SSH-only, password encryption. OSPF auth is advanced routing security."},
+    {q:"Correct descriptions of bitwise AND?",o:["1 AND 1 = 1","1 AND 0 = 1","0 AND 0 = 0","Used to determine network ID","Both must be 1 for result = 1"],a:[0,2,3,4],ch:"Module 2",e:"1 AND 0 = 0 (not 1). AND extracts network IDs; both bits must be 1 for output 1."},
+    {q:"Characteristics of dynamic routing?",o:["Routes learned automatically","Adapt to topology changes","Generate overhead traffic","Require zero CPU","Exchange info with neighbors"],a:[0,1,2,4],ch:"Module 5",e:"Dynamic protocols: auto-learn, adaptive, overhead, neighbor exchange. They DO use CPU/memory."},
+    {q:"Commands showing VLAN information?",o:["show vlan brief","show interfaces trunk","show ip route","show running-config","show mac address-table"],a:[0,1,3],ch:"Module 4",e:"show vlan brief, show interfaces trunk, and show running-config contain VLAN info. show ip route is L3 routing."},
+  ];
+
+  const el = document.getElementById('msq');
+  let h = '<h2 style="font-family:\'Crimson Pro\',serif;font-size:1.8rem;color:var(--navy);margin-bottom:8px;">Multiple-Select Questions (35 MSQs)</h2>';
+  h += '<p style="color:var(--gray);margin-bottom:16px;">Each question has TWO or MORE correct answers. Select ALL that apply.</p>';
+  h += '<div class="search-wrap"><span class="icon">&#128269;</span><input type="text" placeholder="Search questions..." oninput="filterQuestions(\'msq\',this.value)"></div>';
+  msqData.forEach((m, i) => {
+    const opts = m.o.map((o, j) => String.fromCharCode(65+j)+') '+o).join('\n');
+    const aStr = m.a.map(j => String.fromCharCode(65+j)+') '+m.o[j]).join(', ');
+    h += `<div class="card green-border q-item" data-search="${(m.q+' '+m.o.join(' ')+' '+m.ch).toLowerCase()}"><div class="q-block"><span class="chip chip-module">${m.ch}</span><p class="q-text">MSQ ${i+1}. ${m.q} (Select all that apply)</p><p class="q-options">${opts}</p><button class="answer-toggle" onclick="toggleAnswer(this)">Show Answers</button><div class="answer-content"><span class="chip chip-answer">Answers: ${aStr}</span><p style="margin-top:8px;"><span class="chip chip-explain">Explanation</span> ${m.e}</p></div></div></div>`;
+  });
+  el.innerHTML = h;
+}
+
+function renderEssays() {
+  const el = document.getElementById('essay');
+  let h = '<h2 style="font-family:\'Crimson Pro\',serif;font-size:1.8rem;color:var(--navy);margin-bottom:8px;">Short Essay Questions (20 Questions)</h2>';
+  h += '<p style="color:var(--gray);margin-bottom:16px;">Answer each in 4-8 sentences. Click to reveal model answers.</p>';
+  essays.forEach((e, i) => {
+    h += `<div class="card gold-border"><span class="chip chip-module">${e.ch}</span><p class="q-text">Essay ${i+1}. ${e.q}</p><button class="answer-toggle" onclick="toggleAnswer(this)">Show Model Answer</button><div class="answer-content"><span class="chip chip-answer">Model Answer</span><p>${e.a}</p></div></div>`;
+  });
+  el.innerHTML = h;
+}
+
+function renderQuiz() {
+  const el = document.getElementById('quiz');
+  let h = '<h2 style="font-family:\'Crimson Pro\',serif;font-size:1.8rem;color:var(--navy);margin-bottom:8px;">Interactive Quiz Mode</h2>';
+  h += '<p style="color:var(--gray);margin-bottom:16px;">Test yourself with randomized MCQs. Click an option to check your answer.</p>';
+  h += '<div id="quizScore" style="margin-bottom:16px;"><span class="score-display">Score: <span id="sc">0</span> / <span id="st">0</span></span></div>';
+  h += '<div class="progress-bar-wrap"><div class="progress-bar-fill" id="quizProgress" style="width:0%"></div></div>';
+  h += '<div id="quizCard"></div>';
+  h += '<button class="answer-toggle" style="margin-top:16px;" id="nextQuizBtn" onclick="nextQuizQ()" disabled>Next Question &#9654;</button>';
+  el.innerHTML = h;
+  nextQuizQ();
+}
+
+// ===================== QUIZ LOGIC =====================
+let quizOrder = [], quizIdx = 0, quizCorrect = 0, quizTotal = 0;
+function shuffleArray(arr) { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+
+function nextQuizQ() {
+  if(quizOrder.length === 0) { quizOrder = shuffleArray([...Array(mcqs.length).keys()]); quizIdx = 0; }
+  if(quizIdx >= quizOrder.length) { quizOrder = shuffleArray([...Array(mcqs.length).keys()]); quizIdx = 0; }
+  const m = mcqs[quizOrder[quizIdx]];
+  quizIdx++;
+  let h = `<div class="card"><span class="chip chip-module">${m.ch}</span><p class="q-text" style="margin-bottom:16px;">${m.q}</p>`;
+  m.o.forEach((o, j) => {
+    h += `<button class="quiz-btn" onclick="checkQuiz(this,${j},${m.a})">${String.fromCharCode(65+j)}) ${o}</button>`;
+  });
+  h += `<div id="quizFeedback" style="margin-top:16px;display:none;"></div></div>`;
+  document.getElementById('quizCard').innerHTML = h;
+  document.getElementById('nextQuizBtn').disabled = true;
+}
+
+function checkQuiz(btn, chosen, correct) {
+  quizTotal++;
+  const btns = btn.parentElement.querySelectorAll('.quiz-btn');
+  btns.forEach((b,i) => {
+    b.disabled = true;
+    if(i === correct) b.classList.add('correct');
+    if(i === chosen && chosen !== correct) b.classList.add('wrong');
+  });
+  if(chosen === correct) quizCorrect++;
+  document.getElementById('sc').textContent = quizCorrect;
+  document.getElementById('st').textContent = quizTotal;
+  const pct = Math.round((quizCorrect/quizTotal)*100);
+  document.getElementById('quizProgress').style.width = pct+'%';
+  const fb = document.getElementById('quizFeedback');
+  const m = mcqs[quizOrder[quizIdx-1]];
+  fb.style.display = 'block';
+  fb.innerHTML = chosen===correct
+    ? `<p style="color:var(--green);font-weight:700;">&#10004; Correct!</p><p style="margin-top:6px;">${m.e}</p>`
+    : `<p style="color:#D32F2F;font-weight:700;">&#10008; Incorrect.</p><p style="margin-top:6px;">${m.e}</p>`;
+  document.getElementById('nextQuizBtn').disabled = false;
+}
+
+// ===================== UI FUNCTIONS =====================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo({top: 200, behavior: 'smooth'});
+}
+
+function toggleModule(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function toggleAnswer(btn) {
+  const content = btn.nextElementSibling;
+  content.classList.toggle('visible');
+  btn.textContent = content.classList.contains('visible') ? 'Hide Answer' : (btn.textContent.includes('Model') ? 'Show Model Answer' : btn.textContent.includes('Analysis') ? 'Show Analysis & Solution' : btn.textContent.includes('Answers') ? 'Show Answers' : 'Show Answer');
+}
+
+function filterQuestions(sectionId, query) {
+  const items = document.querySelectorAll(`#${sectionId} .q-item`);
+  const q = query.toLowerCase();
+  items.forEach(item => {
+    item.style.display = item.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+
+// Scroll top button
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTopBtn').style.display = window.scrollY > 400 ? 'block' : 'none';
+});
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderCases();
+  renderMCQs();
+  renderMSQs();
+  renderEssays();
+  renderQuiz();
+});
+</script>
+</body>
+</html>

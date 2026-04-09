@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 7: Network Traffic Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals with Sky Blue (TCP/Permit) and Emerald Green (UDP), Rose (Deny) accents -->
+    <!-- Application Structure Plan: The SPA transitions the linear text report into a modular learning dashboard. It uses a top navigation to split the theoretical 'Concept Primer', the practical 'Lab Execution', and 'Project Context'. This structure was chosen because network engineering requires understanding theory (protocols, ACL logic) before touching the command line. An interactive protocol toggle and an interactive subnet calculator replace static text to foster active learning. A progress chart provides context for where this 6-hour task fits into the 14-week semester. -->
+    <!-- Visualization & Content Choices: 
+         1. Semester Progress -> Goal: Inform context -> Viz: Chart.js Doughnut -> Interaction: Hover tooltips -> Justification: Shows how much is done vs pending -> Library: Chart.js (NO SVG).
+         2. TCP vs UDP -> Goal: Compare -> Viz: Interactive Tabs & HTML block diagrams -> Interaction: Click to toggle -> Justification: Side-by-side comparison avoids scrolling and emphasizes differences -> Method: Tailwind + Vanilla JS (NO SVG/Mermaid).
+         3. Subnetting Math -> Goal: Inform/Organize -> Viz: Interactive Grid -> Interaction: Click to reveal answers -> Justification: Active recall is better for exam prep than static tables -> Method: Tailwind Grid + JS (NO SVG). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 300px; }
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #0369a1;
+            color: #0369a1;
+            font-weight: 600;
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-dot {
+            height: 12px; width: 12px; background-color: #ef4444; border-radius: 50%; display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased selection:bg-sky-200">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-sky-800 rounded flex items-center justify-center text-white font-bold font-mono">P7</div>
+                        <span class="font-bold text-xl tracking-tight text-stone-900">Traffic Control</span>
+                    </div>
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
+                        <button onclick="nav('overview')" id="nav-overview" class="tab-btn active text-stone-500 hover:text-stone-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition-colors">Overview & Context</button>
+                        <button onclick="nav('primer')" id="nav-primer" class="tab-btn text-stone-500 hover:text-stone-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition-colors">Concept Primer</button>
+                        <button onclick="nav('lab')" id="nav-lab" class="tab-btn text-stone-500 hover:text-stone-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition-colors">Interactive Lab</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section id="overview" class="fade-in block">
+            <div class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-stone-100">
+                <h1 class="text-3xl font-bold text-stone-900 mb-2">Phase 7: Network Traffic Control</h1>
+                <p class="text-stone-600 text-lg max-w-3xl">Welcome to Week 10. This module transitions your focus from establishing basic connectivity to enforcing security and traffic management. You will implement Access Control Lists (ACLs) and analyze Transport Layer behaviors.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100">
+                    <h2 class="text-xl font-bold text-stone-900 mb-4 flex items-center gap-2">
+                        <span class="text-sky-600">&#9632;</span> Semester Progress
+                    </h2>
+                    <p class="text-stone-600 mb-6 text-sm">This interactive chart visualizes your trajectory through the semester project. Traffic Control sits at the midpoint between basic routing and advanced optimization.</p>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                        <h2 class="text-lg font-bold text-amber-900 mb-2 flex items-center gap-2">
+                            <span class="pulse-dot"></span> Academic & Legal Disclaimer
+                        </h2>
+                        <p class="text-amber-800 text-sm">All tools and procedures are for <strong>strictly educational purposes</strong> in a simulated environment. Capturing or filtering real-world traffic without permission may violate laws (e.g., CFAA). You are individually responsible for ethical use.</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 flex-grow">
+                        <h2 class="text-lg font-bold text-stone-900 mb-4">Phase 7 Deliverables</h2>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <div class="bg-stone-100 p-1 rounded mt-0.5 text-stone-500 font-bold text-xs">01</div>
+                                <div>
+                                    <p class="font-semibold text-stone-800 text-sm">Written Report</p>
+                                    <p class="text-stone-500 text-xs">Max 4 pages A4. Includes annotated screenshots and reasoned answers to reflection questions.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="bg-stone-100 p-1 rounded mt-0.5 text-stone-500 font-bold text-xs">02</div>
+                                <div>
+                                    <p class="font-semibold text-stone-800 text-sm">Updated Topology File</p>
+                                    <p class="text-stone-500 text-xs">Packet Tracer or GNS3 file containing applied Standard and Extended ACLs.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="bg-stone-100 p-1 rounded mt-0.5 text-stone-500 font-bold text-xs">03</div>
+                                <div>
+                                    <p class="font-semibold text-stone-800 text-sm">Subnetting Math</p>
+                                    <p class="text-stone-500 text-xs">Full calculations shown for the 172.16.50.0/24 division exercise.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="primer" class="fade-in hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">Transport Layer & Access Control</h2>
+                <p class="text-stone-600 max-w-4xl">Before configuring routers, you must understand the nature of the traffic you are filtering. Access Control Lists (ACLs) rely heavily on differentiating between Layer 4 protocols and understanding wildcard masks.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden mb-8">
+                <div class="flex border-b border-stone-100">
+                    <button onclick="toggleProtocol('tcp')" id="btn-tcp" class="flex-1 py-4 font-bold text-sky-800 bg-sky-50 border-b-2 border-sky-600 transition-colors">TCP (Transmission Control)</button>
+                    <button onclick="toggleProtocol('udp')" id="btn-udp" class="flex-1 py-4 font-bold text-stone-500 bg-stone-50 border-b-2 border-transparent hover:bg-stone-100 transition-colors">UDP (User Datagram)</button>
+                </div>
+                
+                <div class="p-6 md:p-8">
+                    <div id="view-tcp" class="grid grid-cols-1 md:grid-cols-2 gap-8 block fade-in">
+                        <div>
+                            <h3 class="text-lg font-bold text-stone-900 mb-3">Reliable & Ordered</h3>
+                            <p class="text-stone-600 text-sm mb-4">TCP is like a registered letter. It guarantees delivery through sequence numbers and acknowledgements. If a packet is lost, it is retransmitted. This requires overhead.</p>
+                            <h4 class="font-semibold text-stone-800 text-sm mb-2">Common Ports</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm font-mono">
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-sky-700">80 : HTTP</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-sky-700">443 : HTTPS</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-sky-700">22 : SSH</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-sky-700">21 : FTP</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-sky-700">25 : SMTP</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 flex flex-col items-center justify-center">
+                            <h4 class="font-semibold text-slate-700 text-sm mb-6 uppercase tracking-wider">The 3-Way Handshake</h4>
+                            <div class="w-full max-w-xs space-y-4">
+                                <div class="flex justify-between items-center text-xs font-mono font-bold text-slate-500">
+                                    <span>CLIENT</span><span>SERVER</span>
+                                </div>
+                                <div class="relative w-full h-8 bg-sky-100 rounded flex items-center px-4 justify-between group overflow-hidden">
+                                    <div class="absolute inset-0 bg-sky-200 w-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                                    <span class="relative z-10 text-sky-900 font-mono text-xs font-bold">SYN &rarr;</span>
+                                    <span class="relative z-10 text-sky-700 text-xs text-right">"Hello"</span>
+                                </div>
+                                <div class="relative w-full h-8 bg-indigo-100 rounded flex items-center px-4 justify-between group overflow-hidden">
+                                    <div class="absolute inset-0 bg-indigo-200 w-full transform translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                                    <span class="relative z-10 text-indigo-700 text-xs">"Ready"</span>
+                                    <span class="relative z-10 text-indigo-900 font-mono text-xs font-bold">&larr; SYN-ACK</span>
+                                </div>
+                                <div class="relative w-full h-8 bg-sky-100 rounded flex items-center px-4 justify-between group overflow-hidden">
+                                    <div class="absolute inset-0 bg-sky-200 w-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                                    <span class="relative z-10 text-sky-900 font-mono text-xs font-bold">ACK &rarr;</span>
+                                    <span class="relative z-10 text-sky-700 text-xs text-right">"Let's go"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-udp" class="grid grid-cols-1 md:grid-cols-2 gap-8 hidden fade-in">
+                        <div>
+                            <h3 class="text-lg font-bold text-stone-900 mb-3">Fast & Stateless</h3>
+                            <p class="text-stone-600 text-sm mb-4">UDP is like a postcard. It sends data without establishing a connection or guaranteeing delivery. It is preferred for real-time applications where a missing packet is better than a delayed one.</p>
+                            <h4 class="font-semibold text-stone-800 text-sm mb-2">Common Ports</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm font-mono">
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-emerald-700">53 : DNS</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-emerald-700">67/68: DHCP</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-emerald-700">69 : TFTP</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-emerald-700">123 : NTP</div>
+                                <div class="bg-stone-100 px-3 py-2 rounded border border-stone-200 text-emerald-700">5004: RTP</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 flex flex-col items-center justify-center">
+                            <h4 class="font-semibold text-slate-700 text-sm mb-6 uppercase tracking-wider">Stateless Transmission</h4>
+                            <div class="w-full max-w-xs space-y-4">
+                                <div class="flex justify-between items-center text-xs font-mono font-bold text-slate-500">
+                                    <span>CLIENT</span><span>SERVER</span>
+                                </div>
+                                <div class="relative w-full h-8 bg-emerald-100 rounded flex items-center px-4 justify-between overflow-hidden">
+                                    <div class="absolute inset-0 bg-emerald-200 w-1/2 opacity-50"></div>
+                                    <span class="relative z-10 text-emerald-900 font-mono text-xs font-bold">DATA &rarr;</span>
+                                    <span class="relative z-10 text-emerald-700 text-xs text-right">No handshake</span>
+                                </div>
+                                <div class="relative w-full h-8 bg-emerald-100 rounded flex items-center px-4 justify-between overflow-hidden">
+                                     <div class="absolute inset-0 bg-emerald-200 w-3/4 opacity-50"></div>
+                                    <span class="relative z-10 text-emerald-900 font-mono text-xs font-bold">DATA &rarr;</span>
+                                    <span class="relative z-10 text-emerald-700 text-xs text-right">Just stream</span>
+                                </div>
+                                <div class="relative w-full h-8 border-2 border-dashed border-rose-300 bg-rose-50 rounded flex items-center px-4 justify-center">
+                                    <span class="text-rose-500 text-xs font-bold italic">Packet Lost (Ignored)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 border-l-4 border-l-stone-400">
+                    <h3 class="font-bold text-stone-900 mb-2">Standard ACLs (1-99)</h3>
+                    <p class="text-stone-600 text-sm mb-4">Filter based <strong>only</strong> on Source IP Address.</p>
+                    <div class="bg-stone-50 p-3 rounded font-mono text-xs text-stone-700 border border-stone-200 mb-4">
+                        access-list 10 deny 192.168.30.0 0.0.0.255<br>
+                        access-list 10 permit any
+                    </div>
+                    <div class="text-xs text-stone-500 font-semibold bg-stone-100 inline-block px-2 py-1 rounded">Placement: Close to Destination</div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 border-l-4 border-l-sky-500">
+                    <h3 class="font-bold text-stone-900 mb-2">Extended ACLs (100-199)</h3>
+                    <p class="text-stone-600 text-sm mb-4">Filter based on Source, Dest, Protocol, and Port.</p>
+                    <div class="bg-stone-50 p-3 rounded font-mono text-xs text-stone-700 border border-stone-200 mb-4">
+                        permit tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 80<br>
+                        deny tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 22
+                    </div>
+                    <div class="text-xs text-sky-700 font-semibold bg-sky-100 inline-block px-2 py-1 rounded">Placement: Close to Source</div>
+                </div>
+            </div>
+            
+            <div class="mt-6 bg-rose-50 p-4 rounded-lg border border-rose-200 text-sm text-rose-800 flex items-start gap-3">
+                <span class="text-xl leading-none">&block;</span>
+                <div>
+                    <strong>The Implicit Deny:</strong> Every ACL ends with an invisible <code>deny any any</code> rule. If a packet matches no explicit rules, it is dropped.
+                </div>
+            </div>
+
+        </section>
+
+        <section id="lab" class="fade-in hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">Interactive Lab Execution</h2>
+                <p class="text-stone-600 max-w-4xl">Follow these steps in your simulator (Packet Tracer/GNS3). Expand each section to view instructions, code snippets, and interactive helpers for your calculations.</p>
+            </div>
+
+            <div class="space-y-4">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <button onclick="toggleAccordion('step1')" class="w-full px-6 py-4 text-left font-bold text-stone-900 bg-stone-50 hover:bg-stone-100 transition-colors flex justify-between items-center">
+                        <span>Step 1: Verify Topology</span>
+                        <span id="icon-step1" class="text-stone-400 transform transition-transform">+</span>
+                    </button>
+                    <div id="content-step1" class="hidden px-6 py-4 border-t border-stone-200 text-sm text-stone-600">
+                        <ul class="list-disc pl-5 space-y-2 mb-4">
+                            <li>Ping between VLANs to confirm routing is intact.</li>
+                            <li>Add a <strong>simulated server</strong> with a static IP (e.g. 192.168.50.10) and enable HTTP/DNS services.</li>
+                            <li>Add a <strong>client PC</strong> in a different VLAN.</li>
+                        </ul>
+                        <p class="italic">Report Requirement: Screenshot of updated topology clearly labeling new elements.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <button onclick="toggleAccordion('step2')" class="w-full px-6 py-4 text-left font-bold text-stone-900 bg-stone-50 hover:bg-stone-100 transition-colors flex justify-between items-center">
+                        <span>Step 2: IPv4 Subnetting & Wildcards (Interactive)</span>
+                        <span id="icon-step2" class="text-stone-400 transform transition-transform">+</span>
+                    </button>
+                    <div id="content-step2" class="hidden px-6 py-4 border-t border-stone-200">
+                        <p class="text-sm text-stone-600 mb-4"><strong>Scenario:</strong> Split <code>172.16.50.0/24</code> into four equal subnets. Use the interactive calculator below to check your manual work before adding it to your report.</p>
+                        
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-4">
+                            <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-500 uppercase">Original Block</span>
+                                    <div class="font-mono text-lg font-bold text-slate-800">172.16.50.0 <span class="text-sky-600">/24</span></div>
+                                </div>
+                                <div class="text-2xl text-slate-300 my-2 sm:my-0">&rarr;</div>
+                                <div class="text-right">
+                                    <span class="text-xs font-bold text-slate-500 uppercase">New Prefix (4 Subnets)</span>
+                                    <div id="calc-prefix" class="font-mono text-lg font-bold text-slate-800 bg-slate-200 px-2 rounded blur-sm cursor-pointer" onclick="this.classList.remove('blur-sm')">/26</div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="bg-white p-3 border border-slate-200 rounded cursor-pointer group" onclick="revealSubnet(0)">
+                                    <div class="text-xs font-bold text-slate-400 mb-1">Subnet 1</div>
+                                    <div id="sub-0-net" class="font-mono text-sm font-bold text-slate-800 blur-sm transition-all">172.16.50.0</div>
+                                    <div id="sub-0-range" class="font-mono text-xs text-slate-500 blur-sm mt-1 transition-all">.1 - .62</div>
+                                    <div id="sub-0-bcast" class="font-mono text-xs text-sky-600 blur-sm transition-all">Bcast: .63</div>
+                                    <div class="text-[10px] text-center mt-2 text-slate-300 group-hover:text-slate-500">Click to reveal</div>
+                                </div>
+                                <div class="bg-white p-3 border border-slate-200 rounded cursor-pointer group" onclick="revealSubnet(1)">
+                                    <div class="text-xs font-bold text-slate-400 mb-1">Subnet 2</div>
+                                    <div id="sub-1-net" class="font-mono text-sm font-bold text-slate-800 blur-sm transition-all">172.16.50.64</div>
+                                    <div id="sub-1-range" class="font-mono text-xs text-slate-500 blur-sm mt-1 transition-all">.65 - .126</div>
+                                    <div id="sub-1-bcast" class="font-mono text-xs text-sky-600 blur-sm transition-all">Bcast: .127</div>
+                                </div>
+                                <div class="bg-white p-3 border border-slate-200 rounded cursor-pointer group" onclick="revealSubnet(2)">
+                                    <div class="text-xs font-bold text-slate-400 mb-1">Subnet 3</div>
+                                    <div id="sub-2-net" class="font-mono text-sm font-bold text-slate-800 blur-sm transition-all">172.16.50.128</div>
+                                    <div id="sub-2-range" class="font-mono text-xs text-slate-500 blur-sm mt-1 transition-all">.129 - .190</div>
+                                    <div id="sub-2-bcast" class="font-mono text-xs text-sky-600 blur-sm transition-all">Bcast: .191</div>
+                                </div>
+                                <div class="bg-white p-3 border border-slate-200 rounded cursor-pointer group" onclick="revealSubnet(3)">
+                                    <div class="text-xs font-bold text-slate-400 mb-1">Subnet 4</div>
+                                    <div id="sub-3-net" class="font-mono text-sm font-bold text-slate-800 blur-sm transition-all">172.16.50.192</div>
+                                    <div id="sub-3-range" class="font-mono text-xs text-slate-500 blur-sm mt-1 transition-all">.193 - .254</div>
+                                    <div id="sub-3-bcast" class="font-mono text-xs text-sky-600 blur-sm transition-all">Bcast: .255</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center">
+                                <span class="text-sm font-bold text-slate-700">Required Wildcard Mask:</span>
+                                <span class="font-mono bg-sky-100 text-sky-800 px-3 py-1 rounded cursor-pointer blur-sm transition-all" onclick="this.classList.remove('blur-sm')">0.0.0.63</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <button onclick="toggleAccordion('step3')" class="w-full px-6 py-4 text-left font-bold text-stone-900 bg-stone-50 hover:bg-stone-100 transition-colors flex justify-between items-center">
+                        <span>Step 5 & 6: Applying ACLs</span>
+                        <span id="icon-step3" class="text-stone-400 transform transition-transform">+</span>
+                    </button>
+                    <div id="content-step3" class="hidden px-6 py-4 border-t border-stone-200">
+                        
+                        <div class="mb-6">
+                            <h4 class="font-bold text-stone-800 mb-2 text-sm">Standard ACL Implementation</h4>
+                            <p class="text-xs text-stone-500 mb-2">Blocks Guest VLAN (192.168.30.0) from reaching the server subnet entirely. Applied OUTBOUND on server interface.</p>
+                            <div class="bg-gray-900 p-4 rounded text-gray-100 font-mono text-sm overflow-x-auto">
+<span class="text-gray-500">! Enter global configuration mode</span>
+Router(config)# access-list 10 deny 192.168.30.0 0.0.0.255
+Router(config)# access-list 10 permit any
+<span class="text-gray-500">! Apply outbound on server-facing interface</span>
+Router(config)# interface GigabitEthernet0/1
+Router(config-if)# ip access-group 10 out
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-stone-800 mb-2 text-sm">Extended ACL Implementation</h4>
+                            <p class="text-xs text-stone-500 mb-2">Permits HTTP but denies SSH from Engineering VLAN to Server. Applied INBOUND on Engineering interface.</p>
+                            <div class="bg-gray-900 p-4 rounded text-gray-100 font-mono text-sm overflow-x-auto">
+Router(config)# ip access-list extended ENGINEERING_POLICY
+Router(config-ext-nacl)# permit tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 80
+Router(config-ext-nacl)# deny tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 22
+Router(config-ext-nacl)# permit ip any any
+Router(config)# interface GigabitEthernet0/0.10
+Router(config-if)# ip access-group ENGINEERING_POLICY in
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <button onclick="toggleAccordion('step4')" class="w-full px-6 py-4 text-left font-bold text-stone-900 bg-stone-50 hover:bg-stone-100 transition-colors flex justify-between items-center">
+                        <span>Step 7: Verification Commands</span>
+                        <span id="icon-step4" class="text-stone-400 transform transition-transform">+</span>
+                    </button>
+                    <div id="content-step4" class="hidden px-6 py-4 border-t border-stone-200">
+                         <div class="bg-gray-900 p-4 rounded text-gray-100 font-mono text-sm overflow-x-auto">
+<span class="text-green-400">Router# show access-lists</span>
+Standard IP access list 10
+    10 deny   192.168.30.0, wildcard bits 0.0.0.255 (4 matches)
+    20 permit any (12 matches)
+
+Extended IP access list ENGINEERING_POLICY
+    10 permit tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq www (8 matches)
+    20 deny tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 22 (2 matches)
+    30 permit ip any any (15 matches)
+                        </div>
+                        <p class="text-xs mt-3 text-stone-600 bg-stone-100 p-2 rounded"><strong>Note:</strong> Check the "matches" counter (hit count). If it reads zero after testing, your ACL is either applied to the wrong interface or evaluating logic incorrectly.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function nav(sectionId) {
+            ['overview', 'primer', 'lab'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById('nav-' + id).classList.remove('active', 'border-sky-600', 'text-sky-800');
+                document.getElementById('nav-' + id).classList.add('border-transparent', 'text-stone-500');
+            });
+            
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById('nav-' + sectionId);
+            activeBtn.classList.remove('border-transparent', 'text-stone-500');
+            activeBtn.classList.add('active', 'border-sky-600', 'text-sky-800');
+        }
+
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed (Phases 1-6)', 'Current (Phase 7)', 'Pending (Phases 8-11)'],
+                datasets: [{
+                    data: [6, 1, 4],
+                    backgroundColor: [
+                        '#e7e5e4', 
+                        '#0284c7', 
+                        '#f5f5f4'  
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'Inter', size: 12 },
+                            color: '#57534e',
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1c1917',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { family: 'Inter', size: 13 },
+                        bodyFont: { family: 'Inter', size: 13 }
+                    }
+                }
+            }
+        });
+
+        function toggleProtocol(proto) {
+            document.getElementById('view-tcp').classList.add('hidden');
+            document.getElementById('view-udp').classList.add('hidden');
+            
+            const btnTcp = document.getElementById('btn-tcp');
+            const btnUdp = document.getElementById('btn-udp');
+            
+            btnTcp.className = "flex-1 py-4 font-bold text-stone-500 bg-stone-50 border-b-2 border-transparent hover:bg-stone-100 transition-colors";
+            btnUdp.className = "flex-1 py-4 font-bold text-stone-500 bg-stone-50 border-b-2 border-transparent hover:bg-stone-100 transition-colors";
+
+            if (proto === 'tcp') {
+                document.getElementById('view-tcp').classList.remove('hidden');
+                btnTcp.className = "flex-1 py-4 font-bold text-sky-800 bg-sky-50 border-b-2 border-sky-600 transition-colors";
+            } else {
+                document.getElementById('view-udp').classList.remove('hidden');
+                btnUdp.className = "flex-1 py-4 font-bold text-emerald-800 bg-emerald-50 border-b-2 border-emerald-600 transition-colors";
+            }
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(45deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function revealSubnet(index) {
+            const net = document.getElementById('sub-' + index + '-net');
+            const range = document.getElementById('sub-' + index + '-range');
+            const bcast = document.getElementById('sub-' + index + '-bcast');
+            
+            net.classList.remove('blur-sm');
+            range.classList.remove('blur-sm');
+            bcast.classList.remove('blur-sm');
+        }
+    </script>
+</body>
+</html>
+
+

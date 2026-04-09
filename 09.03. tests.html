@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7: IP Addressing Services Review</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        /* Tab Styles */
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #e9ecef;
+            border-radius: 8px 8px 0 0;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 24px;
+            transition: 0.3s;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+        }
+        .tab button:hover {
+            background-color: #dee2e6;
+        }
+        .tab button.active {
+            background-color: #fff;
+            border-bottom: 3px solid #0056b3;
+            color: #0056b3;
+        }
+        .tabcontent {
+            display: none;
+            padding: 30px;
+            border: 1px solid #ccc;
+            border-top: none;
+            background-color: #fff;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .flashcard {
+            background-color: transparent;
+            width: 100%;
+            height: 200px;
+            perspective: 1000px;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .flashcard:hover .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .flashcard-front {
+            background-color: #ffffff;
+            color: black;
+            border: 2px solid #0056b3;
+            font-weight: bold;
+        }
+        .flashcard-back {
+            background-color: #0056b3;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Quiz Styles */
+        .quiz-question {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .quiz-question h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        .options-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options-list li {
+            margin-bottom: 10px;
+        }
+        .options-list label {
+            cursor: pointer;
+            display: block;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .options-list label:hover {
+            background-color: #e2e6ea;
+        }
+        .feedback {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        .correct-feedback {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect-feedback {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .submit-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .submit-btn:hover {
+            background-color: #004494;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Module 7: IP Addressing Services</h2>
+
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'Flashcards')" id="defaultOpen">Flashcards (25)</button>
+        <button class="tablinks" onclick="openTab(event, 'Quiz')">Practice Quiz (10)</button>
+    </div>
+
+    <div id="Flashcards" class="tabcontent">
+        <p><em>Hover over a card (or tap on mobile) to reveal the answer.</em></p>
+        <div class="flashcard-grid">
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Network analogy for an IP Address</div>
+                <div class="flashcard-back">Your street address (so data packets can find your specific location).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Network analogy for DHCP</div>
+                <div class="flashcard-back">The post office that automatically assigns your address when you join a network.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Network analogy for DNS</div>
+                <div class="flashcard-back">The phone book that translates human-friendly names into routing numbers (IP addresses).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Size of the IPv4 address space</div>
+                <div class="flashcard-back">32-bit (approximately 4.3 billion unique addresses).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Notation format for IPv4 addresses</div>
+                <div class="flashcard-back">Dotted-decimal notation (e.g., 192.168.1.10).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Subnet Mask</div>
+                <div class="flashcard-back">A value that divides an IP address into network and host portions.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Default Gateway</div>
+                <div class="flashcard-back">The router address used for traffic leaving the local subnet.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Size of the IPv6 address space</div>
+                <div class="flashcard-back">128-bit (approximately 3.4 × 10³⁸ addresses).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Notation format for IPv6 addresses</div>
+                <div class="flashcard-back">Colon-hexadecimal notation.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">IPv6 simplification rule for consecutive zeroes</div>
+                <div class="flashcard-back">Collapse one consecutive all-zero sequence with a double colon (::).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">SLAAC (Stateless Address Autoconfiguration)</div>
+                <div class="flashcard-back">A feature allowing IPv6 devices to self-configure their IP addresses using router advertisements.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Purpose of DHCP</div>
+                <div class="flashcard-back">To automate the assignment of IP addresses and network configuration parameters to devices.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">The four steps of the DHCP IPv4 process (DORA)</div>
+                <div class="flashcard-back">Discover, Offer, Request, Acknowledge.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DHCP Lease Time</div>
+                <div class="flashcard-back">The duration an IP address is rented to a device before it must be renewed.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DHCP Reservation</div>
+                <div class="flashcard-back">A permanent mapping on the DHCP server tying a specific MAC address to a specific IP address.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">The three levels of the DNS Hierarchy</div>
+                <div class="flashcard-back">Root Zone, Top-Level Domain (TLD) Servers, and Authoritative Name Servers.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">Recursive resolver</div>
+                <div class="flashcard-back">A DNS server that queries other servers on behalf of a client to fully resolve a domain name into an IP.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNS A Record</div>
+                <div class="flashcard-back">Maps a domain name to an IPv4 address.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNS AAAA Record</div>
+                <div class="flashcard-back">Maps a domain name to an IPv6 address.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNS CNAME Record</div>
+                <div class="flashcard-back">An alias that maps one domain name to another domain name.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNS MX Record</div>
+                <div class="flashcard-back">Specifies the mail server responsible for accepting email messages on behalf of a domain.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNS PTR Record</div>
+                <div class="flashcard-back">Used for reverse lookups, mapping an IP address back to a domain name.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">DNSSEC (DNS Security Extensions)</div>
+                <div class="flashcard-back">Adds cryptographic signatures to DNS records to prevent DNS spoofing and cache poisoning.</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">IETF (Internet Engineering Task Force)</div>
+                <div class="flashcard-back">The organisation that develops Internet protocol standards (such as the RFCs for IPv4, IPv6, DHCP, and DNS).</div>
+            </div></div>
+            <div class="flashcard"><div class="flashcard-inner">
+                <div class="flashcard-front">IANA (Internet Assigned Numbers Authority)</div>
+                <div class="flashcard-back">The organisation that coordinates the DNS root, IP address allocation, and protocol parameters.</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div id="Quiz" class="tabcontent">
+        <form id="quizForm">
+            
+            <div class="quiz-question" id="q1">
+                <h3>1. Which network service acts like a directory, translating human-friendly names into routing numbers?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q1" value="correct"> DNS (Domain Name System)</label></li>
+                    <li><label><input type="radio" name="q1" value="incorrect"> DHCP (Dynamic Host Configuration Protocol)</label></li>
+                    <li><label><input type="radio" name="q1" value="incorrect"> NAT (Network Address Translation)</label></li>
+                    <li><label><input type="radio" name="q1" value="incorrect"> CIDR (Classless Inter-Domain Routing)</label></li>
+                </ul>
+                <div class="feedback">DNS provides name resolution, functioning exactly like a phonebook that maps domain names to IP addresses so browsers can connect.</div>
+            </div>
+
+            <div class="quiz-question" id="q2">
+                <h3>2. According to IPv6 simplification rules, how would you correctly compress the address 2001:0db8:0000:0000:0000:0000:0000:0001?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q2" value="incorrect"> 2001:0db8::0000::1</label></li>
+                    <li><label><input type="radio" name="q2" value="incorrect"> 2001:db8:0:0:0:0:0:1</label></li>
+                    <li><label><input type="radio" name="q2" value="correct"> 2001:db8::1</label></li>
+                    <li><label><input type="radio" name="q2" value="incorrect"> 2001::db8::1</label></li>
+                </ul>
+                <div class="feedback">Leading zeroes in a block can be dropped, and exactly one sequence of multiple all-zero blocks can be collapsed into a double colon.</div>
+            </div>
+
+            <div class="quiz-question" id="q3">
+                <h3>3. What technology serves as a primary workaround for IPv4 address exhaustion by allowing multiple local devices to share a single public IP?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q3" value="incorrect"> SLAAC (Stateless Address Autoconfiguration)</label></li>
+                    <li><label><input type="radio" name="q3" value="correct"> NAT (Network Address Translation)</label></li>
+                    <li><label><input type="radio" name="q3" value="incorrect"> DHCP (Dynamic Host Configuration Protocol)</label></li>
+                    <li><label><input type="radio" name="q3" value="incorrect"> CIDR (Classless Inter-Domain Routing)</label></li>
+                </ul>
+                <div class="feedback">NAT translates non-routable private IPs into a single routable public IP, drastically reducing the total number of public IPs needed globally.</div>
+            </div>
+
+            <div class="quiz-question" id="q4">
+                <h3>4. In the DHCP DORA process, what exactly happens during the 'Discover' phase?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q4" value="incorrect"> The server selects an available IP from its pool and offers it to the client.</label></li>
+                    <li><label><input type="radio" name="q4" value="incorrect"> The client broadcasts a message confirming its acceptance of a specific IP address offer.</label></li>
+                    <li><label><input type="radio" name="q4" value="incorrect"> The server confirms the final lease and removes the address from the available pool.</label></li>
+                    <li><label><input type="radio" name="q4" value="correct"> The client broadcasts a message to 255.255.255.255 asking if there is a DHCP server available.</label></li>
+                </ul>
+                <div class="feedback">Because the client lacks an IP and doesn't know the server's address, it must shout via broadcast to the entire local network to find a configuration source.</div>
+            </div>
+
+            <div class="quiz-question" id="q5">
+                <h3>5. Which capability was inherently built into the design of IPv6, whereas it was only an optional add-on for IPv4?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q5" value="incorrect"> NAT (Network Address Translation)</label></li>
+                    <li><label><input type="radio" name="q5" value="incorrect"> SLAAC (Stateless Address Autoconfiguration)</label></li>
+                    <li><label><input type="radio" name="q5" value="correct"> IPsec (Internet Protocol Security)</label></li>
+                    <li><label><input type="radio" name="q5" value="incorrect"> UDP (User Datagram Protocol)</label></li>
+                </ul>
+                <div class="feedback">Because security was a primary focus during the development of IPv6, cryptographic protocols for authentication and encryption are an integral part of its architecture.</div>
+            </div>
+
+            <div class="quiz-question" id="q6">
+                <h3>6. During a recursive DNS lookup, if the local cache and the recursive resolver do not know the IP address for a domain, which server is queried first?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q6" value="incorrect"> Top-Level Domain (TLD) server</label></li>
+                    <li><label><input type="radio" name="q6" value="correct"> Root Zone server</label></li>
+                    <li><label><input type="radio" name="q6" value="incorrect"> Authoritative Name server</label></li>
+                    <li><label><input type="radio" name="q6" value="incorrect"> Default Gateway</label></li>
+                </ul>
+                <div class="feedback">The recursive resolver must start at the absolute top of the hierarchy to find out which server handles the specific Top-Level Domain (like .com or .org).</div>
+            </div>
+
+            <div class="quiz-question" id="q7">
+                <h3>7. Which DNS record type is essential if you want to perform a reverse lookup to find the domain name associated with a specific IP address?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q7" value="incorrect"> CNAME (Canonical Name) Record</label></li>
+                    <li><label><input type="radio" name="q7" value="incorrect"> A Record</label></li>
+                    <li><label><input type="radio" name="q7" value="incorrect"> MX (Mail Exchanger) Record</label></li>
+                    <li><label><input type="radio" name="q7" value="correct"> PTR (Pointer) Record</label></li>
+                </ul>
+                <div class="feedback">A PTR record specifically maps an IPv4 or IPv6 address back to a canonical domain name, essentially performing the reverse function of an A or AAAA record.</div>
+            </div>
+
+            <div class="quiz-question" id="q8">
+                <h3>8. A network administrator needs a specific printer to always receive the exact same IP address from the DHCP server. Which feature should they configure?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q8" value="incorrect"> Scope</label></li>
+                    <li><label><input type="radio" name="q8" value="correct"> Reservation</label></li>
+                    <li><label><input type="radio" name="q8" value="incorrect"> Relay Agent</label></li>
+                    <li><label><input type="radio" name="q8" value="incorrect"> Lease Time</label></li>
+                </ul>
+                <div class="feedback">By mapping the printer's fixed MAC address to a specific IP, the server ensures that IP is uniquely reserved and never leased to any other device.</div>
+            </div>
+
+            <div class="quiz-question" id="q9">
+                <h3>9. What value is used alongside an IPv4 address to determine which portion identifies the overall network and which portion identifies the specific host device?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q9" value="correct"> Subnet Mask</label></li>
+                    <li><label><input type="radio" name="q9" value="incorrect"> Default Gateway</label></li>
+                    <li><label><input type="radio" name="q9" value="incorrect"> MAC Address</label></li>
+                    <li><label><input type="radio" name="q9" value="incorrect"> Router Advertisement</label></li>
+                </ul>
+                <div class="feedback">The Subnet Mask acts as a mathematical filter, allowing devices and routers to separate the network routing prefix from the local host identifier.</div>
+            </div>
+
+            <div class="quiz-question" id="q10">
+                <h3>10. To prevent attackers from injecting false IP records into a resolver's cache (cache poisoning), which security measure should be implemented?</h3>
+                <ul class="options-list">
+                    <li><label><input type="radio" name="q10" value="incorrect"> DoH (DNS over HTTPS)</label></li>
+                    <li><label><input type="radio" name="q10" value="incorrect"> DoT (DNS over TLS)</label></li>
+                    <li><label><input type="radio" name="q10" value="correct"> DNSSEC (DNS Security Extensions)</label></li>
+                    <li><label><input type="radio" name="q10" value="incorrect"> IPsec</label></li>
+                </ul>
+                <div class="feedback">DNSSEC uses cryptographic signatures to ensure that the DNS records received actually originated from the authoritative source and haven't been maliciously tampered with in transit.</div>
+            </div>
+
+            <button type="button" class="submit-btn" onclick="checkQuiz()">Submit Answers</button>
+        </form>
+    </div>
+
+    <script>
+        // Tab switching logic
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        // Open default tab
+        document.getElementById("defaultOpen").click();
+
+        // Quiz evaluation logic
+        function checkQuiz() {
+            for (let i = 1; i <= 10; i++) {
+                let questionDiv = document.getElementById('q' + i);
+                let options = document.getElementsByName('q' + i);
+                let feedbackDiv = questionDiv.querySelector('.feedback');
+                let answered = false;
+
+                for (let option of options) {
+                    if (option.checked) {
+                        answered = true;
+                        feedbackDiv.style.display = "block";
+                        if (option.value === "correct") {
+                            feedbackDiv.className = "feedback correct-feedback";
+                            feedbackDiv.innerHTML = "<strong>Correct!</strong> " + feedbackDiv.innerText.replace('Correct! ', '').replace('Incorrect. ', '');
+                        } else {
+                            feedbackDiv.className = "feedback incorrect-feedback";
+                            feedbackDiv.innerHTML = "<strong>Incorrect.</strong> " + feedbackDiv.innerText.replace('Correct! ', '').replace('Incorrect. ', '');
+                        }
+                    }
+                }
+                
+                if (!answered) {
+                    feedbackDiv.style.display = "block";
+                    feedbackDiv.className = "feedback";
+                    feedbackDiv.innerHTML = "<em>Please select an answer to see the rationale.</em>";
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
+
+
+

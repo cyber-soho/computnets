@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Connectivity: IP, DHCP & DNS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body {
+        background-color: #FDFBF7;
+        color: #2D3748;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 350px;
+        max-height: 400px;
+    }
+    @media (min-width: 768px) {
+        .chart-container {
+            height: 400px;
+        }
+    }
+    .nav-btn {
+        transition: all 0.2s ease-in-out;
+    }
+    .nav-btn.active {
+        color: #C05621;
+        border-bottom-color: #C05621;
+        background-color: #FFFAF0;
+    }
+    .content-section {
+        display: none;
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    .content-section.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .interactive-element {
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .interactive-element:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .step-box.active {
+        background-color: #EBF8FF;
+        border-color: #3182CE;
+    }
+    .terminal-window {
+        background-color: #1A202C;
+        color: #48BB78;
+        font-family: monospace;
+    }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- Chosen Palette: Warm Neutrals with Terracotta, Sage, and Steel Blue accents (#FDFBF7, #C05621, #38B2AC, #3182CE) -->
+<!-- Application Structure Plan: A tabbed single-page application (SPA). The source report divides content into three distinct pillars (IP, DHCP, DNS). A horizontal tab navigation allows users to explore these complex technical domains independently without vertical scroll fatigue. The 'Home' view establishes the foundational analogy. Each technical tab begins with an introductory overview, followed by interactive data/process visualisations, and concludes with structured reference data, ensuring a logical flow from concept to technical detail. -->
+<!-- Visualization & Content Choices: 1. IP Address Space -> Goal: Compare IPv4/v6 scale -> Viz: Logarithmic Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Logarithmic scale is the only way to visually comprehend the magnitude difference between 4.3 billion and 3.4x10^38. 2. DHCP DORA Process -> Goal: Understand sequence -> Viz: Clickable process flow boxes -> Interaction: Click to reveal step details -> Justification: Breaks the high-speed automated process into user-paced learning chunks. 3. DNS Resolution -> Goal: Comprehend recursive lookups -> Viz: Interactive timeline/list -> Interaction: Sequential reveal -> Justification: Maps the abstract concept of routing queries to a linear, understandable path. Method: HTML/CSS/Tailwind + Vanilla JS. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col py-4">
+            <h1 class="text-2xl font-bold text-gray-900">Module 7: IP Addressing Services</h1>
+            <p class="text-sm text-gray-500">Cyber.SoHo Educational Hub — Graduate Programme</p>
+        </div>
+        <nav class="flex space-x-1 sm:space-x-4 overflow-x-auto pb-2 border-b border-gray-200" aria-label="Tabs">
+            <button class="nav-btn active px-3 py-2 font-medium text-sm rounded-t-md border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50" data-target="home">Overview</button>
+            <button class="nav-btn px-3 py-2 font-medium text-sm rounded-t-md border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50" data-target="ip">IPv4 & IPv6</button>
+            <button class="nav-btn px-3 py-2 font-medium text-sm rounded-t-md border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50" data-target="dhcp">DHCP Configuration</button>
+            <button class="nav-btn px-3 py-2 font-medium text-sm rounded-t-md border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50" data-target="dns">DNS Resolution</button>
+            <button class="nav-btn px-3 py-2 font-medium text-sm rounded-t-md border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50" data-target="glossary">Glossary & Standards</button>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+    <section id="home" class="content-section active">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">The Pillars of Network Connectivity</h2>
+            <p class="text-lg leading-relaxed text-gray-700">This section introduces the foundational concepts of network communication. Before diving into protocols and bits, it is essential to understand the roles of IP, DHCP, and DNS. Together, these three services form a complete chain that allows your device to connect to any service on the global internet. The analogy below provides a conceptual map for the technical details in the following tabs.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-12">
+            <h3 class="text-xl font-semibold mb-6 text-center text-gray-800">The Analogy: Moving to a New City</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="flex flex-col items-center text-center p-6 bg-orange-50 rounded-lg border border-orange-100">
+                    <div class="text-4xl mb-4">🏠</div>
+                    <h4 class="font-bold text-lg text-orange-800 mb-2">1. IP Address</h4>
+                    <p class="text-sm text-gray-600">Your Street Address. This is the unique identifier so that mail (data packets) can find your specific location in the city.</p>
+                </div>
+                <div class="flex flex-col items-center text-center p-6 bg-teal-50 rounded-lg border border-teal-100">
+                    <div class="text-4xl mb-4">📮</div>
+                    <h4 class="font-bold text-lg text-teal-800 mb-2">2. DHCP</h4>
+                    <p class="text-sm text-gray-600">The Post Office. Instead of picking your own address, the post office automatically assigns you one when you move in.</p>
+                </div>
+                <div class="flex flex-col items-center text-center p-6 bg-blue-50 rounded-lg border border-blue-100">
+                    <div class="text-4xl mb-4">📖</div>
+                    <h4 class="font-bold text-lg text-blue-800 mb-2">3. DNS</h4>
+                    <p class="text-sm text-gray-600">The Phonebook. You want to call "Mom," not memorise her 10-digit number. DNS translates names into routing numbers.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 text-white rounded-xl p-8 text-center shadow-md">
+            <h3 class="text-2xl font-bold mb-4">The Complete Chain</h3>
+            <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 text-lg">
+                <span class="px-4 py-2 bg-teal-600 rounded shadow">DHCP</span>
+                <span>➔</span>
+                <span class="px-4 py-2 bg-blue-600 rounded shadow">DNS</span>
+                <span>➔</span>
+                <span class="px-4 py-2 bg-orange-600 rounded shadow">IP</span>
+                <span>➔</span>
+                <span class="px-4 py-2 bg-gray-600 rounded shadow border border-gray-400">Connection</span>
+            </div>
+            <p class="mt-6 text-gray-300 text-sm max-w-2xl mx-auto">DHCP assigns your IP address and tells you which DNS server to use. DNS resolves every domain name you type into an IPv4 or IPv6 address. Your browser then uses that IP to establish the connection.</p>
+        </div>
+    </section>
+
+    <section id="ip" class="content-section">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Lesson 1: IPv4 and IPv6 — The Addressing System</h2>
+            <p class="text-lg leading-relaxed text-gray-700">Every device requires a unique identifier on a network. Currently, two coexisting protocols provide this: the legacy IPv4, which is suffering from address exhaustion, and the modern IPv6, designed to provide limitless addresses and built-in security features. Explore the data and structural differences below.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-xl font-bold text-orange-700 mb-4 flex items-center"><span class="text-2xl mr-2">🧮</span> IPv4 (Internet Protocol v4)</h3>
+                <ul class="space-y-3 text-gray-700">
+                    <li><strong class="text-gray-900">Standardised:</strong> 1981 (RFC 791)</li>
+                    <li><strong class="text-gray-900">Size:</strong> 32-bit address space</li>
+                    <li><strong class="text-gray-900">Notation:</strong> Dotted-decimal (e.g., <code class="bg-gray-100 px-1 rounded">192.168.1.10</code>)</li>
+                    <li><strong class="text-gray-900">Structure:</strong> Four octets (8 bits each), range 0–255. Variable header with checksum.</li>
+                    <li><strong class="text-gray-900">Status:</strong> Global pool exhausted in 2011. Relies on workarounds like NAT (Network Address Translation) and CIDR.</li>
+                </ul>
+                <div class="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">
+                    <h4 class="font-semibold text-orange-900 mb-2">Key IPv4 Concepts</h4>
+                    <p class="text-sm mb-1"><strong class="text-orange-800">Subnet Mask:</strong> Divides address into network vs. host portions.</p>
+                    <p class="text-sm mb-1"><strong class="text-orange-800">Default Gateway:</strong> Router address for exiting the local subnet.</p>
+                    <p class="text-sm"><strong class="text-orange-800">Private Ranges:</strong> Non-routable IPs (e.g., 10.x.x.x, 192.168.x.x) for local networks.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center"><span class="text-2xl mr-2">🚀</span> IPv6 (Internet Protocol v6)</h3>
+                <ul class="space-y-3 text-gray-700">
+                    <li><strong class="text-gray-900">Standardised:</strong> RFC 8200</li>
+                    <li><strong class="text-gray-900">Size:</strong> 128-bit address space</li>
+                    <li><strong class="text-gray-900">Notation:</strong> Colon-hexadecimal (e.g., <code class="bg-gray-100 px-1 rounded break-all">2001:0db8:85a3::8a2e:0370:7334</code>)</li>
+                    <li><strong class="text-gray-900">Structure:</strong> Eight groups of four hex digits. Fixed 40-byte header, no checksum for faster routing.</li>
+                    <li><strong class="text-gray-900">Features:</strong> No NAT required. Integral IPsec security. Built-in auto-configuration (SLAAC).</li>
+                </ul>
+                <div class="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <h4 class="font-semibold text-indigo-900 mb-2">Simplification Rules</h4>
+                    <p class="text-sm mb-1">1. Drop leading zeroes: <code class="bg-white px-1">0db8</code> becomes <code class="bg-white px-1">db8</code></p>
+                    <p class="text-sm">2. Collapse ONE all-zero sequence: <code class="bg-white px-1">0000:0000:0000</code> becomes <code class="bg-white px-1">::</code></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-2 text-center">The Exhaustion Problem: Address Space Comparison</h3>
+            <p class="text-center text-sm text-gray-500 mb-6">A logarithmic scale is necessary to visualise the difference. IPv4 provides ~4.3 Billion. IPv6 provides ~3.4 × 10³⁸.</p>
+            <div class="chart-container">
+                <canvas id="ipChart"></canvas>
+            </div>
+            <p class="text-center text-sm font-medium text-gray-700 mt-4 bg-gray-50 p-3 rounded">
+                Key Takeaway: We exist in a dual-stack network era. IPv4 is running out, making NAT a temporary band-aid. IPv6 offers a permanent, limitless, and secure supply.
+            </p>
+        </div>
+    </section>
+
+    <section id="dhcp" class="content-section">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Lesson 2: DHCP — Automatic Configuration</h2>
+            <p class="text-lg leading-relaxed text-gray-700">Manually configuring 15,000 devices on a campus network is impossible. The Dynamic Host Configuration Protocol (DHCP) solves this by automating IP address assignment. In IPv4, this is achieved through the rapid, four-step DORA handshake. In IPv6, networks can choose between DHCPv6 or serverless autoconfiguration (SLAAC).</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
+            <h3 class="text-2xl font-bold text-teal-800 mb-6 text-center">The DORA Process (IPv4)</h3>
+            <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Click the steps below to trace the four-part broadcast handshake that assigns an IP address in less than one second.</p>
+            
+            <div class="flex flex-col md:flex-row justify-between items-stretch gap-4 mb-8">
+                <div class="flex-1 border-2 border-gray-200 rounded-lg p-4 text-center interactive-element step-box bg-gray-50" onclick="updateDora(0)">
+                    <div class="text-xl font-bold text-gray-400 mb-1">Step 1</div>
+                    <h4 class="text-2xl font-black text-gray-800">D</h4>
+                    <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Discover</p>
+                </div>
+                <div class="flex-1 border-2 border-gray-200 rounded-lg p-4 text-center interactive-element step-box" onclick="updateDora(1)">
+                    <div class="text-xl font-bold text-gray-400 mb-1">Step 2</div>
+                    <h4 class="text-2xl font-black text-gray-800">O</h4>
+                    <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Offer</p>
+                </div>
+                <div class="flex-1 border-2 border-gray-200 rounded-lg p-4 text-center interactive-element step-box" onclick="updateDora(2)">
+                    <div class="text-xl font-bold text-gray-400 mb-1">Step 3</div>
+                    <h4 class="text-2xl font-black text-gray-800">R</h4>
+                    <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Request</p>
+                </div>
+                <div class="flex-1 border-2 border-gray-200 rounded-lg p-4 text-center interactive-element step-box" onclick="updateDora(3)">
+                    <div class="text-xl font-bold text-gray-400 mb-1">Step 4</div>
+                    <h4 class="text-2xl font-black text-gray-800">A</h4>
+                    <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Acknowledge</p>
+                </div>
+            </div>
+
+            <div id="dora-details" class="bg-teal-50 border border-teal-200 rounded-xl p-6 min-h-[160px] flex flex-col justify-center transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="px-3 py-1 bg-teal-200 text-teal-800 text-sm font-bold rounded-full" id="dora-direction">Client ➔ Broadcast</span>
+                    <span class="text-teal-700 font-mono text-sm" id="dora-port">UDP Port 67</span>
+                </div>
+                <h4 class="text-xl font-bold text-teal-900 mb-2" id="dora-title">Discover Phase</h4>
+                <p class="text-teal-800" id="dora-desc">The device has no IP address yet. It broadcasts to 255.255.255.255 asking: "Is there a DHCP server out there?"</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><span class="text-2xl mr-2">📚</span> DHCP Dictionary</h3>
+                <div class="space-y-4">
+                    <div>
+                        <strong class="text-gray-900 block">Lease Time</strong>
+                        <span class="text-sm text-gray-600">The duration the IP is rented. The client must renew it or lose connectivity. Addresses are leased to enable efficient reuse.</span>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 block">Scope / Pool</strong>
+                        <span class="text-sm text-gray-600">The range of assignable addresses configured on the server (e.g., .50 through .200).</span>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 block">Reservation</strong>
+                        <span class="text-sm text-gray-600">A permanent mapping in the server tying a specific MAC address to a specific IP.</span>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 block">Relay Agent</strong>
+                        <span class="text-sm text-gray-600">A network device that forwards DHCP broadcast messages across different subnets.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-700 text-white">
+                <h3 class="text-xl font-bold text-teal-400 mb-4 flex items-center"><span class="text-2xl mr-2">🌐</span> IPv6 Auto-Config</h3>
+                <p class="text-gray-300 mb-4 text-sm">IPv6 introduces two distinct approaches for address assignment, reducing reliance on central servers.</p>
+                <div class="space-y-4">
+                    <div class="bg-gray-900 p-4 rounded border border-gray-600">
+                        <strong class="text-white block mb-1 text-lg">SLAAC</strong>
+                        <span class="text-xs text-teal-300 uppercase font-bold tracking-wider mb-2 block">Stateless Address Autoconfiguration</span>
+                        <p class="text-sm text-gray-400">Routers advertise the network prefix via RA (Router Advertisement) messages. Hosts independently generate their own interface ID. No central DHCP server is required.</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded border border-gray-600">
+                        <strong class="text-white block mb-1 text-lg">DHCPv6</strong>
+                        <span class="text-xs text-teal-300 uppercase font-bold tracking-wider mb-2 block">RFC 8415</span>
+                        <p class="text-sm text-gray-400">Functions similarly to IPv4 DHCP. Used when network administrators require tighter control, specific DNS assignments, or address tracking.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="dns" class="content-section">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Lesson 3: DNS Operations — Name Resolution</h2>
+            <p class="text-lg leading-relaxed text-gray-700">Computers communicate using IP addresses, but humans use domain names (like www.google.com). The Domain Name System (DNS) acts as the internet's phonebook, translating these human-friendly names into routable IPs through a globally distributed, hierarchical system.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-xl font-bold text-blue-800 mb-4">The DNS Hierarchy</h3>
+                <p class="text-sm text-gray-600 mb-6">DNS is an inverted tree structure. Queries cascade downwards to find the specific authoritative answer.</p>
+                
+                <div class="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-300 before:to-transparent">
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-100 text-blue-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 font-bold z-10 text-xl">.</div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-gray-200 bg-white shadow-sm z-10">
+                            <div class="font-bold text-gray-800 mb-1">Root Zone (.)</div>
+                            <div class="text-xs text-gray-500">13 server clusters (A-M), hundreds of anycast instances.</div>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-200 text-blue-700 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 font-bold z-10 text-xs text-center leading-tight">TLD</div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-gray-200 bg-white shadow-sm z-10">
+                            <div class="font-bold text-gray-800 mb-1">Top-Level Domain</div>
+                            <div class="text-xs text-gray-500">Handles extensions like .com, .org, .edu, .ca.</div>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-600 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 font-bold z-10 text-xl">A</div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-gray-200 bg-white shadow-sm z-10">
+                            <div class="font-bold text-gray-800 mb-1">Authoritative</div>
+                            <div class="text-xs text-gray-500">Holds the actual IP records for a specific domain.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-2">DNS Security</h4>
+                    <ul class="text-sm space-y-2 text-gray-600">
+                        <li><strong class="text-red-600">Spoofing/Poisoning:</strong> Attacker injects false IP records into caches.</li>
+                        <li><strong class="text-green-700">DNSSEC:</strong> Adds cryptographic signatures to records to prevent spoofing.</li>
+                        <li><strong class="text-green-700">DoH & DoT:</strong> Encrypts DNS queries over HTTPS or TLS for privacy.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">Recursive Resolution Simulator</h3>
+                    <button id="next-dns-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded shadow transition-colors" onclick="advanceDnsStep()">Start Lookup: www.google.com</button>
+                </div>
+                <div class="terminal-window p-6 flex-grow flex flex-col justify-end text-sm sm:text-base leading-relaxed overflow-hidden relative">
+                    <div id="dns-terminal-output" class="absolute top-0 left-0 w-full p-6 space-y-3 max-h-full overflow-y-auto pb-12">
+                        <div class="text-gray-500 italic">Awaiting lookup command...</div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-4 border-t border-gray-200">
+                    <p id="dns-explanation" class="text-sm text-gray-700 font-medium h-10 flex items-center">Click "Start Lookup" to trace the 9-step resolution process.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                <h3 class="text-lg font-bold text-blue-900">Common DNS Record Types</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-0 text-sm">
+                <div class="p-4 border-b border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">A</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">IPv4 Address</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">google.com → 142.250.80.46</div>
+                </div>
+                <div class="p-4 border-b border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">AAAA</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">IPv6 Address</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">google.com → 2607:f8b0:...</div>
+                </div>
+                <div class="p-4 border-b border-r md:border-r-0 lg:border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">CNAME</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Alias</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">www.example.com → example.com</div>
+                </div>
+                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">MX</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Mail Server</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">example.com → mail.example.com</div>
+                </div>
+                <div class="p-4 border-b md:border-b-0 border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">NS</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Name Server</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">google.com → ns1.google.com</div>
+                </div>
+                <div class="p-4 border-b md:border-b-0 border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">PTR</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Reverse Lookup</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">8.8.8.8 → dns.google</div>
+                </div>
+                <div class="p-4 border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">TXT</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Arbitrary Text</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">v=spf1 include:...</div>
+                </div>
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <div class="font-black text-blue-600 text-xl mb-1">SOA</div>
+                    <div class="text-gray-500 text-xs uppercase tracking-wider mb-2">Start of Authority</div>
+                    <div class="font-mono text-xs bg-gray-100 p-2 rounded text-gray-700 break-all">Serial, refresh, admin info</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="glossary" class="content-section">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Reference: Glossary & Standards</h2>
+            <p class="text-lg leading-relaxed text-gray-700">A quick reference repository for the key abbreviations, standards (RFCs), and governing organisations discussed in Module 7.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">Abbreviations</h3>
+                    <input type="text" id="abbr-search" placeholder="Search..." class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-500" onkeyup="filterTable('abbr-search', 'abbr-table')">
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                    <table class="w-full text-sm text-left" id="abbr-table">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3">Abbr</th>
+                                <th class="px-6 py-3">Full Name</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">IP</td><td class="px-6 py-3">Internet Protocol</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">IPv4 / IPv6</td><td class="px-6 py-3">Internet Protocol version 4 / 6</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">DHCP</td><td class="px-6 py-3">Dynamic Host Configuration Protocol</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">DNS</td><td class="px-6 py-3">Domain Name System</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">NAT</td><td class="px-6 py-3">Network Address Translation</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">CIDR</td><td class="px-6 py-3">Classless Inter-Domain Routing</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">SLAAC</td><td class="px-6 py-3">Stateless Address Autoconfiguration</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">TLD</td><td class="px-6 py-3">Top-Level Domain</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">TTL</td><td class="px-6 py-3">Time to Live</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">MAC</td><td class="px-6 py-3">Media Access Control</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">UDP</td><td class="px-6 py-3">User Datagram Protocol</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">DNSSEC</td><td class="px-6 py-3">DNS Security Extensions</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-bold">DoH / DoT</td><td class="px-6 py-3">DNS over HTTPS / DNS over TLS</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800">Key Standards (RFCs)</h3>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <tbody class="divide-y divide-gray-100">
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500 w-24">RFC 791</td><td class="px-6 py-3 font-medium">IPv4</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 8200</td><td class="px-6 py-3 font-medium">IPv6</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 1918</td><td class="px-6 py-3 font-medium">Private Address Ranges</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 2131</td><td class="px-6 py-3 font-medium">DHCP</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 8415</td><td class="px-6 py-3 font-medium">DHCPv6</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 1034/5</td><td class="px-6 py-3 font-medium">DNS</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-6 py-3 font-mono text-gray-500">RFC 4033</td><td class="px-6 py-3 font-medium">DNSSEC</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800">Organisations</h3>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 gap-4">
+                        <div class="flex items-start">
+                            <span class="font-bold w-20 shrink-0 text-gray-800">IETF</span>
+                            <span class="text-sm text-gray-600">Develops Internet protocol standards.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="font-bold w-20 shrink-0 text-gray-800">IANA</span>
+                            <span class="text-sm text-gray-600">Coordinates DNS root, IP allocation, protocol parameters.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="font-bold w-20 shrink-0 text-gray-800">ICANN</span>
+                            <span class="text-sm text-gray-600">Oversees domain name system policy.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="font-bold w-20 shrink-0 text-gray-800">Verisign</span>
+                            <span class="text-sm text-gray-600">Operates .com / .net registries.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.content-section');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            navButtons.forEach(b => b.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.getAttribute('data-target');
+            document.getElementById(target).classList.add('active');
+            
+            if (target === 'ip' && !window.ipChartRendered) {
+                renderIpChart();
+                window.ipChartRendered = true;
+            }
+        });
+    });
+
+    function renderIpChart() {
+        const ctx = document.getElementById('ipChart').getContext('2d');
+        const data = {
+            labels: ['IPv4 Addresses', 'IPv6 Addresses'],
+            datasets: [{
+                label: 'Total Address Space (Log10 Scale)',
+                data: [9.63, 38.53], 
+                backgroundColor: ['#E28B54', '#667EEA'],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        };
+        const config = {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataIndex === 0) return '~4.3 Billion (4.29 x 10^9)';
+                                return '~340 Undecillion (3.4 x 10^38)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Magnitude (Powers of 10)' },
+                        ticks: { stepSize: 10 }
+                    }
+                }
+            }
+        };
+        new Chart(ctx, config);
+    }
+
+    const doraSteps = [
+        { dir: "Client ➔ Broadcast", port: "UDP Port 67", title: "Discover Phase", desc: "The device has no IP address yet. It broadcasts to 255.255.255.255 asking: 'Is there a DHCP server out there?'" },
+        { dir: "Server ➔ Client", port: "Unicast/Broadcast", title: "Offer Phase", desc: "Server selects an available IP from its pool and responds with a complete configuration: IP, Mask, Gateway, DNS, and Lease Time." },
+        { dir: "Client ➔ Broadcast", port: "UDP Port 68", title: "Request Phase", desc: "Client accepts the offer. It broadcasts its acceptance so other DHCP servers release their competing offers." },
+        { dir: "Server ➔ Client", port: "Unicast", title: "Acknowledge Phase", desc: "Server confirms the lease and removes the address from the available pool. The client is now fully configured." }
+    ];
+
+    function updateDora(index) {
+        const boxes = document.querySelectorAll('.step-box');
+        boxes.forEach((box, i) => {
+            if (i === index) box.classList.add('active');
+            else box.classList.remove('active');
+        });
+        document.getElementById('dora-direction').innerText = doraSteps[index].dir;
+        document.getElementById('dora-port').innerText = doraSteps[index].port;
+        document.getElementById('dora-title').innerText = doraSteps[index].title;
+        document.getElementById('dora-desc').innerText = doraSteps[index].desc;
+    }
+
+    const dnsSteps = [
+        { code: "> Local cache check...", expl: "Step 1: Does the browser/OS already know the IP?" },
+        { code: "> Cache miss. Stub resolver connecting to Recursive resolver (e.g., 8.8.8.8)...", expl: "Step 2: Asking the designated local or ISP DNS server." },
+        { code: "> Recursive resolver querying Root server for .com...", expl: "Step 3: 'Where is .com?'" },
+        { code: "< Root server referral: 'Ask the .com TLD server.'", expl: "Step 4: Root points downwards to the Top-Level Domain." },
+        { code: "> Recursive resolver querying TLD server for google.com...", expl: "Step 5: 'Where is google.com?'" },
+        { code: "< TLD server referral: 'Ask authoritative ns1.google.com.'", expl: "Step 6: TLD points to the domain's specific servers." },
+        { code: "> Recursive resolver querying ns1.google.com for www record...", expl: "Step 7: 'What is the A/AAAA record for www?'" },
+        { code: "< Authoritative Answer: 142.250.80.46", expl: "Step 8: The authoritative server provides the final IP." },
+        { code: "> Caching result (respecting TTL) and returning to browser.", expl: "Step 9: Answer is saved locally and passed to the application." }
+    ];
+
+    let currentDnsStep = 0;
+    
+    function advanceDnsStep() {
+        const terminal = document.getElementById('dns-terminal-output');
+        const explanation = document.getElementById('dns-explanation');
+        const btn = document.getElementById('next-dns-btn');
+
+        if (currentDnsStep === 0) {
+            terminal.innerHTML = '';
+            btn.innerText = "Next Step";
+        }
+
+        if (currentDnsStep < dnsSteps.length) {
+            const stepHtml = document.createElement('div');
+            stepHtml.className = dnsSteps[currentDnsStep].code.startsWith('<') ? 'text-blue-400' : 'text-green-400';
+            stepHtml.innerText = dnsSteps[currentDnsStep].code;
+            terminal.appendChild(stepHtml);
+            
+            explanation.innerText = dnsSteps[currentDnsStep].expl;
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            currentDnsStep++;
+            if (currentDnsStep === dnsSteps.length) {
+                btn.innerText = "Restart Process";
+            }
+        } else {
+            currentDnsStep = 0;
+            terminal.innerHTML = '<div class="text-gray-500 italic">Awaiting lookup command...</div>';
+            explanation.innerText = 'Click "Start Lookup" to trace the 9-step resolution process.';
+            btn.innerText = "Start Lookup: www.google.com";
+        }
+    }
+
+    function filterTable(inputId, tableId) {
+        const input = document.getElementById(inputId);
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById(tableId);
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            const td1 = tr[i].getElementsByTagName("td")[0];
+            const td2 = tr[i].getElementsByTagName("td")[1];
+            if (td1 || td2) {
+                const txtValue1 = td1.textContent || td1.innerText;
+                const txtValue2 = td2.textContent || td2.innerText;
+                if (txtValue1.toUpperCase().indexOf(filter) > -1 || txtValue2.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    updateDora(0);
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Transport Layer | Interactive Educational Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals with Indigo and Amber Accents -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive educational dashboard, moving away from linear slides to a functional workspace. It features a persistent sidebar for easy navigation across four core thematic modules: TCP vs UDP, Flow Control, Windowing, and Ports. This dashboard approach allows students to explore concepts non-linearly, use interactive calculators (like the Throughput calculator), and filter data (like the Port list) in real-time, actively reinforcing the course material rather than passively reading it. -->
+    <!-- Visualization & Content Choices: 
+         - TCP vs UDP Header Comparison -> Goal: Compare -> Viz: Chart.js Doughnut Chart -> Justification: Visually demonstrates the 20-byte vs 8-byte overhead difference instantly. -> Method: Chart.js Canvas.
+         - Flow Control -> Goal: Inform/Change -> Viz: HTML/CSS Dynamic Progress Bar -> Justification: Simulates a receiver buffer filling and emptying based on user clicks, illustrating the 'rwnd' concept without complex graphs. -> Method: Vanilla JS DOM manipulation of Tailwind widths.
+         - Windowing & Throughput -> Goal: Compute/Relate -> Viz: Interactive Sliders + Chart.js Bar Chart -> Justification: Allows users to physically change Window Size and RTT to see the mathematical impact on maximum throughput in real-time. -> Method: Vanilla JS Math + Chart.js dynamic updates.
+         - Port Numbers -> Goal: Organize/Filter -> Viz: Interactive Data Grid -> Justification: Users need to quickly find and memorize specific ports. A live-searchable grid is superior to static tables. -> Method: Vanilla JS Array filtering and DOM generation.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #fafaf9; color: #1c1917; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-width: 600px;
+            }
+        }
+        .nav-link.active {
+            background-color: #e7e5e4;
+            font-weight: 600;
+            border-left: 4px solid #4f46e5;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f5f5f4;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <nav class="w-full md:w-64 bg-stone-100 border-r border-stone-200 flex flex-col fixed md:sticky top-0 z-50 h-auto md:h-screen shadow-sm md:shadow-none">
+        <div class="p-6 border-b border-stone-200 bg-stone-50">
+            <h1 class="text-xl font-bold text-indigo-900 tracking-tight">Cyber.SoHo Hub</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider font-semibold">Module 8</p>
+            <p class="text-sm font-medium text-stone-700">The Transport Layer</p>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4 flex flex-row md:flex-col gap-1 px-2 overflow-x-auto md:overflow-x-hidden" id="nav-menu">
+            <a href="#intro" class="nav-link active px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">Overview</a>
+            <a href="#tcp-udp" class="nav-link px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">TCP vs. UDP</a>
+            <a href="#flow-control" class="nav-link px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">Flow Control</a>
+            <a href="#windowing" class="nav-link px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">Windowing & Speed</a>
+            <a href="#ports" class="nav-link px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">Port Numbers</a>
+            <a href="#summary" class="nav-link px-4 py-3 rounded-md text-sm text-stone-700 hover:bg-stone-200 transition-colors whitespace-nowrap">Quick Review</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto mt-32 md:mt-0">
+        
+        <div class="max-w-5xl mx-auto space-y-24">
+
+            <section id="intro" class="scroll-mt-24">
+                <div class="mb-8">
+                    <span class="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold uppercase tracking-widest mb-4">OSI Layer 4</span>
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-stone-900 mb-6 tracking-tight">The Engine of the Internet</h2>
+                    <p class="text-lg text-stone-600 leading-relaxed max-w-3xl">
+                        Welcome to the Transport Layer. Sitting right between the Network Layer (where packets go) and the Application Layer (what uses them), this is the layer that decides <em>how</em> your data gets there. It handles whether data arrived safely, in what order, and directs traffic to the correct application on your machine. Without Layer 4, there is no streaming, no email, no banking, and no gaming.
+                    </p>
+                </div>
+            </section>
+
+            <section id="tcp-udp" class="scroll-mt-24 pt-8 border-t border-stone-200">
+                <h3 class="text-3xl font-bold text-stone-800 mb-4">TCP vs. UDP: The Two Philosophies</h3>
+                <p class="text-stone-600 mb-8 max-w-3xl">
+                    This section contrasts the two dominant transport protocols. You will explore their core differences, overhead costs, and specific use cases. Understanding when to choose reliable delivery over raw speed is fundamental to network engineering.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <div class="glass-panel rounded-2xl p-8 border-t-4 border-indigo-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-3xl">&#128230;</span>
+                            <h4 class="text-2xl font-bold text-indigo-900">TCP (Transmission Control Protocol)</h4>
+                        </div>
+                        <p class="text-stone-600 italic mb-6">"The Certified Letter"</p>
+                        <ul class="space-y-3 text-stone-700">
+                            <li class="flex items-start gap-2"><span class="text-indigo-500 font-bold">&#10003;</span> <strong>Connection-oriented:</strong> Requires a 3-way handshake (SYN &rarr; SYN-ACK &rarr; ACK).</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-500 font-bold">&#10003;</span> <strong>Reliable & Ordered:</strong> Every byte is tracked, acknowledged, and reassembled in sequence.</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-500 font-bold">&#10003;</span> <strong>Slower:</strong> Trades raw speed for absolute guarantees.</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-500 font-bold">&#10003;</span> <strong>Use Cases:</strong> Web (HTTP/HTTPS), Email (SMTP/IMAP), File Transfer, Banking.</li>
+                        </ul>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-8 border-t-4 border-amber-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-3xl">&#128233;</span>
+                            <h4 class="text-2xl font-bold text-amber-900">UDP (User Datagram Protocol)</h4>
+                        </div>
+                        <p class="text-stone-600 italic mb-6">"The Postcard"</p>
+                        <ul class="space-y-3 text-stone-700">
+                            <li class="flex items-start gap-2"><span class="text-amber-500 font-bold">&#9889;</span> <strong>Connectionless:</strong> No setup, just starts blasting datagrams.</li>
+                            <li class="flex items-start gap-2"><span class="text-amber-500 font-bold">&#9889;</span> <strong>Best-effort:</strong> No retries, no acknowledgements, unordered delivery.</li>
+                            <li class="flex items-start gap-2"><span class="text-amber-500 font-bold">&#9889;</span> <strong>Faster:</strong> Extremely lightweight with minimal overhead.</li>
+                            <li class="flex items-start gap-2"><span class="text-amber-500 font-bold">&#9889;</span> <strong>Use Cases:</strong> VoIP, Online Gaming, Live Video, DNS queries.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-8 bg-white">
+                    <h4 class="text-xl font-bold text-stone-800 mb-2 text-center">Header Overhead Comparison</h4>
+                    <p class="text-sm text-stone-500 text-center mb-6">Visualizing the structural weight of each protocol segment/datagram.</p>
+                    <div class="chart-container">
+                        <canvas id="headerChart"></canvas>
+                    </div>
+                    <div class="mt-6 text-center text-sm text-stone-600 bg-stone-50 p-4 rounded-lg">
+                        <strong>Key Insight:</strong> TCP's header (minimum 20 bytes) carries sequence numbers, acknowledgment numbers, flags, and window sizes to ensure reliability. UDP's header (8 bytes) only carries source/destination ports, length, and a checksum. Minimalism enables low latency.
+                    </div>
+                </div>
+            </section>
+
+            <section id="flow-control" class="scroll-mt-24 pt-8 border-t border-stone-200">
+                <h3 class="text-3xl font-bold text-stone-800 mb-4">Flow Control: Pacing the Data</h3>
+                <p class="text-stone-600 mb-8 max-w-3xl">
+                    This module illustrates how TCP prevents a fast sender from overwhelming a slow receiver. You can interact with the receiver's processing speed to see how the "Receive Window" (rwnd) adapts, pausing the sender when the buffer is full. Note: UDP does not have this feature.
+                </p>
+
+                <div class="glass-panel rounded-2xl p-8 bg-stone-900 text-stone-100">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <div>
+                            <h4 class="text-2xl font-bold text-white mb-2">The Receive Window (rwnd) Simulator</h4>
+                            <p class="text-stone-400 text-sm">Flow control is end-to-end. The receiver is always in charge.</p>
+                        </div>
+                        <div class="flex gap-2 bg-stone-800 p-1 rounded-lg">
+                            <button id="btn-process-fast" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded transition-colors">App: Process Fast</button>
+                            <button id="btn-process-slow" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white text-sm font-bold rounded transition-colors">App: Process Slow</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm font-bold mb-2">
+                            <span class="text-stone-400">Receiver Buffer Status</span>
+                            <span id="buffer-status-text" class="text-green-400">Window Open (7000 bytes)</span>
+                        </div>
+                        <div class="h-12 w-full bg-stone-800 rounded-lg overflow-hidden border border-stone-700 relative">
+                            <div id="buffer-fill" class="h-full bg-green-500 transition-all duration-500 ease-in-out w-1/4"></div>
+                            <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-stone-900 mix-blend-overlay">BUFFER CAPACITY</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-stone-800 p-4 rounded-lg">
+                            <div class="text-stone-400 text-xs uppercase tracking-wider mb-1">Sender State</div>
+                            <div id="sender-state" class="text-xl font-bold text-green-400">Transmitting Data &rarr;</div>
+                        </div>
+                        <div class="bg-stone-800 p-4 rounded-lg">
+                            <div class="text-stone-400 text-xs uppercase tracking-wider mb-1">Advertised rwnd</div>
+                            <div id="rwnd-value" class="text-xl font-bold text-white">7000</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="windowing" class="scroll-mt-24 pt-8 border-t border-stone-200">
+                <h3 class="text-3xl font-bold text-stone-800 mb-4">Windowing: Speed Meets Reliability</h3>
+                <p class="text-stone-600 mb-8 max-w-3xl">
+                    Stop-and-wait transmission is too slow. TCP uses a "Sliding Window" to send batches of segments without waiting for individual acknowledgements. In this section, you will calculate how Window Size and Round-Trip Time (RTT) dictate the absolute maximum throughput of a TCP connection, regardless of physical cable speed.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div class="col-span-1 lg:col-span-5 glass-panel rounded-2xl p-6 bg-white flex flex-col justify-center">
+                        <h4 class="text-xl font-bold text-stone-800 mb-6">Throughput Calculator</h4>
+                        
+                        <div class="mb-8">
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-bold text-stone-700">TCP Window Size</label>
+                                <span id="win-val-display" class="text-sm font-bold text-indigo-600">64 KB</span>
+                            </div>
+                            <input type="range" id="slider-window" min="16" max="10000" step="16" value="64" class="w-full accent-indigo-600">
+                            <p class="text-xs text-stone-500 mt-2">Data in flight without ACK. Original max: 64KB. Scaled max: ~1GB.</p>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-bold text-stone-700">Round-Trip Time (RTT)</label>
+                                <span id="rtt-val-display" class="text-sm font-bold text-indigo-600">100 ms</span>
+                            </div>
+                            <input type="range" id="slider-rtt" min="1" max="500" step="1" value="100" class="w-full accent-indigo-600">
+                            <p class="text-xs text-stone-500 mt-2">Latency between sender and receiver.</p>
+                        </div>
+
+                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center">
+                            <div class="text-xs text-indigo-500 font-bold uppercase tracking-wider mb-1">Max Protocol Throughput</div>
+                            <div id="calc-throughput" class="text-3xl font-extrabold text-indigo-700">5.12 Mbps</div>
+                            <div class="text-xs text-stone-500 mt-2">(Window Size &divide; RTT)</div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-1 lg:col-span-7 glass-panel rounded-2xl p-6 bg-white">
+                        <h4 class="text-lg font-bold text-stone-800 mb-2">Throughput Curve Visualization</h4>
+                        <p class="text-sm text-stone-500 mb-4">Shows theoretical throughput scaling against current settings.</p>
+                        <div class="chart-container">
+                            <canvas id="throughputChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ports" class="scroll-mt-24 pt-8 border-t border-stone-200">
+                <h3 class="text-3xl font-bold text-stone-800 mb-4">Port Numbers: The Apartment Numbers</h3>
+                <p class="text-stone-600 mb-8 max-w-3xl">
+                    IP addresses locate the machine; Port numbers locate the application. This section provides an interactive, searchable directory of the critical Well-Known ports managed by IANA. Knowing these is essential for configuring firewalls and understanding attack surfaces.
+                </p>
+
+                <div class="glass-panel rounded-2xl overflow-hidden bg-white">
+                    <div class="p-6 bg-stone-50 border-b border-stone-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex gap-4">
+                            <div class="text-center">
+                                <div class="text-xs text-stone-500 uppercase font-bold">System</div>
+                                <div class="text-lg font-bold text-stone-800">0 - 1023</div>
+                            </div>
+                            <div class="border-l border-stone-300"></div>
+                            <div class="text-center">
+                                <div class="text-xs text-stone-500 uppercase font-bold">Registered</div>
+                                <div class="text-lg font-bold text-stone-800">1024 - 49151</div>
+                            </div>
+                            <div class="border-l border-stone-300"></div>
+                            <div class="text-center">
+                                <div class="text-xs text-stone-500 uppercase font-bold">Ephemeral</div>
+                                <div class="text-lg font-bold text-stone-800">49152+</div>
+                            </div>
+                        </div>
+                        <input type="text" id="port-search" placeholder="Search service or port... (e.g., HTTP, 443)" class="px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64 text-sm">
+                    </div>
+                    
+                    <div class="p-0">
+                        <div class="grid grid-cols-4 bg-stone-100 p-4 text-xs font-bold text-stone-500 uppercase tracking-wider border-b border-stone-200">
+                            <div>Port</div>
+                            <div>Protocol</div>
+                            <div class="col-span-2">Service Description</div>
+                        </div>
+                        <div id="port-list" class="divide-y divide-stone-100 max-h-96 overflow-y-auto">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="summary" class="scroll-mt-24 pt-8 border-t border-stone-200 mb-24">
+                <h3 class="text-3xl font-bold text-stone-800 mb-6">Module 8 Quick Review</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-indigo-900 rounded-2xl p-8 text-white shadow-lg">
+                        <h4 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="text-2xl">&#128221;</span> 6 Facts to Memorize</h4>
+                        <ul class="space-y-4 text-indigo-100">
+                            <li class="pb-2 border-b border-indigo-800"><strong class="text-white">Throughput Formula:</strong> Window Size &divide; RTT</li>
+                            <li class="pb-2 border-b border-indigo-800"><strong class="text-white">TCP Header:</strong> Minimum 20 bytes</li>
+                            <li class="pb-2 border-b border-indigo-800"><strong class="text-white">UDP Header:</strong> Exactly 8 bytes</li>
+                            <li class="pb-2 border-b border-indigo-800"><strong class="text-white">Port Range:</strong> 0 to 65,535 (16-bit)</li>
+                            <li class="pb-2 border-b border-indigo-800"><strong class="text-white">TCP Handshake:</strong> SYN &rarr; SYN-ACK &rarr; ACK</li>
+                            <li><strong class="text-white">TCP Teardown:</strong> FIN &rarr; ACK &rarr; FIN &rarr; ACK</li>
+                        </ul>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-8">
+                        <h4 class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2"><span class="text-2xl">&#128161;</span> Core Concepts</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="font-bold text-stone-800 text-sm">Flow vs. Congestion Control</h5>
+                                <p class="text-sm text-stone-600">Flow control protects the <em>receiver</em> (via the receive window). Congestion control protects the <em>network</em>.</p>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-stone-800 text-sm">Ephemeral Ports</h5>
+                                <p class="text-sm text-stone-600">Assigned automatically by the OS for outbound client connections (49152 - 65535). No registration needed.</p>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-stone-800 text-sm">Modern Protocols</h5>
+                                <p class="text-sm text-stone-600">QUIC (HTTP/3) runs on UDP for speed, but builds TCP-like reliability into the application space.</p>
+                            </div>
+                            <div class="pt-4 mt-4 border-t border-stone-200">
+                                <p class="text-xs text-stone-500 text-center uppercase tracking-widest font-bold">End of Module</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '-20% 0px -60% 0px',
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => observer.observe(section));
+
+            const ctxHeader = document.getElementById('headerChart').getContext('2d');
+            new Chart(ctxHeader, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TCP Header Payload (20+ bytes)', 'UDP Header Payload (8 bytes)'],
+                    datasets: [{
+                        data: [20, 8],
+                        backgroundColor: ['#4f46e5', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label.split(' (')[0] + ': ' + context.raw + ' Bytes Minimum';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            const bufferFill = document.getElementById('buffer-fill');
+            const bufferStatusText = document.getElementById('buffer-status-text');
+            const senderState = document.getElementById('sender-state');
+            const rwndValue = document.getElementById('rwnd-value');
+            
+            let bufferLevel = 25; 
+            let flowInterval;
+
+            function updateFlowControlUI() {
+                bufferFill.style.width = bufferLevel + '%';
+                
+                let rwnd = Math.floor(7000 * (1 - (bufferLevel/100)));
+                rwndValue.innerText = rwnd;
+
+                if (bufferLevel >= 100) {
+                    bufferFill.className = 'h-full transition-all duration-500 ease-in-out bg-red-500';
+                    bufferStatusText.innerText = 'Window Closed (Buffer Full)';
+                    bufferStatusText.className = 'text-red-400 font-bold';
+                    senderState.innerText = 'PAUSED';
+                    senderState.className = 'text-xl font-bold text-red-500';
+                    rwndValue.innerText = '0';
+                } else if (bufferLevel >= 75) {
+                    bufferFill.className = 'h-full transition-all duration-500 ease-in-out bg-amber-500';
+                    bufferStatusText.innerText = 'Window Shrinking';
+                    bufferStatusText.className = 'text-amber-400';
+                    senderState.innerText = 'Transmitting (Slowed)';
+                    senderState.className = 'text-xl font-bold text-amber-400';
+                } else {
+                    bufferFill.className = 'h-full transition-all duration-500 ease-in-out w-1/4 bg-green-500';
+                    bufferStatusText.innerText = 'Window Open';
+                    bufferStatusText.className = 'text-green-400';
+                    senderState.innerText = 'Transmitting Data \u2192';
+                    senderState.className = 'text-xl font-bold text-green-400';
+                }
+                bufferFill.style.width = bufferLevel + '%'; 
+            }
+
+            document.getElementById('btn-process-slow').addEventListener('click', () => {
+                clearInterval(flowInterval);
+                flowInterval = setInterval(() => {
+                    bufferLevel += 15; 
+                    if(bufferLevel > 100) bufferLevel = 100;
+                    updateFlowControlUI();
+                    if(bufferLevel >= 100) clearInterval(flowInterval);
+                }, 500);
+            });
+
+            document.getElementById('btn-process-fast').addEventListener('click', () => {
+                clearInterval(flowInterval);
+                flowInterval = setInterval(() => {
+                    bufferLevel -= 20; 
+                    if(bufferLevel < 0) bufferLevel = 0;
+                    updateFlowControlUI();
+                    if(bufferLevel <= 0) clearInterval(flowInterval);
+                }, 300);
+            });
+
+            updateFlowControlUI(); 
+
+            const winSlider = document.getElementById('slider-window');
+            const rttSlider = document.getElementById('slider-rtt');
+            const winDisplay = document.getElementById('win-val-display');
+            const rttDisplay = document.getElementById('rtt-val-display');
+            const calcOutput = document.getElementById('calc-throughput');
+
+            let tpChartInstance = null;
+
+            function calculateThroughput(winKB, rttMS) {
+                if(rttMS === 0) return 0;
+                let bits = winKB * 1024 * 8;
+                let seconds = rttMS / 1000;
+                return (bits / seconds) / 1000000; 
+            }
+
+            function updateWindowingModule() {
+                let w = parseFloat(winSlider.value);
+                let r = parseFloat(rttSlider.value);
+                
+                winDisplay.innerText = w >= 1024 ? (w/1024).toFixed(1) + ' MB' : w + ' KB';
+                rttDisplay.innerText = r + ' ms';
+
+                let mbps = calculateThroughput(w, r);
+                calcOutput.innerText = mbps.toFixed(2) + ' Mbps';
+
+                updateThroughputChart(w, r);
+            }
+
+            function initThroughputChart() {
+                const ctxTp = document.getElementById('throughputChart').getContext('2d');
+                tpChartInstance = new Chart(ctxTp, {
+                    type: 'line',
+                    data: {
+                        labels: ['10ms', '50ms', '100ms', '200ms', '300ms', '500ms'],
+                        datasets: [{
+                            label: 'Throughput (Mbps) at current Window Size',
+                            data: [],
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#4f46e5',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Mbps' } },
+                            x: { title: { display: true, text: 'Round Trip Time (RTT)' } }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            function updateThroughputChart(currentWin, currentRtt) {
+                const rttStops = [10, 50, 100, 200, 300, 500];
+                const newData = rttStops.map(rtt => calculateThroughput(currentWin, rtt));
+                
+                tpChartInstance.data.datasets[0].data = newData;
+                tpChartInstance.update();
+            }
+
+            winSlider.addEventListener('input', updateWindowingModule);
+            rttSlider.addEventListener('input', updateWindowingModule);
+            
+            initThroughputChart();
+            updateWindowingModule(); 
+
+            const portsData = [
+                { port: "20, 21", proto: "TCP", desc: "FTP (File Transfer Protocol)" },
+                { port: "22", proto: "TCP", desc: "SSH (Secure Shell)" },
+                { port: "23", proto: "TCP", desc: "Telnet" },
+                { port: "25", proto: "TCP", desc: "SMTP (Simple Mail Transfer Protocol)" },
+                { port: "53", proto: "UDP/TCP", desc: "DNS (Domain Name System)" },
+                { port: "67, 68", proto: "UDP", desc: "DHCP (Dynamic Host Configuration)" },
+                { port: "69", proto: "UDP", desc: "TFTP (Trivial File Transfer Protocol)" },
+                { port: "80", proto: "TCP", desc: "HTTP (Hypertext Transfer Protocol)" },
+                { port: "110", proto: "TCP", desc: "POP3 (Post Office Protocol)" },
+                { port: "123", proto: "UDP", desc: "NTP (Network Time Protocol)" },
+                { port: "143", proto: "TCP", desc: "IMAP (Internet Message Access Protocol)" },
+                { port: "161, 162", proto: "UDP", desc: "SNMP (Simple Network Management)" },
+                { port: "389", proto: "TCP", desc: "LDAP (Lightweight Directory Access)" },
+                { port: "443", proto: "TCP", desc: "HTTPS (HTTP Secure)" },
+                { port: "445", proto: "TCP", desc: "SMB (Server Message Block)" },
+                { port: "3389", proto: "TCP", desc: "RDP (Remote Desktop Protocol)" }
+            ];
+
+            const portListContainer = document.getElementById('port-list');
+            const portSearchInput = document.getElementById('port-search');
+
+            function renderPorts(filterText = "") {
+                portListContainer.innerHTML = '';
+                const lowerFilter = filterText.toLowerCase();
+                
+                const filtered = portsData.filter(p => 
+                    p.port.includes(lowerFilter) || 
+                    p.desc.toLowerCase().includes(lowerFilter) || 
+                    p.proto.toLowerCase().includes(lowerFilter)
+                );
+
+                if(filtered.length === 0) {
+                    portListContainer.innerHTML = '<div class="p-6 text-center text-stone-500">No matching ports found.</div>';
+                    return;
+                }
+
+                filtered.forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = 'grid grid-cols-4 p-4 hover:bg-stone-50 transition-colors text-sm';
+                    
+                    let portHtml = `<div class="font-bold text-indigo-700">${p.port}</div>`;
+                    let protoHtml = `<div><span class="px-2 py-1 rounded text-xs font-bold ${p.proto.includes('TCP') ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">${p.proto}</span></div>`;
+                    let descHtml = `<div class="col-span-2 text-stone-700">${p.desc}</div>`;
+                    
+                    row.innerHTML = portHtml + protoHtml + descHtml;
+                    portListContainer.appendChild(row);
+                });
+            }
+
+            portSearchInput.addEventListener('input', (e) => renderPorts(e.target.value));
+            renderPorts(); 
+
+        });
+    </script>
+</body>
+</html>
+
+
+

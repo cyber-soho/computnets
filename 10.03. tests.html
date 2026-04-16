@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transport Layer | Study Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #fafaf9; color: #1c1917; }
+        
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Flashcard 3D Flip Styles */
+        .flip-card {
+            perspective: 1000px;
+            width: 100%;
+            height: 400px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .flip-card-front {
+            background-color: white;
+            border: 2px solid #e7e5e4;
+        }
+        .flip-card-back {
+            background-color: #4f46e5;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <h1 class="text-2xl font-bold text-indigo-900 mb-6 text-center">Module 8: Transport Layer Practice</h1>
+            <nav class="flex border-b border-stone-200 justify-center gap-8">
+                <button id="tab-btn-flashcards" onclick="switchTab('flashcards')" class="pb-4 px-1 border-b-2 font-medium text-sm transition-colors border-indigo-600 text-indigo-600">
+                    Flashcards (25)
+                </button>
+                <button id="tab-btn-quiz" onclick="switchTab('quiz')" class="pb-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300">
+                    Practice Quiz (10)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
+
+        <section id="tab-flashcards" class="tab-content active">
+            <div class="mb-6 flex justify-between items-center text-sm font-medium text-stone-500">
+                <span>Click the card to reveal the answer.</span>
+                <span id="fc-counter" class="bg-stone-200 px-3 py-1 rounded-full">1 / 25</span>
+            </div>
+
+            <div class="flip-card mx-auto max-w-2xl" id="flashcard" onclick="flipCard()">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <span class="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-4">Question</span>
+                        <h2 id="fc-front-text" class="text-2xl md:text-3xl font-bold text-stone-800">Front Text</h2>
+                        <div class="mt-8 text-stone-400 text-sm flex items-center gap-2">
+                            <span>&#8634;</span> Tap to flip
+                        </div>
+                    </div>
+                    <div class="flip-card-back">
+                        <span class="text-xs font-bold uppercase tracking-widest text-indigo-200 mb-4">Answer</span>
+                        <p id="fc-back-text" class="text-xl md:text-2xl font-medium leading-relaxed">Back Text</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-center gap-4 max-w-2xl mx-auto">
+                <button onclick="prevCard()" class="flex-1 bg-white border border-stone-300 text-stone-700 py-3 rounded-lg font-bold hover:bg-stone-50 transition shadow-sm disabled:opacity-50" id="btn-fc-prev">
+                    &#9664; Previous
+                </button>
+                <button onclick="nextCard()" class="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-500 transition shadow-sm" id="btn-fc-next">
+                    Next &#9654;
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-quiz" class="tab-content">
+            <div id="quiz-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                
+                <div class="bg-stone-50 p-6 border-b border-stone-200 flex justify-between items-center">
+                    <span id="quiz-progress" class="text-xs font-bold uppercase tracking-widest text-indigo-500">Question 1 of 10</span>
+                    <span id="quiz-score" class="text-sm font-bold text-stone-600">Score: 0</span>
+                </div>
+
+                <div class="p-6 md:p-8">
+                    <h3 id="quiz-question" class="text-xl md:text-2xl font-bold text-stone-800 mb-6 leading-relaxed">Question text goes here?</h3>
+                    
+                    <div id="quiz-hint-container" class="mb-6 hidden">
+                        <div class="p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                            <p class="text-sm text-amber-800"><strong class="font-bold">Hint: </strong><span id="quiz-hint-text"></span></p>
+                        </div>
+                    </div>
+
+                    <div id="quiz-options" class="space-y-3">
+                        </div>
+
+                    <div id="quiz-feedback" class="mt-6 hidden p-5 rounded-xl border">
+                        <h4 id="feedback-title" class="text-lg font-bold mb-2"></h4>
+                        <p id="feedback-rationale" class="text-stone-700"></p>
+                    </div>
+                </div>
+
+                <div class="bg-stone-50 p-6 border-t border-stone-200 flex justify-between items-center">
+                    <button onclick="showHint()" id="btn-hint" class="text-sm font-bold text-amber-600 hover:text-amber-700 transition">
+                        &#128161; Need a hint?
+                    </button>
+                    <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="hidden px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-500 transition shadow-sm">
+                        Next Question &#9654;
+                    </button>
+                    <button onclick="restartQuiz()" id="btn-restart-quiz" class="hidden px-6 py-2 bg-stone-800 text-white rounded-lg font-bold hover:bg-stone-700 transition shadow-sm w-full text-center">
+                        Restart Quiz &#8634;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /* =================== DATA =================== */
+        const flashcardData = [
+            { front: "Primary function of the Transport Layer (OSI Layer 4)", back: "It decides how data is delivered, tracks whether it arrived and in what order, and directs traffic to the correct application on the destination host." },
+            { front: "Core characteristics of TCP (Transmission Control Protocol)", back: "It is connection-oriented, reliable, ordered, and full-duplex, but operates slower than UDP." },
+            { front: "Core characteristics of UDP (User Datagram Protocol)", back: "It is connectionless, best-effort (no retries or acknowledgements), unordered, and faster than TCP." },
+            { front: "Minimum size of a TCP header", back: "20 bytes." },
+            { front: "Size of a UDP header", back: "Exactly 8 bytes." },
+            { front: "Steps of the TCP Three-Way Handshake", back: "SYN $\\rightarrow$ SYN-ACK $\\rightarrow$ ACK" },
+            { front: "Steps of a TCP connection teardown", back: "FIN $\\rightarrow$ ACK $\\rightarrow$ FIN $\\rightarrow$ ACK" },
+            { front: "Common applications that use TCP", back: "Web browsing (HTTP/HTTPS), email (SMTP, IMAP), file transfers (FTP), remote access (SSH), and online banking." },
+            { front: "Common applications that use UDP", back: "VoIP, video calls, online gaming, DNS queries, and live video streaming." },
+            { front: "QUIC Protocol", back: "Quick UDP Internet Connections; a protocol powering HTTP/3 that runs on UDP but adds TCP-like reliability to improve web speeds." },
+            { front: "Definition of Flow Control", back: "The mechanism by which a fast sender learns to pace its data transmission so it does not overwhelm a slow receiver's buffer." },
+            { front: "Difference between Flow Control and Congestion Control", back: "Flow control protects the receiver from being overwhelmed, whereas congestion control protects the overall network from being overwhelmed." },
+            { front: "Receive Window (rwnd)", back: "A 16-bit TCP header field used for flow control that advertises how many more bytes the receiver can currently accept." },
+            { front: "Flow control in UDP", back: "UDP has no built-in flow control; the sending application must implement its own pacing to avoid overwhelming the receiver." },
+            { front: "TCP Sliding Window concept", back: "A transmission method where the sender transmits a batch of unacknowledged segments and slides the window forward as acknowledgements arrive, keeping the pipeline full." },
+            { front: "Maximum TCP Throughput Formula", back: "$\\text{Maximum Throughput} \\approx \\frac{\\text{Window Size}}{\\text{RTT}}$" },
+            { front: "Purpose of TCP Window Scaling", back: "It multiplies the standard 16-bit window size to allow larger amounts of data in flight, which is necessary to fill high-bandwidth, high-latency links." },
+            { front: "Selective Acknowledgement (SACK)", back: "A TCP extension that allows the receiver to specify exact blocks of missing data, so the sender only retransmits what was actually lost." },
+            { front: "Fast Retransmit trigger", back: "Triggered when a sender receives 3 duplicate ACKs, prompting it to immediately resend the missing segment without waiting for a timeout timer." },
+            { front: "Port Number definition", back: "A 16-bit integer (ranging from 0 to 65,535) used by the Transport layer to identify and route data to the correct application on a machine." },
+            { front: "Network Socket definition", back: "The combination of an IP address and a Port number." },
+            { front: "The 5-tuple identifying a network connection", back: "Source IP, Source Port, Destination IP, Destination Port, and Protocol." },
+            { front: "Well-Known Port Range", back: "Ports 0 through 1023, managed by IANA and reserved for standard system services." },
+            { front: "Ephemeral Port Range", back: "Ports 49,152 through 65,535, assigned dynamically by the operating system for outbound client connections." },
+            { front: "Standard ports for DNS, HTTP, and HTTPS", back: "DNS is 53 (TCP/UDP), HTTP is 80 (TCP), and HTTPS is 443 (TCP)." }
+        ];
+
+        const quizData = [
+            {
+                question: "You are designing a real-time multiplayer online game where minimizing latency is critical, and dropping a few data frames occasionally is acceptable. Which transport protocol should you choose and why?",
+                options: [
+                    { text: "TCP, because it guarantees every movement packet arrives safely.", isCorrect: false, rationale: "While true that TCP guarantees delivery, it trades raw speed and latency for this reliability, which is detrimental to real-time gaming." },
+                    { text: "UDP, because it has minimal overhead and does not introduce retransmission delays.", isCorrect: true, rationale: "This protocol acts like a lightweight 'postcard', prioritizing speed over perfect reliability, making it ideal for real-time applications." },
+                    { text: "TCP, because its 8-byte header is the most lightweight option available.", isCorrect: false, rationale: "TCP actually has a minimum header size of 20 bytes due to its tracking and sequencing fields." },
+                    { text: "UDP, because it uses a highly optimized 3-way handshake to establish a fast connection.", isCorrect: false, rationale: "UDP is connectionless; it does not perform a handshake at all before sending data." }
+                ],
+                hint: "Consider which protocol trades reliability for speed by omitting features like connection setup and guaranteed delivery."
+            },
+            {
+                question: "In a TCP connection, a powerful data-center server is transmitting data to a low-power IoT device much faster than the device can process it. How does the TCP protocol prevent the IoT device's buffer from overflowing?",
+                options: [
+                    { text: "The device relies on the network routers to drop packets using Congestion Control.", isCorrect: false, rationale: "Congestion control protects the network links, not the end receiver's specific memory buffer." },
+                    { text: "The device sends a FIN packet to temporarily close the connection until it catches up.", isCorrect: false, rationale: "A FIN packet is used for permanent connection teardown, not temporary pacing." },
+                    { text: "The device advertises a shrinking Receive Window (rwnd) in its acknowledgements.", isCorrect: true, rationale: "The receiver dictates the pace by constantly updating the sender on exactly how many more bytes it can currently accept in its buffer." },
+                    { text: "The server automatically calculates the physical cable speed and limits its transmission rate.", isCorrect: false, rationale: "Throughput is bounded by protocol arithmetic and window sizes, not just the physical wire speed." }
+                ],
+                hint: "The receiver is always in charge of pacing the sender in TCP using a specific 16-bit header field."
+            },
+            {
+                question: "A TCP connection has a negotiated Window Size of 128 KB and a Round-Trip Time (RTT) of 100 ms. Based on the back-of-the-envelope calculation, what is the approximate maximum protocol throughput?",
+                options: [
+                    { text: "$\\approx 5 \\text{ Mbps}$", isCorrect: false, rationale: "This throughput corresponds to a 64 KB window size at a 100 ms RTT, not a 128 KB window." },
+                    { text: "$\\approx 10 \\text{ Mbps}$", isCorrect: true, rationale: "Applying the throughput formula (Window Size $\\div$ RTT) yields roughly 10 Mbps when scaling up from the baseline 64 KB/100 ms $\\approx$ 5 Mbps calculation." },
+                    { text: "$\\approx 1.28 \\text{ Mbps}$", isCorrect: false, rationale: "This calculation does not properly convert kilobytes to bits or divide by the correct fraction of a second." },
+                    { text: "$\\approx 128 \\text{ Mbps}$", isCorrect: false, rationale: "This assumes the entire window is transmitted every millisecond rather than every 100 milliseconds." }
+                ],
+                hint: "Remember the formula: $\\text{Maximum Throughput} \\approx \\frac{\\text{Window Size}}{\\text{RTT}}$. (Note from the slides: a 64 KB window at 100 ms RTT is roughly 5 Mbps)."
+            },
+            {
+                question: "When you open a web browser and navigate to an HTTPS website, your computer uses port 443 as the destination port. Which port is most likely used as the source port on your local machine?",
+                options: [
+                    { text: "Port 80, because it is the standard web client port.", isCorrect: false, rationale: "Port 80 is the standard destination port for unencrypted HTTP traffic, not a client-side source port." },
+                    { text: "Port 443, to ensure symmetric communication with the destination.", isCorrect: false, rationale: "Source and destination ports do not need to match; clients rarely use reserved ports for outbound traffic." },
+                    { text: "A dynamic, ephemeral port between 49152 and 65535.", isCorrect: true, rationale: "The operating system automatically assigns a temporary, high-numbered port to uniquely identify the specific outbound client session." },
+                    { text: "Port 53, since the connection must first resolve the domain name.", isCorrect: false, rationale: "Port 53 is used for DNS queries to find the IP address, but it is not the source port for the subsequent HTTPS web traffic." }
+                ],
+                hint: "Outbound client connections don't use 'Well-Known' reserved ports; the operating system picks a temporary one on the fly."
+            },
+            {
+                question: "Which of the following correctly describes the header characteristics of TCP and UDP?",
+                options: [
+                    { text: "Both TCP and UDP headers have a fixed size of 20 bytes.", isCorrect: false, rationale: "Only TCP has a minimum size of 20 bytes; UDP is much smaller." },
+                    { text: "TCP has a minimum 20-byte header to track state, while UDP uses exactly 8 bytes.", isCorrect: true, rationale: "TCP requires significant overhead (Sequence Numbers, ACKs, Flags) for reliability, while UDP is heavily stripped down for speed." },
+                    { text: "TCP uses an 8-byte header for fast delivery, while UDP requires 20 bytes for error checking.", isCorrect: false, rationale: "This reverses the characteristics; TCP is the heavier protocol, and UDP is the lightweight one." },
+                    { text: "UDP headers vary in size depending on the application data, while TCP headers are always 8 bytes.", isCorrect: false, rationale: "UDP headers are strictly fixed at 8 bytes, and TCP is minimum 20 bytes, with optional extensions making it larger." }
+                ],
+                hint: "The protocol that provides 'certified letter' reliability needs more space for tracking fields like sequence numbers."
+            },
+            {
+                question: "During the establishment of a TCP connection, what is the correct sequence of control flags exchanged between a client and a server?",
+                options: [
+                    { text: "ACK $\\rightarrow$ SYN-ACK $\\rightarrow$ SYN", isCorrect: false, rationale: "A connection cannot start with an acknowledgement of data that hasn't been synchronized yet." },
+                    { text: "SYN $\\rightarrow$ ACK $\\rightarrow$ FIN", isCorrect: false, rationale: "The FIN flag is used during connection teardown, not during the establishment phase." },
+                    { text: "SYN $\\rightarrow$ SYN-ACK $\\rightarrow$ ACK", isCorrect: true, rationale: "This represents the standard three-way handshake: request to talk, mutual agreement, and final confirmation." },
+                    { text: "SYN $\\rightarrow$ ACK $\\rightarrow$ SYN-ACK", isCorrect: false, rationale: "The server must synchronize its own sequence numbers with the client before the client sends the final acknowledgement." }
+                ],
+                hint: "The client first asks to talk, the server agrees and acknowledges the request, and finally, the client acknowledges the server's agreement."
+            },
+            {
+                question: "What is the primary operational advantage of using Selective Acknowledgement (SACK) in TCP?",
+                options: [
+                    { text: "It enables the receiver to specify exactly which blocks of data are missing, preventing wasteful retransmission.", isCorrect: true, rationale: "By indicating specific gaps in the sequence, the sender only resends the lost segments rather than blindly repeating everything sent after the failure point." },
+                    { text: "It allows the sender to skip the three-way handshake and send data immediately on subsequent connections.", isCorrect: false, rationale: "Connection resumption and 0-RTT features are associated with protocols like TLS 1.3 and QUIC, not SACK." },
+                    { text: "It dynamically switches a TCP connection to UDP when severe packet loss is detected to maintain speeds.", isCorrect: false, rationale: "A single connection cannot switch transport protocols mid-stream; they are fundamentally different mechanisms." },
+                    { text: "It automatically scales the 16-bit window size to allow more data in flight over Long Fat Networks.", isCorrect: false, rationale: "This is the function of Window Scaling (RFC 1323), not Selective Acknowledgement." }
+                ],
+                hint: "Without this feature, an ACK only indicates the last contiguous byte received, forcing the sender to guess or resend everything after a gap."
+            },
+            {
+                question: "A network administrator is reviewing firewall rules and sees that inbound traffic is explicitly allowed on TCP port 22. Which service is this rule facilitating?",
+                options: [
+                    { text: "FTP (File Transfer Protocol)", isCorrect: false, rationale: "FTP typically uses ports 20 and 21 for data and control channels." },
+                    { text: "HTTP (Hypertext Transfer Protocol)", isCorrect: false, rationale: "Unencrypted web traffic operates on port 80." },
+                    { text: "DNS (Domain Name System)", isCorrect: false, rationale: "DNS predominantly uses port 53 for its queries and zone transfers." },
+                    { text: "SSH (Secure Shell)", isCorrect: true, rationale: "Port 22 is the standard well-known port designated for secure remote command-line access." }
+                ],
+                hint: "This service provides encrypted remote terminal access to manage servers securely."
+            },
+            {
+                question: "To avoid long stalls while waiting for a timeout timer to expire, TCP implements a mechanism called 'Fast Retransmit'. What specific network event triggers this mechanism?",
+                options: [
+                    { text: "The sender's Receive Window (rwnd) metric suddenly drops to zero.", isCorrect: false, rationale: "A zero window triggers a pause in sending due to flow control, not a retransmission of lost packets." },
+                    { text: "The sender receives 3 duplicate ACKs from the receiver.", isCorrect: true, rationale: "Seeing the same acknowledgement number repeated multiple times strongly signals to the sender that subsequent segments have arrived, but a specific earlier segment was dropped." },
+                    { text: "The sender receives an ICMP 'Destination Unreachable' network message.", isCorrect: false, rationale: "ICMP messages operate at the Network layer and do not trigger TCP's internal fast retransmit logic." },
+                    { text: "The receiver explicitly sends a FIN flag indicating out-of-order segments.", isCorrect: false, rationale: "The FIN flag is strictly used to signal the end of data transmission and close the connection." }
+                ],
+                hint: "TCP monitors the pattern of acknowledgements coming back. If it sees the same specific sequence number requested multiple times in a row, it acts immediately."
+            },
+            {
+                question: "What is the fundamental difference between Flow Control and Congestion Control in network engineering?",
+                options: [
+                    { text: "Flow control protects the receiver from being overwhelmed by a fast sender, while congestion control protects the overall network path.", isCorrect: true, rationale: "Flow control is an end-to-end mechanism driven by the receiver's buffer capacity, whereas congestion control reacts to broader bottlenecks across routers and links." },
+                    { text: "Flow control protects the network from traffic spikes, while congestion control protects the end receiver from buffer overflows.", isCorrect: false, rationale: "This description reverses the actual definitions and responsibilities of the two mechanisms." },
+                    { text: "Flow control is used exclusively by UDP, while congestion control is a TCP-only feature.", isCorrect: false, rationale: "UDP utilizes neither mechanism natively; both are implemented as core features within TCP." },
+                    { text: "Flow control manages the physical cable transmission speed, while congestion control manages application-layer processing.", isCorrect: false, rationale: "Both operate at the Transport layer (Layer 4) adjusting logical transmission rates, not physical electrical speeds." }
+                ],
+                hint: "One is an end-to-end mechanism driven by the `rwnd` field, while the other looks at the broader health of the routers between the endpoints."
+            }
+        ];
+
+        /* =================== TAB LOGIC =================== */
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            // Reset tab styles
+            document.getElementById('tab-btn-flashcards').className = "pb-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300";
+            document.getElementById('tab-btn-quiz').className = "pb-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300";
+            
+            // Show active content
+            document.getElementById('tab-' + tabId).classList.add('active');
+            // Style active tab
+            document.getElementById('tab-btn-' + tabId).className = "pb-4 px-1 border-b-2 font-medium text-sm transition-colors border-indigo-600 text-indigo-600";
+            
+            // Trigger MathJax re-render for active tab
+            if(window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        /* =================== FLASHCARD LOGIC =================== */
+        let currentFcIndex = 0;
+        const flashcardElement = document.getElementById('flashcard');
+
+        function renderCard() {
+            // Ensure card is face up
+            flashcardElement.classList.remove('flipped');
+            
+            // Update text with a tiny delay to allow flip animation to reset if it was flipped
+            setTimeout(() => {
+                document.getElementById('fc-front-text').innerHTML = flashcardData[currentFcIndex].front;
+                document.getElementById('fc-back-text').innerHTML = flashcardData[currentFcIndex].back;
+                document.getElementById('fc-counter').innerText = `${currentFcIndex + 1} / ${flashcardData.length}`;
+                
+                // Button states
+                document.getElementById('btn-fc-prev').disabled = currentFcIndex === 0;
+                document.getElementById('btn-fc-next').innerText = currentFcIndex === flashcardData.length - 1 ? "Finish" : "Next \u25B6";
+
+                if(window.MathJax) MathJax.typesetPromise();
+            }, 150);
+        }
+
+        function flipCard() {
+            flashcardElement.classList.toggle('flipped');
+        }
+
+        function prevCard() {
+            if (currentFcIndex > 0) {
+                currentFcIndex--;
+                renderCard();
+            }
+        }
+
+        function nextCard() {
+            if (currentFcIndex < flashcardData.length - 1) {
+                currentFcIndex++;
+                renderCard();
+            } else {
+                currentFcIndex = 0; // Loop back
+                renderCard();
+            }
+        }
+
+        /* =================== QUIZ LOGIC =================== */
+        let currentQuizIndex = 0;
+        let score = 0;
+        let questionAnswered = false;
+
+        function renderQuizQuestion() {
+            questionAnswered = false;
+            const q = quizData[currentQuizIndex];
+            
+            // Update UI elements
+            document.getElementById('quiz-progress').innerText = `Question ${currentQuizIndex + 1} of ${quizData.length}`;
+            document.getElementById('quiz-score').innerText = `Score: ${score}`;
+            document.getElementById('quiz-question').innerHTML = q.question;
+            
+            // Hint
+            document.getElementById('quiz-hint-text').innerHTML = q.hint;
+            document.getElementById('quiz-hint-container').classList.add('hidden');
+            document.getElementById('btn-hint').classList.remove('hidden');
+
+            // Feedback
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('btn-next-quiz').classList.add('hidden');
+
+            // Options
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border border-stone-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 transition-colors duration-200";
+                btn.innerHTML = `<span class="inline-block w-6 h-6 rounded-full border border-stone-300 text-center text-sm font-bold mr-3 pt-0.5 text-stone-500">${String.fromCharCode(65 + index)}</span> <span class="text-stone-700">${opt.text}</span>`;
+                btn.onclick = () => selectQuizOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+
+        function showHint() {
+            document.getElementById('quiz-hint-container').classList.remove('hidden');
+            document.getElementById('btn-hint').classList.add('hidden');
+        }
+
+        function selectQuizOption(selectedIndex, btnElement) {
+            if (questionAnswered) return;
+            questionAnswered = true;
+
+            const q = quizData[currentQuizIndex];
+            const isCorrect = q.options[selectedIndex].isCorrect;
+            const buttons = document.getElementById('quiz-options').children;
+
+            // Disable all buttons
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-indigo-50', 'hover:border-indigo-200', 'cursor-pointer');
+            }
+
+            // Highlight selected and correct answers
+            if (isCorrect) {
+                score++;
+                document.getElementById('quiz-score').innerText = `Score: ${score}`;
+                btnElement.classList.add('bg-green-50', 'border-green-500', 'ring-1', 'ring-green-500');
+            } else {
+                btnElement.classList.add('bg-red-50', 'border-red-500');
+                // Find and highlight correct answer
+                const correctIndex = q.options.findIndex(o => o.isCorrect);
+                buttons[correctIndex].classList.add('bg-green-50', 'border-green-500');
+            }
+
+            // Show feedback
+            const feedbackEl = document.getElementById('quiz-feedback');
+            const titleEl = document.getElementById('feedback-title');
+            const rationaleEl = document.getElementById('feedback-rationale');
+            
+            feedbackEl.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'border-green-200', 'border-red-200');
+            
+            if (isCorrect) {
+                feedbackEl.classList.add('bg-green-100', 'border-green-200');
+                titleEl.innerText = "Correct!";
+                titleEl.className = "text-lg font-bold mb-2 text-green-800";
+            } else {
+                feedbackEl.classList.add('bg-red-100', 'border-red-200');
+                titleEl.innerText = "Not quite.";
+                titleEl.className = "text-lg font-bold mb-2 text-red-800";
+            }
+            
+            rationaleEl.innerHTML = q.options[selectedIndex].rationale;
+            
+            document.getElementById('btn-hint').classList.add('hidden');
+            
+            if (currentQuizIndex < quizData.length - 1) {
+                document.getElementById('btn-next-quiz').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-restart-quiz').classList.remove('hidden');
+                document.getElementById('quiz-progress').innerText = "Quiz Complete!";
+            }
+
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIndex++;
+            renderQuizQuestion();
+        }
+
+        function restartQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            document.getElementById('btn-restart-quiz').classList.add('hidden');
+            renderQuizQuestion();
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCard();
+            renderQuizQuestion();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
+

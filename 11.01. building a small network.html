@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Small Network: Interactive Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals with Sky Blue Accents (stone-50, stone-800, sky-700, amber-500) -->
+    <!-- Application Structure Plan: The SPA uses a chapter-based navigation structure, transforming the linear slide deck into an interactive dashboard. The design prioritizes ease of exploration by breaking content into four logical domains: Overview, Physical Cabling, Device Selection, and Network Scaling. This structure allows users to jump directly to specific architectural concepts. A key interactive element is the 'Port Calculator' which operationalizes a static formula from the report into a dynamic tool, increasing engagement and understanding. -->
+    <!-- Visualization & Content Choices: 
+         1. Report Info: Cable specs (Cat5e-8) -> Goal: Compare speed/distance -> Viz: Grouped Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Clearly contrasts the legacy vs modern capabilities. 
+         2. Report Info: Device port formula -> Goal: Inform & Calculate -> Viz: Donut Chart & Dynamic Form -> Interaction: User inputs device counts, chart updates -> Justification: Active learning through applied calculation. 
+         3. Report Info: VLSM Address Plan -> Goal: Organize & Compare -> Viz: Horizontal Bar Chart -> Interaction: Hover to see exact usable IPs -> Justification: Visually demonstrates the varying sizes of segmented subnets vs a flat network. 
+         Library/Method: Chart.js and Vanilla JS. Confirming NO SVG or Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-btn.active {
+            border-bottom: 2px solid #0369a1;
+            color: #0369a1;
+            font-weight: 600;
+        }
+        .section-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .section-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        input[type="number"] {
+            transition: all 0.2s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans leading-relaxed">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🌐</span>
+                    <span class="font-bold text-xl tracking-tight text-stone-900">Cyber.SoHo Hub</span>
+                </div>
+                <div class="flex space-x-1 overflow-x-auto">
+                    <button class="nav-btn active px-3 py-2 text-sm md:text-base text-stone-600 hover:text-sky-700 whitespace-nowrap transition-colors" data-target="overview">Overview</button>
+                    <button class="nav-btn px-3 py-2 text-sm md:text-base text-stone-600 hover:text-sky-700 whitespace-nowrap transition-colors" data-target="cabling">1. Physical Cabling</button>
+                    <button class="nav-btn px-3 py-2 text-sm md:text-base text-stone-600 hover:text-sky-700 whitespace-nowrap transition-colors" data-target="devices">2. Device Selection</button>
+                    <button class="nav-btn px-3 py-2 text-sm md:text-base text-stone-600 hover:text-sky-700 whitespace-nowrap transition-colors" data-target="scaling">3. Scaling</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+
+        <section id="overview" class="section-content active">
+            <div class="mb-8">
+                <h1 class="text-4xl font-extrabold text-stone-900 mb-4">Building a Small Network</h1>
+                <p class="text-lg text-stone-600">This section introduces the foundational concepts of network architecture. It highlights the critical importance of early design decisions, demonstrating that the vast majority of network failures stem from the physical and structural choices made on day one, rather than software or external threats. Explore this section to understand the "3 a.m. framework" for network design.</p>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-amber-600 mb-2">The Uncomfortable Truth</h2>
+                    <p class="text-xl font-medium mb-4">80% of network problems are NOT caused by software, hackers, or the ISP.</p>
+                    <p class="text-stone-600 mb-6">They come from architecture decisions made on day one. Architecture is what we decide today that we cannot cheaply undo tomorrow.</p>
+                    <div class="bg-stone-100 p-4 rounded-xl border-l-4 border-sky-600">
+                        <p class="font-semibold text-stone-800">The 3 A.M. Question:</p>
+                        <p class="italic text-stone-600">"What will this network look like when someone who is NOT you has to fix it at 3 a.m.?"</p>
+                    </div>
+                </div>
+                <div class="w-48 h-48 rounded-full bg-amber-50 flex flex-col items-center justify-center border-8 border-amber-500 shadow-inner flex-shrink-0">
+                    <span class="text-5xl font-black text-amber-600">80%</span>
+                    <span class="text-sm font-bold text-amber-800 uppercase tracking-wide mt-1">Architecture</span>
+                    <span class="text-sm font-bold text-amber-800 uppercase tracking-wide">Failures</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 stat-card cursor-default">
+                    <div class="text-3xl mb-3">🏷️</div>
+                    <h3 class="font-bold text-lg mb-2">Cables</h3>
+                    <p class="text-stone-600 text-sm">Are the cables accurately labeled at both ends during installation?</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 stat-card cursor-default">
+                    <div class="text-3xl mb-3">🗄️</div>
+                    <h3 class="font-bold text-lg mb-2">Devices</h3>
+                    <p class="text-stone-600 text-sm">Are the hardware devices properly documented and inventoried?</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 stat-card cursor-default">
+                    <div class="text-3xl mb-3">🗺️</div>
+                    <h3 class="font-bold text-lg mb-2">Subnets</h3>
+                    <p class="text-stone-600 text-sm">Are the subnets logically planned using VLSM for future growth?</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 stat-card cursor-default">
+                    <div class="text-3xl mb-3">📊</div>
+                    <h3 class="font-bold text-lg mb-2">Monitoring</h3>
+                    <p class="text-stone-600 text-sm">Is there honest, centralized monitoring in place before users complain?</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="cabling" class="section-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 1: Physical Cabling</h1>
+                <p class="text-lg text-stone-600">This section explores the physical foundation of the network. Cabling is a 10-year commitment, and poor choices here are extremely costly to fix later. Here, you will interact with data comparing copper and fiber capabilities, and review the strict physical laws (distance, bend radius, interference) that dictate a reliable network installation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold mb-4 text-stone-800">Copper Cable Capabilities</h3>
+                    <div class="chart-container">
+                        <canvas id="cablingChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-4 bg-sky-50 text-sky-800 rounded-lg text-sm border border-sky-100">
+                        <strong>Rule of thumb for 2026:</strong> New office = <span class="font-bold">Cat 6a</span> minimum. It guarantees 10 Gbps across the full 100m standard length.
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-6 text-stone-800">The Laws of Physics</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="text-2xl mr-4 mt-1">📏</div>
+                            <div>
+                                <h4 class="font-bold text-stone-900">The 100-Meter Rule</h4>
+                                <p class="text-stone-600 text-sm">TIA-568 limit is 100m total for copper (90m horizontal + 10m patches). Cable path ≈ straight-line × 1.5. Violating it causes silent drops under load.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="text-2xl mr-4 mt-1">↩️</div>
+                            <div>
+                                <h4 class="font-bold text-stone-900">Bend Radius</h4>
+                                <p class="text-stone-600 text-sm">Minimum bend radius for Cat 6a UTP is 4× cable diameter. Tighter bends deform twist geometry, increasing crosstalk and dropping speed. Avoid staples and zip-ties.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="text-2xl mr-4 mt-1">⚡</div>
+                            <div>
+                                <h4 class="font-bold text-stone-900">Separation from Power/EMI</h4>
+                                <p class="text-stone-600 text-sm">Keep data cables at least 30 cm from parallel AC mains. Cross at 90° when necessary. Beware of fluorescent ballasts and old HVAC motors.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-stone-900 text-stone-100 p-8 rounded-2xl shadow-lg">
+                <div class="flex items-center mb-4">
+                    <span class="text-3xl mr-3">✨</span>
+                    <h3 class="text-2xl font-bold">Fiber Optic (Glass, not Copper)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-stone-800 p-4 rounded-xl">
+                        <h4 class="font-bold text-sky-400 mb-2">Multi-Mode Fiber (MMF)</h4>
+                        <p class="text-sm">Distance: 300m – 2km</p>
+                        <p class="text-sm">Optics Cost: Lower</p>
+                        <p class="text-sm text-stone-400 mt-2">Use Case: Inside building, campus backbone.</p>
+                    </div>
+                    <div class="bg-stone-800 p-4 rounded-xl">
+                        <h4 class="font-bold text-amber-400 mb-2">Single-Mode Fiber (SMF)</h4>
+                        <p class="text-sm">Distance: 10+ km</p>
+                        <p class="text-sm">Optics Cost: Higher</p>
+                        <p class="text-sm text-stone-400 mt-2">Use Case: Building-to-building, ISP links.</p>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-stone-300 italic">Fiber wins because it is immune to EMI, offers huge distance over a single run, and provides future-proof bandwidth.</p>
+            </div>
+        </section>
+
+        <section id="devices" class="section-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 2: Device Selection</h1>
+                <p class="text-lg text-stone-600">This section focuses on choosing the right hardware. An €80 home router will fail in a 30-person office. Small networks require purpose-built devices handling specific tasks. Use the interactive calculator below to determine exactly how many switch ports your network requires based on industry-standard sizing formulas.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 text-center">
+                    <div class="text-3xl mb-2">🔌</div>
+                    <h4 class="font-bold">Switch</h4>
+                    <p class="text-xs text-stone-500 mt-1">Connects wired endpoints (L2/L3)</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 text-center">
+                    <div class="text-3xl mb-2">🚦</div>
+                    <h4 class="font-bold">Router</h4>
+                    <p class="text-xs text-stone-500 mt-1">Moves packets to the internet</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 text-center">
+                    <div class="text-3xl mb-2">🧱</div>
+                    <h4 class="font-bold">Firewall</h4>
+                    <p class="text-xs text-stone-500 mt-1">Enforces boundary security</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 text-center">
+                    <div class="text-3xl mb-2">📡</div>
+                    <h4 class="font-bold">Wireless AP</h4>
+                    <p class="text-xs text-stone-500 mt-1">Provides Wi-Fi coverage</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-8">
+                <div class="bg-sky-700 p-4 text-white">
+                    <h3 class="text-xl font-bold">Interactive Port Sizing Calculator</h3>
+                    <p class="text-sky-100 text-sm">Ports = Workstations + Phones + Printers + APs + Cameras/IoT + Uplinks + 30% buffer</p>
+                </div>
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <form id="portForm" class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <label class="text-stone-700 font-medium">Workstations 💻</label>
+                                <input type="number" id="inp-workstations" value="25" min="0" class="w-24 p-2 border rounded-lg text-right bg-stone-50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-stone-700 font-medium">VoIP Phones ☎️</label>
+                                <input type="number" id="inp-phones" value="6" min="0" class="w-24 p-2 border rounded-lg text-right bg-stone-50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-stone-700 font-medium">Printers 🖨️</label>
+                                <input type="number" id="inp-printers" value="4" min="0" class="w-24 p-2 border rounded-lg text-right bg-stone-50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-stone-700 font-medium">Access Points 📡</label>
+                                <input type="number" id="inp-aps" value="3" min="0" class="w-24 p-2 border rounded-lg text-right bg-stone-50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-stone-700 font-medium">Cameras/IoT 📷</label>
+                                <input type="number" id="inp-iot" value="2" min="0" class="w-24 p-2 border rounded-lg text-right bg-stone-50">
+                            </div>
+                        </form>
+                        <div class="mt-6 p-4 bg-stone-100 rounded-xl border border-stone-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-stone-600">Active Ports:</span>
+                                <span id="calc-active" class="font-bold text-lg">40</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-stone-600">30% Growth Buffer:</span>
+                                <span id="calc-buffer" class="font-bold text-lg text-amber-600">+12</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-stone-300">
+                                <span class="text-stone-900 font-bold">Total Recommended:</span>
+                                <span id="calc-total" class="font-black text-2xl text-sky-700">52</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="chart-container h-64 w-full">
+                            <canvas id="portChart"></canvas>
+                        </div>
+                        <p class="text-sm text-stone-500 mt-4 text-center" id="recommendation-text">
+                            Recommendation: 48-port switch + 8-port add-on, or two stacked 48s.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-xl">
+                <h3 class="text-xl font-bold text-amber-800 mb-2">The €300 Decision That Saves €3,000</h3>
+                <p class="text-stone-800 mb-4">Always buy a <strong>Managed</strong> switch over an unmanaged one. For approximately €300 more, you gain:</p>
+                <ul class="list-disc list-inside text-stone-700 space-y-1 ml-2">
+                    <li>Visibility into every port</li>
+                    <li>VLAN separation for security</li>
+                    <li>QoS (Quality of Service) for voice traffic</li>
+                    <li>Alerts when cables go bad</li>
+                    <li>10-minute remote troubleshooting vs. a full day of unplugging things</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="scaling" class="section-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-extrabold text-stone-900 mb-4">Lesson 3: Scaling</h1>
+                <p class="text-lg text-stone-600">This section explores how to build a network that grows painlessly. Scaling is a design decision made on day one, not a rebuild project executed in year three. Interact with the chart below to see how Variable Length Subnet Masking (VLSM) efficiently organizes a network compared to a flat topology, and review the four pillars of scalability.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold mb-2 text-stone-800">Pillar 1: VLSM Address Plan</h3>
+                    <p class="text-sm text-stone-600 mb-4">A single flat /24 subnet limits you to 254 devices and lacks security. VLSM segments the network efficiently based on purpose.</p>
+                    <div class="chart-container h-80">
+                        <canvas id="vlsmChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-4 text-stone-800">The 4 Pillars of Scaling</h3>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <span class="font-bold text-sky-700">1. IP Planning</span>
+                            <p class="text-xs text-stone-600 mt-1">Use VLSM. Think in segments, not a single block.</p>
+                        </div>
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <span class="font-bold text-sky-700">2. Redundancy</span>
+                            <p class="text-xs text-stone-600 mt-1">Eliminate cheap SPOFs (Dual ISP, HSRP/VRRP, Stacked switches).</p>
+                        </div>
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <span class="font-bold text-sky-700">3. Monitoring</span>
+                            <p class="text-xs text-stone-600 mt-1">SNMP, Syslog, NetFlow. A network no one watches fails silently.</p>
+                        </div>
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <span class="font-bold text-sky-700">4. Documentation</span>
+                            <p class="text-xs text-stone-600 mt-1">Diagrams, IP plan, cable schedule, change log. (The Bus Test).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-stone-800 text-white p-8 rounded-2xl shadow-lg text-center">
+                <h2 class="text-2xl font-bold mb-4 text-sky-400">Key Takeaway</h2>
+                <p class="text-xl italic">"Design for the network that will exist in 3 years, not the one that exists today."</p>
+                <p class="text-stone-400 mt-4 max-w-2xl mx-auto">VLSM, redundant gateways, centralized monitoring, and honest documentation are not luxuries. They are the difference between a network that scales and one that needs to be rebuilt.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-6 text-center mt-12">
+        <p class="text-sm">Cyber.SoHo Educational Hub • Building IT's Future, Today and Together.</p>
+    </footer>
+
+    <script>
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section-content');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.target).classList.add('active');
+            });
+        });
+
+        const ctxCabling = document.getElementById('cablingChart').getContext('2d');
+        new Chart(ctxCabling, {
+            type: 'bar',
+            data: {
+                labels: ['Cat 5e (Avoid)', 'Cat 6', 'Cat 6 (Short)', 'Cat 6a (Rec)', 'Cat 7/8 (DC)'],
+                datasets: [
+                    {
+                        label: 'Speed (Gbps)',
+                        data: [1, 1, 10, 10, 40],
+                        backgroundColor: '#0369a1',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Max Distance (m)',
+                        data: [100, 100, 37, 100, 30],
+                        backgroundColor: '#d97706',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                    label += context.datasetIndex === 0 ? ' Gbps' : ' meters';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxVlsm = document.getElementById('vlsmChart').getContext('2d');
+        new Chart(ctxVlsm, {
+            type: 'bar',
+            data: {
+                labels: ['User Data (/23)', 'Wi-Fi Corp (/23)', 'Voice (/24)', 'Wi-Fi Guest (/24)', 'IoT (/25)', 'Servers (/27)', 'Mgmt (/28)'],
+                datasets: [{
+                    label: 'Usable IP Addresses',
+                    data: [510, 510, 254, 254, 126, 30, 14],
+                    backgroundColor: [
+                        '#0369a1', '#0369a1', '#0ea5e9', '#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd'
+                    ],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        const inputs = ['workstations', 'phones', 'printers', 'aps', 'iot'];
+        const inputEls = inputs.map(id => document.getElementById(`inp-${id}`));
+        const outActive = document.getElementById('calc-active');
+        const outBuffer = document.getElementById('calc-buffer');
+        const outTotal = document.getElementById('calc-total');
+        const recText = document.getElementById('recommendation-text');
+        
+        const ctxPort = document.getElementById('portChart').getContext('2d');
+        const portChart = new Chart(ctxPort, {
+            type: 'doughnut',
+            data: {
+                labels: ['Workstations', 'Phones', 'Printers', 'APs', 'IoT', 'Buffer (30%)'],
+                datasets: [{
+                    data: [25, 6, 4, 3, 2, 12],
+                    backgroundColor: ['#0369a1', '#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+
+        function calculatePorts() {
+            let active = 0;
+            const values = [];
+            
+            inputEls.forEach(el => {
+                const val = parseInt(el.value) || 0;
+                active += val;
+                values.push(val);
+            });
+            
+            const buffer = Math.ceil(active * 0.3);
+            const total = active + buffer;
+            
+            outActive.innerText = active;
+            outBuffer.innerText = `+${buffer}`;
+            outTotal.innerText = total;
+            
+            values.push(buffer);
+            portChart.data.datasets[0].data = values;
+            portChart.update();
+            
+            if (total <= 8) {
+                recText.innerText = "Recommendation: 8-port Managed Switch.";
+            } else if (total <= 24) {
+                recText.innerText = "Recommendation: 24-port Managed Switch.";
+            } else if (total <= 48) {
+                recText.innerText = "Recommendation: 48-port Managed Switch.";
+            } else {
+                const num48s = Math.ceil(total / 48);
+                recText.innerText = `Recommendation: ${num48s}x Stacked 48-port Managed Switches.`;
+            }
+        }
+
+        inputEls.forEach(el => el.addEventListener('input', calculatePorts));
+
+    </script>
+</body>
+</html>
+
+
+

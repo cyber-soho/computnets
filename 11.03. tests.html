@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Architecture: Study Materials</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f5f5f5; color: #2d3b45; }
+        
+        .tab-btn.active { border-bottom: 3px solid #0055a6; color: #0055a6; font-weight: 600; background-color: #f0f8ff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .flip-card { background-color: transparent; height: 200px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0; }
+        .flip-card-front { background-color: #ffffff; color: #1e293b; }
+        .flip-card-back { background-color: #0055a6; color: white; transform: rotateY(180deg); }
+        
+        .option-btn { transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { background-color: #e2e8f0; }
+        .option-correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .option-incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .option-disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <main class="max-w-5xl mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+        
+        <div class="flex border-b border-slate-200 bg-slate-50">
+            <button onclick="switchTab('flashcards')" id="btn-flashcards" class="tab-btn active flex-1 py-4 px-6 text-center text-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                <span class="text-xl mr-2">📇</span> Flashcards (25)
+            </button>
+            <button onclick="switchTab('quiz')" id="btn-quiz" class="tab-btn flex-1 py-4 px-6 text-center text-lg text-slate-600 hover:bg-slate-100 transition-colors border-l border-slate-200">
+                <span class="text-xl mr-2">📝</span> Practice Quiz (10)
+            </button>
+        </div>
+
+        <div class="p-6 md:p-10">
+            
+            <section id="tab-flashcards" class="tab-content active">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Network Concepts Flashcards</h2>
+                    <p class="text-slate-600">Click on any card to flip it and reveal the definition. Use these to memorize key terms before attempting the quiz.</p>
+                </div>
+                <div id="flashcards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+
+            <section id="tab-quiz" class="tab-content">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Architecture & Configuration Quiz</h2>
+                    <p class="text-slate-600">Test your practical application of network architecture, WAN configuration, and routing concepts. Select the best answer for each question.</p>
+                </div>
+                <div id="quiz-container" class="space-y-12">
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const flashcardsData = [
+            { front: "HQ (HeadQuarters)", back: "The central, primary office site of an organisation that typically hosts the most critical infrastructure." },
+            { front: "Remote Branch (Branch Office)", back: "A secondary site, geographically separate from HQ, that requires network communication with the central office." },
+            { front: "WAN (Wide Area Network)", back: "A network that spans a large geographical area, connecting multiple distinct sites together." },
+            { front: "Leased Lines", back: "Dedicated physical connections between two sites that are expensive but highly reliable." },
+            { front: "MPLS (MultiProtocol Label Switching)", back: "A provider-managed, high-performance WAN service." },
+            { front: "VPN (Virtual Private Network) over the Internet", back: "A cost-effective, encrypted tunnel used to securely connect sites across the public Internet." },
+            { front: "Hub-and-Spoke Topology", back: "A network design where one central site connects to multiple remote branches, common for enterprise WANs." },
+            { front: "Mesh Topology", back: "A network design where every device connects to every other device, typically used in core WAN infrastructure." },
+            { front: "Router", back: "A network device that forwards data packets between different networks based on IP addresses." },
+            { front: "Routing Table", back: "A list maintained by a router of known networks and the instructions on how to reach them." },
+            { front: "Subnetting", back: "The process of dividing a larger IP address space into smaller, logical sub-groups to prevent conflicts." },
+            { front: "Usable host addresses in a /30 subnet", back: "Exactly 2, which makes it perfect for a point-to-point link between two routers." },
+            { front: "Static Routing", back: "A routing method where an administrator manually types each route into the router; it does not scale well." },
+            { front: "Dynamic Routing", back: "A routing method where routers automatically share routing information with each other using a protocol." },
+            { front: "RIP (Routing Information Protocol)", back: "A simple, older dynamic routing protocol that is limited to a maximum of 15 hops." },
+            { front: "OSPF (Open Shortest Path First)", back: "A modern, fast-convergence dynamic routing protocol that is widely used in enterprise networks." },
+            { front: "EIGRP (Enhanced Interior Gateway Routing Protocol)", back: "An efficient, Cisco-proprietary dynamic routing protocol." },
+            { front: "FastEthernet / GigabitEthernet", back: "Router interfaces that are typically used to connect to Local Area Networks (LANs)." },
+            { front: "Serial Interface", back: "A router interface that is typically used for long-distance Wide Area Network (WAN) connections." },
+            { front: "Baseline Documentation", back: "The professional practice of verifying and recording an existing network's functionality before making changes." },
+            { front: "DCE (Data Circuit-terminating Equipment) Cable", back: "The end of a simulated serial connection that requires a clock rate to be manually configured." },
+            { front: "RFC 1918", back: "The standard that defines specific IP address ranges (like 10.x.x.x and 192.168.x.x) reserved for private, internal use." },
+            { front: "Cisco IOS command to enable an interface", back: "no shutdown" },
+            { front: "Cisco IOS command to view the routing table", back: "show ip route" },
+            { front: "Cisco IOS command to check interface states", back: "show interfaces" }
+        ];
+
+        const quizData = [
+            {
+                question: "A network engineer is configuring a dedicated point-to-point serial link between a central headquarters and a newly acquired branch office. Which subnet mask is the most efficient choice for this specific link to avoid wasting IP addresses?",
+                hint: "Consider exactly how many device interfaces need an IP address on a direct connection between two routers.",
+                options: [
+                    { text: "255.255.255.252 (/30)", rationale: "A /30 subnet leaves exactly two host bits, providing two usable IP addresses, which perfectly matches a point-to-point connection between two routers.", isCorrect: true },
+                    { text: "255.255.255.0 (/24)", rationale: "A /24 subnet provides 254 usable addresses, which wastes 252 IPs when only two devices are communicating on the link.", isCorrect: false },
+                    { text: "255.255.255.248 (/29)", rationale: "This mask creates subnets with 6 usable addresses, leaving 4 unused addresses that could be allocated elsewhere.", isCorrect: false },
+                    { text: "255.255.255.255 (/32)", rationale: "A /32 mask designates a single specific host, meaning it cannot establish a network segment connecting two different devices.", isCorrect: false }
+                ]
+            },
+            {
+                question: "An administrator needs the HQ router to send traffic destined for the Branch LAN (192.168.2.0/24). The Branch router's WAN interface IP is 10.0.0.2. Which command correctly establishes this path?",
+                hint: "The router needs to know the final destination network and the immediate next step (the neighbor's address) to get there.",
+                options: [
+                    { text: "ip route 192.168.2.0 255.255.255.0 10.0.0.2", rationale: "The command accurately specifies the target destination network, its subnet mask, and the IP address of the neighboring router interface that traffic must pass through.", isCorrect: true },
+                    { text: "ip route 10.0.0.2 255.255.255.252 192.168.2.0", rationale: "This syntax improperly places the next-hop IP address where the destination network should be, breaking the routing logic.", isCorrect: false },
+                    { text: "ip route 192.168.1.0 255.255.255.0 10.0.0.1", rationale: "This configuration routes traffic back into the local network rather than pushing it across the WAN link toward the distant site.", isCorrect: false },
+                    { text: "network 192.168.2.0 255.255.255.0", rationale: "The network command is utilized within dynamic routing protocol configurations to advertise connected interfaces, not to build static paths.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A rapidly expanding enterprise network requires a routing protocol that converges quickly and works seamlessly across multi-vendor equipment. Which protocol aligns best with these requirements?",
+                hint: "Look for a standardized, modern protocol recognized by the IETF that isn't locked to a specific hardware manufacturer.",
+                options: [
+                    { text: "OSPF", rationale: "As an open standard defined by the IETF, it offers fast convergence and widespread compatibility suitable for modern enterprise environments.", isCorrect: true },
+                    { text: "EIGRP", rationale: "While highly efficient and fast, it is traditionally a Cisco-proprietary protocol and may require complex configurations in a multi-vendor environment.", isCorrect: false },
+                    { text: "RIP", rationale: "This protocol is older, slower to converge, and limited by a 15-hop maximum, making it unsuitable for a rapidly expanding network.", isCorrect: false },
+                    { text: "Static Routing", rationale: "Manual route entry requires constant administrative intervention for every network change, making it impossible to scale quickly.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A ping test across a newly connected WAN link fails. When checking the router, the engineer notices the interface status says 'administratively down'. What is the required action to fix this?",
+                hint: "Think about the specific IOS command used to enable a port that is turned off by default.",
+                options: [
+                    { text: "Enter the interface configuration mode and type 'no shutdown'.", rationale: "This command powers on the interface, changing its status from administratively down to an active state.", isCorrect: true },
+                    { text: "Assign a new IP address from a private RFC 1918 range.", rationale: "Addressing issues can cause communication failures, but they do not cause a router's physical interface to enter an administratively shut down state.", isCorrect: false },
+                    { text: "Configure a clock rate on the DTE side of the connection.", rationale: "Clock rates are applied to the DCE side, and missing clock rates cause layer 2 protocol failures, not administrative layer 1 shutdowns.", isCorrect: false },
+                    { text: "Restart the routing protocol process using 'clear ip route'.", rationale: "Routing protocols only operate on interfaces that are already physically up and enabled, so this will not resolve a port state issue.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A retail company is connecting 50 small storefronts back to its main data center to process transactions. The storefronts do not need to communicate directly with each other. Which WAN topology represents the most cost-effective and logical design?",
+                hint: "Consider an architecture shaped like a bicycle wheel, where all traffic must flow through a central processing point.",
+                options: [
+                    { text: "Hub-and-spoke", rationale: "All remote sites connect back to a central location, minimizing the total number of expensive WAN links needed while fulfilling communication requirements.", isCorrect: true },
+                    { text: "Full mesh", rationale: "Connecting every single storefront to every other storefront would require an excessive, unnecessary number of links, greatly inflating costs.", isCorrect: false },
+                    { text: "Star", rationale: "While visually similar, 'star' traditionally describes a local area network layout around a local switch, whereas this specific WAN architecture has a distinct industry term.", isCorrect: false },
+                    { text: "Point-to-point", rationale: "This describes a single link between two specific devices, not a comprehensive architectural layout for 50 remote sites.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Before connecting a new branch router to the network, the lead engineer mandates verifying that all devices in the main office can successfully reach the local server. What is the primary operational value of this practice?",
+                hint: "If an experiment fails after you change a variable, you need to be absolutely certain the system was working before the change.",
+                options: [
+                    { text: "It establishes a known working state to prevent confusing pre-existing issues with new configuration errors.", rationale: "Baseline documentation isolates variables, ensuring any new troubleshooting efforts are strictly focused on the newly added branch equipment.", isCorrect: true },
+                    { text: "It forces the routers to update their dynamic routing tables before new links are added.", rationale: "Pinging local servers generates basic ICMP traffic but does not trigger or accelerate routing protocol updates.", isCorrect: false },
+                    { text: "It automatically allocates the correct subnet masks for the upcoming WAN configuration.", rationale: "IP allocation and subnetting are manual design tasks completed during the planning phase, not automated by basic connectivity tests.", isCorrect: false },
+                    { text: "It clears the ARP cache on all switches to make room for new remote MAC addresses.", rationale: "Switches manage their own MAC address tables dynamically, and remote MAC addresses do not traverse a routed WAN link.", isCorrect: false }
+                ]
+            },
+            {
+                question: "While configuring a simulated serial WAN link between two routers in a lab environment, traffic is failing to pass. The administrator realizes they forgot to set the timing signal for the connection. Where must this timing configuration be applied?",
+                hint: "Identify which end of a simulated physical serial connection traditionally acts as the 'provider' equipment controlling the link speed.",
+                options: [
+                    { text: "On the router interface designated as the DCE (Data Circuit-terminating Equipment).", rationale: "The DCE side is responsible for providing the clocking signal to synchronize the serial transmission between the two devices.", isCorrect: true },
+                    { text: "On the router interface designated as the DTE (Data Terminal Equipment).", rationale: "The DTE acts as the receiver of the clocking signal and does not possess the hardware role to set the transmission rate itself.", isCorrect: false },
+                    { text: "On the local switch connecting the router to the LAN.", rationale: "Clocking signals are specific to synchronous serial WAN links and are entirely irrelevant to standard Ethernet switch ports.", isCorrect: false },
+                    { text: "Within the OSPF dynamic routing configuration mode.", rationale: "Timing signals happen at the physical/data-link layer, functioning completely independently of layer 3 routing protocols.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A startup with a tight budget needs to connect a new remote office to headquarters. They require encrypted communication but cannot afford a dedicated provider-managed physical circuit. Which WAN technology is the most appropriate solution?",
+                hint: "Think about how you can securely transmit private data across a cheap, globally available public network.",
+                options: [
+                    { text: "VPN over the Internet", rationale: "This leverages existing, inexpensive public internet connections while creating a secure, encrypted tunnel to protect private data traversing the public space.", isCorrect: true },
+                    { text: "Leased Lines", rationale: "These provide dedicated physical connections, which are highly reliable but carry premium monthly costs that fall outside a tight budget.", isCorrect: false },
+                    { text: "MPLS", rationale: "This is a premium, high-performance service managed by an ISP, carrying a significantly higher cost than standard internet-based solutions.", isCorrect: false },
+                    { text: "Private Local Area Network", rationale: "LAN technologies are bound by strict distance limitations and cannot physically span the geographical distances required to connect remote offices.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A network technician successfully pings a branch PC from the HQ LAN, confirming basic reachability. However, they now need to verify exactly which routers the packets traverse to ensure traffic isn't taking an unexpected backup path. Which tool provides this specific visibility?",
+                hint: "Look for the utility specifically designed to document the path of a packet step-by-step.",
+                options: [
+                    { text: "traceroute", rationale: "This utility intentionally manipulates time-to-live values to record and display each individual router hop the packet takes to reach the destination.", isCorrect: true },
+                    { text: "show ip route", rationale: "This displays the local router's forwarding table logic, but does not confirm the actual end-to-end path the packet physically takes across multiple devices.", isCorrect: false },
+                    { text: "ping", rationale: "This tool only confirms end-to-end reachability and round-trip time, hiding the intermediate steps and providing no visibility into pathing.", isCorrect: false },
+                    { text: "show interfaces", rationale: "This command provides detailed statistics about a single local port, offering zero visibility into the broader network path beyond the device.", isCorrect: false }
+                ]
+            },
+            {
+                question: "An engineer is drafting the IP scheme for a new branch LAN and selects the address block 192.168.2.0/24. According to industry standards (RFC 1918), what is the defining characteristic of this specific address block?",
+                hint: "Consider why millions of home and office networks can safely use this exact same IP range simultaneously without breaking the global Internet.",
+                options: [
+                    { text: "It is reserved for private, internal use and cannot be routed across the public Internet.", rationale: "Standards bodies defined this range specifically so organizations could build internal networks without their addresses conflicting with public web servers.", isCorrect: true },
+                    { text: "It provides exactly two usable host addresses for point-to-point connections.", rationale: "A /24 subnet provides 254 usable addresses, accommodating full office LANs, whereas a /30 mask provides the two addresses needed for a point-to-point link.", isCorrect: false },
+                    { text: "It is designated exclusively for provider-managed WAN links like MPLS.", rationale: "Providers typically use public IP space or specific carrier-grade NAT space for their core infrastructure, while 192.168.x.x is intended for enterprise and home LANs.", isCorrect: false },
+                    { text: "It guarantees automatic, dynamic configuration of host devices without a DHCP server.", rationale: "Private IP ranges still require either manual static assignment or an active DHCP server to be properly allocated to endpoint hosts.", isCorrect: false }
+                ]
+            }
+        ];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+        }
+
+        function renderFlashcards() {
+            const container = document.getElementById('flashcards-container');
+            flashcardsData.forEach((card, index) => {
+                const cardHtml = `
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <span class="text-xs text-slate-400 mb-2 uppercase tracking-wider font-bold">Card ${index + 1}</span>
+                                <h3 class="text-xl font-bold text-center leading-tight">${card.front}</h3>
+                                <div class="mt-4 text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full">Click to flip</div>
+                            </div>
+                            <div class="flip-card-back">
+                                <p class="text-center font-medium leading-relaxed">${card.back}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            quizData.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                q.options.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <button id="btn-${qIndex}-${oIndex}" class="option-btn w-full text-left p-4 rounded-lg border border-slate-200 bg-white mb-3 shadow-sm" onclick="selectAnswer(${qIndex}, ${oIndex}, ${opt.isCorrect})">
+                            <div class="flex items-start">
+                                <span class="font-bold mr-3 text-slate-400 mt-0.5">${String.fromCharCode(65 + oIndex)}.</span>
+                                <span>${opt.text}</span>
+                            </div>
+                        </button>
+                        <div id="rationale-${qIndex}-${oIndex}" class="hidden p-4 mb-4 rounded-lg text-sm bg-slate-50 border border-slate-200 text-slate-700">
+                            <span class="font-bold ${opt.isCorrect ? 'text-green-700' : 'text-red-700'}">${opt.isCorrect ? 'Correct!' : 'Incorrect.'}</span> 
+                            ${opt.rationale}
+                        </div>
+                    `;
+                });
+
+                const questionHtml = `
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 pr-4"><span class="text-blue-600 mr-2">${qIndex + 1}.</span>${q.question}</h3>
+                            <button onclick="document.getElementById('hint-${qIndex}').classList.toggle('hidden')" class="shrink-0 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1 rounded transition-colors" title="Show Hint">💡 Hint</button>
+                        </div>
+                        <div id="hint-${qIndex}" class="hidden bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-3 mb-6 text-sm rounded-r">
+                            <strong>Hint:</strong> ${q.hint}
+                        </div>
+                        <div class="options-container" id="options-${qIndex}">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += questionHtml;
+            });
+        }
+
+        function selectAnswer(qIndex, oIndex, isCorrect) {
+            const container = document.getElementById(`options-${qIndex}`);
+            const buttons = container.querySelectorAll('.option-btn');
+            
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                btn.classList.add('option-disabled');
+                
+                const isThisCorrect = quizData[qIndex].options[idx].isCorrect;
+                
+                if (isThisCorrect) {
+                    btn.classList.add('option-correct');
+                } else if (idx === oIndex && !isCorrect) {
+                    btn.classList.add('option-incorrect');
+                }
+            });
+
+            document.getElementById(`rationale-${qIndex}-${oIndex}`).classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFlashcards();
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
+
+
+

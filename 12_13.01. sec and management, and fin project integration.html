@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 10 — Security & Management Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 300px; max-height: 300px; }
+        .osi-layer { transition: all 0.3s ease; }
+        .osi-layer:hover { transform: translateX(10px); }
+        .nav-btn.active { background-color: #e7e5e4; border-left: 4px solid #0891b2; font-weight: 600; color: #1c1917; }
+        body { background-color: #fafaf9; color: #292524; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+<!-- Chosen Palette: Warm Neutrals with Cyan & Amber Accents (stone-50 background, stone-800 text, cyan-600 interactions, amber-600 highlights) -->
+<!-- Application Structure Plan: The SPA uses a dashboard-style layout with a persistent left sidebar for navigation. This transforms the linear 11-slide presentation into a functional "Engineer's Toolkit". Sections are grouped by operational domain: Dashboard (Overview & Grading), Security (CIA, SSH, Port Security), Operations (Backups, Docs), and Triage (Methodologies, Matrix). This allows students to quickly access reference material (like the OSI matrix or CLI commands) exactly when they need it during their final project, rather than scrolling through a document. -->
+<!-- Visualization & Content Choices: 
+1. Grading Ponderation -> Inform -> Doughnut Chart (Chart.js) -> Hover for details -> Visually emphasizes the 50% weight of Lab work. 
+2. SSH vs Telnet -> Compare -> Interactive toggle cards -> Click to flip/reveal -> Highlights the critical differences actively.
+3. Port Security -> Organize -> Interactive Configuration Builder -> Select dropdowns to match "Desk Default" -> Reinforces memory through action.
+4. OSI Troubleshooting -> Relationships -> Interactive HTML Stack -> Click layer to reveal tools -> Maps theoretical layers to practical CLI commands. 
+All visualizations use HTML/Tailwind/Canvas. NO SVG. NO Mermaid. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="w-full md:w-64 bg-stone-100 border-r border-stone-200 flex-shrink-0 z-10 flex flex-col">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-xl font-bold text-stone-800 tracking-tight">Cyber.SoHo Hub</h1>
+            <p class="text-sm text-stone-500 mt-1">Module 10: Sec & Mgmt</p>
+        </div>
+        <div class="flex flex-col p-4 gap-2 flex-grow">
+            <button onclick="nav('dashboard')" id="btn-dashboard" class="nav-btn active text-left px-4 py-3 rounded-md text-stone-600 hover:bg-stone-200 transition-colors">
+                <span class="mr-2">🏠</span> Overview & Project
+            </button>
+            <button onclick="nav('security')" id="btn-security" class="nav-btn text-left px-4 py-3 rounded-md text-stone-600 hover:bg-stone-200 transition-colors">
+                <span class="mr-2">🔒</span> Security Posture
+            </button>
+            <button onclick="nav('management')" id="btn-management" class="nav-btn text-left px-4 py-3 rounded-md text-stone-600 hover:bg-stone-200 transition-colors">
+                <span class="mr-2">💾</span> Ops & Docs
+            </button>
+            <button onclick="nav('triage')" id="btn-triage" class="nav-btn text-left px-4 py-3 rounded-md text-stone-600 hover:bg-stone-200 transition-colors">
+                <span class="mr-2">🛠️</span> Triage & Matrix
+            </button>
+        </div>
+        <div class="p-4 border-t border-stone-200 text-xs text-stone-400">
+            Internal Use Only. Do not redistribute.
+        </div>
+    </nav>
+
+    <main class="flex-grow p-6 md:p-10 lg:p-14 overflow-y-auto w-full">
+        
+        <section id="sec-dashboard" class="block animate-fade-in">
+            <header class="mb-8 border-b border-stone-200 pb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Module 10: Stop Theory, Start Operations</h2>
+                <p class="text-lg text-stone-600">This dashboard is your operational craft interface. Here, the theoretical concepts of Computer Networks translate into hands-on router and switch lockdown, management migrations, and structured troubleshooting. Explore the sections to prepare for your Final Project integration.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 text-cyan-800 border-b border-stone-100 pb-2">Final Project Mission</h3>
+                    <p class="text-stone-600 mb-4 text-sm">Combine Module 9 (VLANs/Routing) with Module 10 (Security/Mgmt) to transition from student to junior engineer.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start"><span class="text-green-600 mr-2">☑</span> <span class="text-sm">Apply Lesson 1 baseline (banners, secrets, logging)</span></li>
+                        <li class="flex items-start"><span class="text-green-600 mr-2">☑</span> <span class="text-sm">Disable Telnet, configure SSH-2 / RSA-2048</span></li>
+                        <li class="flex items-start"><span class="text-green-600 mr-2">☑</span> <span class="text-sm">Lock down at least one access port</span></li>
+                        <li class="flex items-start"><span class="text-green-600 mr-2">☑</span> <span class="text-sm">Spin up TFTP & run daily backup</span></li>
+                        <li class="flex items-start"><span class="text-green-600 mr-2">☑</span> <span class="text-sm">Document an outage using the OSI matrix</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm flex flex-col items-center">
+                    <h3 class="text-xl font-bold mb-2 text-cyan-800 w-full text-left">Grading Ponderation (1-2-1)</h3>
+                    <p class="text-sm text-stone-500 mb-4 w-full text-left">Real life rewards what runs. Focus your efforts accordingly.</p>
+                    <div class="chart-container">
+                        <canvas id="gradingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 text-amber-900">
+                <h4 class="font-bold flex items-center mb-2"><span class="text-xl mr-2">⚠️</span> Key Takeaway</h4>
+                <p>A network engineer who can break a network is not impressive. One who can keep it running and explain how is.</p>
+            </div>
+        </section>
+
+        <section id="sec-security" class="hidden animate-fade-in">
+            <header class="mb-8 border-b border-stone-200 pb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Security Posture</h2>
+                <p class="text-lg text-stone-600">Network security is a posture you maintain, not a product you buy. This section covers the foundational CIA Triad, the critical migration from Telnet to SSH, and securing the physical Layer 2 perimeter.</p>
+            </header>
+
+            <h3 class="text-xl font-bold mb-4 text-cyan-800">The CIA Triad</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div class="bg-white p-5 rounded-lg border-t-4 border-stone-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="toggleDetails('cia-c')">
+                    <h4 class="font-bold text-lg mb-2">Confidentiality</h4>
+                    <p class="text-sm text-stone-600">Only authorized eyes see the data.</p>
+                    <div id="cia-c" class="hidden mt-3 pt-3 border-t border-stone-100 text-sm text-stone-700 bg-stone-50 p-2 rounded">
+                        <strong>Action:</strong> Encryption everywhere (HTTPS, SSH), Strong passwords, MFA.
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-lg border-t-4 border-cyan-600 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="toggleDetails('cia-i')">
+                    <h4 class="font-bold text-lg mb-2">Integrity</h4>
+                    <p class="text-sm text-stone-600">Data is not altered without permission.</p>
+                    <div id="cia-i" class="hidden mt-3 pt-3 border-t border-stone-100 text-sm text-stone-700 bg-stone-50 p-2 rounded">
+                        <strong>Action:</strong> HMAC checks, SSH-2 implementation.
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-lg border-t-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="toggleDetails('cia-a')">
+                    <h4 class="font-bold text-lg mb-2">Availability</h4>
+                    <p class="text-sm text-stone-600">The service answers when legitimate users ask.</p>
+                    <div id="cia-a" class="hidden mt-3 pt-3 border-t border-stone-100 text-sm text-stone-700 bg-stone-50 p-2 rounded">
+                        <strong>Action:</strong> Port-security (prevents rogue DHCP/loops), Backups, Patching.
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 text-cyan-800">Protocol Migration: Telnet vs SSH-2</h3>
+            <div class="flex flex-col md:flex-row gap-6 mb-10">
+                <div class="flex-1 bg-red-50 border border-red-200 p-6 rounded-xl">
+                    <h4 class="font-bold text-red-800 text-lg mb-3 flex items-center">☠️ Telnet (Dead in 2026)</h4>
+                    <ul class="text-sm text-red-900 space-y-2">
+                        <li>• Cleartext over TCP/23</li>
+                        <li>• Wireshark sees every keystroke</li>
+                        <li>• No integrity check (tamper-prone)</li>
+                    </ul>
+                </div>
+                <div class="flex justify-center items-center font-bold text-stone-400 text-2xl">➔</div>
+                <div class="flex-1 bg-green-50 border border-green-200 p-6 rounded-xl">
+                    <h4 class="font-bold text-green-800 text-lg mb-3 flex items-center">🛡️ SSH-2 (The Standard)</h4>
+                    <ul class="text-sm text-green-900 space-y-2">
+                        <li>• TCP/22, AES + ChaCha20 ciphers</li>
+                        <li>• HMAC integrity checks</li>
+                        <li>• Key-based auth (RSA 2048+ bits)</li>
+                        <li>• Critical: <code>transport input ssh</code></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 text-cyan-800">Port Security Configurator</h3>
+            <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                <p class="text-sm text-stone-600 mb-4">Configure the switch port to block rogue L2 devices. Find the "Office Desk" recommended defaults to turn the indicator green.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 uppercase mb-1">Max MACs</label>
+                        <select id="ps-max" class="w-full p-2 border border-stone-300 rounded bg-stone-50 text-sm" onchange="checkPortSecurity()">
+                            <option value="none">-- Select --</option>
+                            <option value="1">1</option>
+                            <option value="2">2 (Desk + Phone)</option>
+                            <option value="5">5 (Shared Printer)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 uppercase mb-1">Learning Method</label>
+                        <select id="ps-learn" class="w-full p-2 border border-stone-300 rounded bg-stone-50 text-sm" onchange="checkPortSecurity()">
+                            <option value="none">-- Select --</option>
+                            <option value="static">Static</option>
+                            <option value="dynamic">Dynamic</option>
+                            <option value="sticky">Sticky</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 uppercase mb-1">Violation Action</label>
+                        <select id="ps-action" class="w-full p-2 border border-stone-300 rounded bg-stone-50 text-sm" onchange="checkPortSecurity()">
+                            <option value="none">-- Select --</option>
+                            <option value="protect">Protect</option>
+                            <option value="restrict">Restrict</option>
+                            <option value="shutdown">Shutdown</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ps-feedback" class="p-3 rounded text-sm font-bold bg-stone-100 text-stone-500 text-center border border-stone-200">
+                    Select settings to build configuration.
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-management" class="hidden animate-fade-in">
+            <header class="mb-8 border-b border-stone-200 pb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Operations & Documentation</h2>
+                <p class="text-lg text-stone-600">Automation that doesn't report is worse than no automation. Documentation is deferred kindness to your future self. Learn to secure configurations and generate lasting runbooks.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-cyan-800 flex items-center">⚙️ Backups (TFTP & Beyond)</h3>
+                    <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-4">
+                        <ul class="space-y-4">
+                            <li class="border-l-4 border-stone-300 pl-3">
+                                <strong class="text-stone-800 block">The Reality Check</strong>
+                                <span class="text-sm text-stone-600">One typo erases a route in 0.2s. Rebuilding at 2 AM relies on tested backups.</span>
+                            </li>
+                            <li class="border-l-4 border-cyan-500 pl-3">
+                                <strong class="text-stone-800 block">Legacy Baseline: TFTP (UDP 69)</strong>
+                                <span class="text-sm text-stone-600">No auth, no encryption. Use ONLY inside a secured management VLAN.</span>
+                            </li>
+                            <li class="border-l-4 border-stone-800 pl-3">
+                                <strong class="text-stone-800 block">Modern Standard</strong>
+                                <span class="text-sm text-stone-600">SCP over SSH, SFTP, or HTTPS pushes to a central server.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-amber-50 p-4 border border-amber-200 rounded text-sm text-amber-900">
+                        <strong>Backup Hygiene Checklist:</strong> Run nightly, stamp filename with date/host, verify file size > 1KB, email daily reports.
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-cyan-800 flex items-center">📚 Documentation Standards</h3>
+                    <div class="bg-stone-800 text-stone-100 p-6 rounded-xl shadow-md">
+                        <p class="italic text-stone-300 mb-4 border-b border-stone-600 pb-4">"Documentation that is generated by code is documentation that stays current."</p>
+                        
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center border-b border-stone-700 pb-2">
+                                <span class="font-bold text-cyan-400">Naming Convention</span>
+                                <span class="text-stone-400">siterole-number (e.g., MAD-PRI-R1)</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-stone-700 pb-2">
+                                <span class="font-bold text-cyan-400">IPAM / Truth</span>
+                                <span class="text-stone-400">NetBox (Single source of truth)</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-stone-700 pb-2">
+                                <span class="font-bold text-cyan-400">Change Log</span>
+                                <span class="text-stone-400">Append-only (Who/What/When/Why/Rollback)</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-stone-700 pb-2">
+                                <span class="font-bold text-cyan-400">Runbooks</span>
+                                <span class="text-stone-400">"If X breaks, do Y" written beforehand</span>
+                            </div>
+                             <div class="flex justify-between items-center">
+                                <span class="font-bold text-cyan-400">Version Control</span>
+                                <span class="text-stone-400">GitLab / GitHub + MkDocs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-triage" class="hidden animate-fade-in">
+            <header class="mb-8 border-b border-stone-200 pb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Triage & The OSI Matrix</h2>
+                <p class="text-lg text-stone-600">A method beats a genius without one. Before touching the keyboard, ask: <em>"What changed in the last 24 hours?"</em> Then, apply a structured methodology using the OSI model as your compass.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <div class="lg:col-span-4">
+                    <h3 class="text-xl font-bold mb-4 text-cyan-800">Methodologies</h3>
+                    <div class="space-y-3 mb-8">
+                        <div class="bg-white p-3 rounded border border-stone-200 shadow-sm">
+                            <span class="font-bold text-stone-800">⬆️ Bottom-up</span>
+                            <p class="text-xs text-stone-500 mt-1">Start L1, climb to L7. Best when hardware/cabling is suspected.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-stone-200 shadow-sm">
+                            <span class="font-bold text-stone-800">⬇️ Top-down</span>
+                            <p class="text-xs text-stone-500 mt-1">Start L7, descend to L1. Best for application-level user complaints.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-stone-200 shadow-sm">
+                            <span class="font-bold text-stone-800">➗ Divide-and-conquer</span>
+                            <p class="text-xs text-stone-500 mt-1">Start in the middle (L3/L4). Halve the search space based on pings.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-4 text-cyan-800">OSI Compass (Interactive)</h3>
+                    <p class="text-xs text-stone-500 mb-2">Click a layer to filter the troubleshooting matrix.</p>
+                    <div class="flex flex-col-reverse gap-1 font-mono text-sm">
+                        <div class="osi-layer bg-stone-800 text-stone-100 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L1')"><span>L1 Physical</span> <span class="text-stone-400">LEDs, Cables</span></div>
+                        <div class="osi-layer bg-stone-700 text-stone-100 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L2')"><span>L2 Data Link</span> <span class="text-stone-400">MAC, VLAN</span></div>
+                        <div class="osi-layer bg-stone-600 text-stone-100 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L3')"><span>L3 Network</span> <span class="text-stone-400">IP, Routes</span></div>
+                        <div class="osi-layer bg-stone-500 text-stone-100 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L4')"><span>L4 Transport</span> <span class="text-stone-400">TCP, UDP, ACL</span></div>
+                        <div class="osi-layer bg-stone-400 text-stone-900 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L5-6')"><span>L5/6 Sess/Pres</span> <span class="text-stone-600">TLS, SSL</span></div>
+                        <div class="osi-layer bg-stone-300 text-stone-900 p-2 rounded cursor-pointer flex justify-between items-center" onclick="filterMatrix('L7')"><span>L7 Application</span> <span class="text-stone-600">DNS, HTTP</span></div>
+                        <div class="bg-cyan-600 text-white p-2 rounded cursor-pointer text-center font-bold mt-2" onclick="filterMatrix('ALL')">Show All Layers</div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-8">
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-xl font-bold text-cyan-800">Dynamic Troubleshooting Matrix</h3>
+                        <span id="matrix-filter-label" class="text-xs bg-stone-200 text-stone-700 px-2 py-1 rounded font-bold">Showing: ALL</span>
+                    </div>
+                    <div class="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-stone-100 border-b border-stone-200 text-stone-600">
+                                        <th class="p-3 font-bold">Layer</th>
+                                        <th class="p-3 font-bold">Symptom</th>
+                                        <th class="p-3 font-bold">Diagnostic CLI</th>
+                                        <th class="p-3 font-bold">Fix Focus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matrix-body" class="text-stone-700">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <p class="text-xs text-stone-500 mt-3 text-right italic">A matrix that grows with every incident becomes the team's collective memory.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // State Management
+        let currentState = 'dashboard';
+        let gradingChartInstance = null;
+
+        // Data Storage
+        const matrixData = [
+            { layer: 'L1', symptom: 'Port down/down, no link lights', diag: 'show interfaces status', fix: 'Check physical cable, patch panel, replace optics' },
+            { layer: 'L1', symptom: 'Port err-disabled', diag: 'show interfaces status err-disabled', fix: 'Check port-security, spanning-tree BPDUGuard' },
+            { layer: 'L2', symptom: 'Device connected but cannot talk to subnet', diag: 'show vlan brief, show mac address-table', fix: 'Assign correct access VLAN, check switchport mode' },
+            { layer: 'L2', symptom: 'MAC address flapping', diag: 'show mac address-table', fix: 'Trace L2 loop, check spanning-tree topology' },
+            { layer: 'L3', symptom: 'Cannot reach remote subnet', diag: 'ping, traceroute, show ip route', fix: 'Add missing static route, check routing protocol neighbor' },
+            { layer: 'L3', symptom: 'Inter-VLAN routing failing', diag: 'show ip interface brief', fix: 'Check subinterface encapsulation dot1q, ensure SVI is UP' },
+            { layer: 'L4', symptom: 'Ping works, HTTP/SSH fails', diag: 'telnet host port, show access-lists', fix: 'Adjust firewall ACLs, check service listening state' },
+            { layer: 'L7', symptom: 'Can ping 8.8.8.8 but not google.com', diag: 'nslookup, dig', fix: 'Configure correct DNS server on client or DHCP scope' },
+            { layer: 'L7', symptom: 'Certificate error on management UI', diag: 'Browser DevTools, app logs', fix: 'Renew TLS certificate, check system clock (NTP)' }
+        ];
+
+        // Core Interaction: Navigation
+        function nav(tabId) {
+            // Update buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+
+            // Hide all sections
+            document.getElementById('sec-dashboard').classList.add('hidden');
+            document.getElementById('sec-security').classList.add('hidden');
+            document.getElementById('sec-management').classList.add('hidden');
+            document.getElementById('sec-triage').classList.add('hidden');
+
+            // Show selected section
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            
+            // Re-render charts if needed (fixes canvas sizing quirks when hidden)
+            if(tabId === 'dashboard' && gradingChartInstance) {
+                gradingChartInstance.resize();
+            }
+        }
+
+        // Interaction: CIA Details Toggle
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // Interaction: Port Security Logic
+        function checkPortSecurity() {
+            const max = document.getElementById('ps-max').value;
+            const learn = document.getElementById('ps-learn').value;
+            const action = document.getElementById('ps-action').value;
+            const feedback = document.getElementById('ps-feedback');
+
+            if (max === 'none' || learn === 'none' || action === 'none') {
+                feedback.className = "p-3 rounded text-sm font-bold bg-stone-100 text-stone-500 text-center border border-stone-200 mt-4";
+                feedback.innerText = "Select all settings to verify configuration.";
+                return;
+            }
+
+            if (max === '1' && learn === 'sticky' && action === 'shutdown') {
+                feedback.className = "p-3 rounded text-sm font-bold bg-green-100 text-green-800 text-center border border-green-300 mt-4";
+                feedback.innerHTML = "✅ <strong>Perfect!</strong> This matches the 'Office Desk' recommended defaults. A 4-hour outage becomes a 4-second event.";
+            } else {
+                feedback.className = "p-3 rounded text-sm font-bold bg-amber-100 text-amber-800 text-center border border-amber-300 mt-4";
+                feedback.innerHTML = "⚠️ Configuration valid, but does not match standard <em>'Office Desk' defaults</em> (Max 1, Sticky, Shutdown).";
+            }
+        }
+
+        // Interaction: Matrix Filtering
+        function filterMatrix(layer) {
+            document.getElementById('matrix-filter-label').innerText = `Showing: ${layer}`;
+            renderTable(layer);
+        }
+
+        function renderTable(filterLayer) {
+            const tbody = document.getElementById('matrix-body');
+            tbody.innerHTML = '';
+
+            const filteredData = filterLayer === 'ALL' 
+                ? matrixData 
+                : matrixData.filter(row => row.layer === filterLayer || (filterLayer === 'L5-6' && (row.layer === 'L5' || row.layer === 'L6')));
+
+            if(filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-stone-500 italic">No standard symptoms logged for ${filterLayer} yet. Add to the matrix!</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach((row, index) => {
+                const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-stone-50';
+                const tr = document.createElement('tr');
+                tr.className = `${bgClass} border-b border-stone-100 hover:bg-cyan-50 transition-colors`;
+                
+                let layerColor = 'text-stone-800';
+                if(row.layer === 'L1') layerColor = 'text-red-700 font-bold';
+                if(row.layer === 'L2') layerColor = 'text-orange-600 font-bold';
+                if(row.layer === 'L3') layerColor = 'text-amber-600 font-bold';
+                if(row.layer === 'L4') layerColor = 'text-green-600 font-bold';
+                if(row.layer === 'L7') layerColor = 'text-purple-600 font-bold';
+
+                tr.innerHTML = `
+                    <td class="p-3 ${layerColor}">${row.layer}</td>
+                    <td class="p-3">${row.symptom}</td>
+                    <td class="p-3 font-mono text-xs bg-stone-100 rounded my-1 inline-block border border-stone-200 text-stone-800">${row.diag}</td>
+                    <td class="p-3 text-xs">${row.fix}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Init Table
+            renderTable('ALL');
+
+            // Init Chart
+            const ctx = document.getElementById('gradingChart').getContext('2d');
+            gradingChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Theory Understanding', 'Lab Implementation', 'Documentation Quality'],
+                    datasets: [{
+                        data: [25, 50, 25],
+                        backgroundColor: [
+                            '#d6d3d1', // stone-300
+                            '#0891b2', // cyan-600 (Highlight)
+                            '#a8a29e'  // stone-400
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'system-ui' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
+
+
+

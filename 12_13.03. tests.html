@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 10: Study Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom utilities for CSS 3D Transforms (Flashcards) */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .group:hover .group-hover\:rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-slate-900 mb-2">Module 10: Security & Management</h1>
+            <p class="text-slate-600">Interactive Study Hub: Flashcards & Quiz</p>
+        </header>
+
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="tab-btn-flashcards" onclick="switchTab('flashcards')" class="px-6 py-3 rounded-lg font-semibold bg-blue-600 text-white shadow-md transition-colors">
+                Flashcards (25)
+            </button>
+            <button id="tab-btn-quiz" onclick="switchTab('quiz')" class="px-6 py-3 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 shadow-md transition-colors">
+                Practice Quiz (10)
+            </button>
+        </div>
+
+        <div id="tab-flashcards" class="block animate-fade-in">
+            <p class="text-center text-slate-500 mb-6">Hover over a card to reveal the answer.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="flashcard-container">
+                </div>
+        </div>
+
+        <div id="tab-quiz" class="hidden animate-fade-in max-w-4xl mx-auto">
+            <p class="text-center text-slate-500 mb-6">Test your operational knowledge.</p>
+            <form id="quiz-form" class="space-y-8">
+                </form>
+            <div class="mt-8 flex justify-center pb-12">
+                <button type="button" onclick="gradeQuiz()" class="px-8 py-4 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition-colors text-lg">
+                    Check Answers
+                </button>
+            </div>
+            <div id="quiz-results" class="hidden mt-6 mb-12 p-6 bg-white rounded-xl shadow-md text-center text-xl font-bold border-t-4 border-blue-500">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data ---
+        const flashcardsData = [
+            { front: "CIA Triad components", back: "Confidentiality, Integrity, and Availability." },
+            { front: "Confidentiality (CIA Triad)", back: "Ensuring that only authorized eyes see the data, typically achieved through encryption." },
+            { front: "Integrity (CIA Triad)", back: "Ensuring data is not altered without permission, often verified using HMACs." },
+            { front: "Availability (CIA Triad)", back: "Ensuring the service answers and is accessible when legitimate users request it." },
+            { front: "AAA security framework", back: "Authentication, Authorization, and Accounting." },
+            { front: "Primary vulnerability of Telnet", back: "It transmits data in cleartext over TCP port 23, allowing attackers to intercept keystrokes and tamper with data." },
+            { front: "SSH-2 protocol specifications", back: "Operates over TCP port 22, utilizing AES or ChaCha20 ciphers and HMAC for integrity." },
+            { front: "Critical command to enforce SSH on VTY lines", back: "transport input ssh (without it, Telnet may still be listening)." },
+            { front: "Primary function of Port Security", back: "It restricts which MAC addresses are allowed to communicate on a Layer 2 switch port." },
+            { front: "Recommended Port Security defaults for an office desk", back: "Maximum MACs: 1, Learning: sticky, Violation: shutdown." },
+            { front: "Benefit of \"sticky\" MAC learning", back: "The dynamically learned MAC address is permanently saved into the device's running-config." },
+            { front: "TFTP transport protocol and port", back: "UDP port 69." },
+            { front: "Primary security limitation of TFTP", back: "It has absolutely no authentication or encryption, meaning it should only be used inside an isolated management VLAN." },
+            { front: "Modern, secure alternatives to TFTP", back: "SCP (Secure Copy Protocol), SFTP, or an HTTPS push to a central config server." },
+            { front: "Bottom-up troubleshooting methodology", back: "Starting diagnostics at Layer 1 (Physical) and climbing up to Layer 7; best when hardware or cabling issues are suspected." },
+            { front: "Top-down troubleshooting methodology", back: "Starting diagnostics at Layer 7 (Application) and descending; best when users complain about specific application failures." },
+            { front: "Divide-and-conquer troubleshooting", back: "Starting in the middle of the OSI model (e.g., Layer 3) and halving the search space with each diagnostic step." },
+            { front: "Universal opening question for network outages", back: "What changed in the last 24 hours?" },
+            { front: "Key CLI tools for troubleshooting Layer 3 (Network)", back: "ping, traceroute, and show ip route." },
+            { front: "Key CLI tools for troubleshooting Layer 2 (Data Link)", back: "show vlan brief and show mac address-table." },
+            { front: "Primary function of an IPAM (like NetBox)", back: "To act as the single source of truth for all IP subnets and address management." },
+            { front: "Runbook definition", back: "Documentation written before an incident detailing \"if X breaks, do Y\" to ensure swift resolution." },
+            { front: "Golden rule of documentation", back: "Documentation that is generated by code is documentation that stays current." },
+            { front: "Core components of a Troubleshooting Matrix", back: "It maps a user symptom to its OSI layer, diagnostic CLI commands, and the appropriate fix CLI commands." },
+            { front: "Most heavily weighted category in the Final Project grading", back: "Lab implementation (50%), because real life rewards what actually runs." }
+        ];
+
+        const quizData = [
+            {
+                qNum: 1,
+                question: "Which component of the CIA triad ensures that data is not altered without permission?",
+                options: [
+                    { text: "Confidentiality", isCorrect: false, rationale: "This component restricts data access to authorized eyes only, typically using encryption, rather than protecting against alteration." },
+                    { text: "Integrity", isCorrect: true, rationale: "This principle relies on mechanisms like HMACs to verify that information remains completely unchanged during transit or storage." },
+                    { text: "Availability", isCorrect: false, rationale: "This ensures that a service is online and answers when legitimate users request it, but it does not verify the data's content." },
+                    { text: "Accounting", isCorrect: false, rationale: "This is part of the AAA framework and tracks what a user did while logged in, not the immutability of the data itself." }
+                ],
+                hint: "Consider the principle that uses hash functions to detect if a file or packet has been tampered with."
+            },
+            {
+                qNum: 2,
+                question: "When migrating from Telnet to SSH-2, which command is absolutely critical to apply on the VTY lines to prevent Telnet from continuing to listen?",
+                options: [
+                    { text: "ip ssh version 2", isCorrect: false, rationale: "This forces the router to use the more secure version of SSH, but it does not actively disable other inbound protocols on the terminal lines." },
+                    { text: "crypto key generate rsa", isCorrect: false, rationale: "Generating RSA keys is a prerequisite for SSH to function, but it does not stop the device from accepting unencrypted connections." },
+                    { text: "transport input ssh", isCorrect: true, rationale: "Applying this command to the virtual terminal lines strictly enforces that only the specified encrypted protocol is allowed to connect." },
+                    { text: "service password-encryption", isCorrect: false, rationale: "This encrypts passwords locally in the configuration file to prevent shoulder-surfing, but has no effect on remote access protocols." }
+                ],
+                hint: "Think about the command that dictates exactly which traffic can enter the virtual terminal interfaces."
+            },
+            {
+                qNum: 3,
+                question: "What are the recommended port security defaults for a standard office desk to turn a rogue device connection into a brief, localized outage?",
+                options: [
+                    { text: "Maximum 2 MACs, dynamic learning, restrict violation", isCorrect: false, rationale: "Allowing dynamic learning without saving the MAC, and only restricting the port, does not permanently stop the attacker or log the event as aggressively." },
+                    { text: "Maximum 1 MAC, sticky learning, shutdown violation", isCorrect: true, rationale: "Locking the port to a single saved address and completely disabling the interface upon violation provides the highest physical layer security." },
+                    { text: "Maximum 1 MAC, static learning, protect violation", isCorrect: false, rationale: "A 'protect' violation simply drops packets silently without alerting administrators or shutting down the port." },
+                    { text: "Maximum 5 MACs, sticky learning, restrict violation", isCorrect: false, rationale: "Allowing 5 MACs is intended for shared resources like a printer hub, not a single secured desk." }
+                ],
+                hint: "The ideal configuration locks the specific computer to the port and completely disables the port if an unauthorized machine is plugged in."
+            },
+            {
+                qNum: 4,
+                question: "Why must TFTP only be used inside a secured management VLAN?",
+                options: [
+                    { text: "It operates on TCP port 69, which is frequently blocked by modern hardware firewalls.", isCorrect: false, rationale: "TFTP actually operates on UDP, not TCP, and firewall behavior is not its primary security flaw." },
+                    { text: "It requires heavy CPU overhead to process the encryption algorithms on legacy routers.", isCorrect: false, rationale: "TFTP requires very little CPU overhead specifically because it lacks any encryption algorithms." },
+                    { text: "It lacks any form of authentication or encryption.", isCorrect: true, rationale: "The protocol transmits files in cleartext and does not verify user identity, leaving configurations vulnerable to interception or tampering on open networks." },
+                    { text: "It utilizes SCP (Secure Copy Protocol) in the background, which is inherently slow for large config files.", isCorrect: false, rationale: "SCP is a modern, secure alternative to TFTP, not a background process of it." }
+                ],
+                hint: "Consider how this older protocol handles user credentials and data privacy over the wire."
+            },
+            {
+                qNum: 5,
+                question: "If a user complains about an application-level failure (e.g., a specific website won't load, but others do), which troubleshooting methodology is typically best to employ?",
+                options: [
+                    { text: "Bottom-up", isCorrect: false, rationale: "Starting at the physical layer is inefficient when the issue is isolated to a specific piece of software and general connectivity is working." },
+                    { text: "Divide-and-conquer", isCorrect: false, rationale: "Starting at Layer 3 or 4 is useful for general routing issues, but misses the mark when the problem is clearly at the highest OSI layer." },
+                    { text: "Follow-the-path", isCorrect: false, rationale: "While tracing a path is useful, it is not one of the primary structured methodologies based on the OSI model discussed in the module." },
+                    { text: "Top-down", isCorrect: true, rationale: "Starting at Layer 7 allows the engineer to immediately investigate DNS, TLS, and application logs where software-specific issues reside." }
+                ],
+                hint: "If the problem is at the highest layer of the OSI model, you should start your investigation there."
+            },
+            {
+                qNum: 6,
+                question: "Before typing any CLI commands to diagnose a network outage, what is the universal opening question you should investigate?",
+                options: [
+                    { text: "Are the link lights flashing green?", isCorrect: false, rationale: "Checking physical status is a good step in a bottom-up approach, but it should happen after determining recent administrative actions." },
+                    { text: "What is the destination IP address?", isCorrect: false, rationale: "Knowing the target is necessary for routing diagnostics, but it doesn't provide context on why the outage started." },
+                    { text: "What changed in the last 24 hours?", isCorrect: true, rationale: "Reviewing change-control logs first often reveals the root cause instantly, as most outages are the result of recent administrative actions." },
+                    { text: "Is the router powered on?", isCorrect: false, rationale: "While power is essential, verifying recent network modifications is a more strategic first step for a network engineer." }
+                ],
+                hint: "Most outages, particularly those on a Monday morning, are the direct result of recent actions taken by other engineers."
+            },
+            {
+                qNum: 7,
+                question: "In modern network documentation standards, what is the primary role of an IPAM tool like NetBox?",
+                options: [
+                    { text: "To serve as the single source of truth for all subnets and IP addresses.", isCorrect: true, rationale: "An IP Address Management system replaces scattered spreadsheets by providing a centralized, authoritative database for the entire network's addressing space." },
+                    { text: "To automatically back up router configurations to a central server nightly.", isCorrect: false, rationale: "Configuration backups are handled by tools like TFTP/SCP servers or dedicated tools like Oxidized, not IPAM systems." },
+                    { text: "To generate dynamic troubleshooting matrices based on syslog alerts.", isCorrect: false, rationale: "While logging and monitoring are crucial, an IPAM's focus is on inventory and addressing design, not active alerting." },
+                    { text: "To act as a version-controlled repository for static documentation sites.", isCorrect: false, rationale: "Version control and static sites are typically handled by platforms like Git and MkDocs." }
+                ],
+                hint: "Think about the tool that tracks where every IP address lives so you don't accidentally create an IP conflict."
+            },
+            {
+                qNum: 8,
+                question: "Which piece of documentation is specifically written beforehand to dictate \"if X breaks, do Y\"?",
+                options: [
+                    { text: "Troubleshooting Matrix", isCorrect: false, rationale: "A matrix maps general symptoms to diagnostic commands, but it does not typically contain step-by-step procedural playbooks for specific service outages." },
+                    { text: "Runbook", isCorrect: true, rationale: "This operational document acts as a playbook, providing exact, pre-determined steps to resolve specific known incidents swiftly." },
+                    { text: "Change log", isCorrect: false, rationale: "A change log records what was altered in the past, including rollback steps, but it is not a general guide for responding to future unexpected breaks." },
+                    { text: "IPAM", isCorrect: false, rationale: "This is an inventory tool for subnets, not a procedural guide for incident response." }
+                ],
+                hint: "This document is a procedural playbook designed to eliminate guesswork during a high-stress outage."
+            },
+            {
+                qNum: 9,
+                question: "According to the Troubleshooting Matrix pattern, which set of CLI tools should be used for diagnosing Layer 3 (Network) issues?",
+                options: [
+                    { text: "show vlan brief and show mac address-table", isCorrect: false, rationale: "These commands investigate switches and MAC addresses, which operate at Layer 2 (Data Link)." },
+                    { text: "telnet host port and show ip ssh", isCorrect: false, rationale: "These commands check port accessibility and session establishment, which pertain to Layer 4 (Transport)." },
+                    { text: "show interfaces status and cable tests", isCorrect: false, rationale: "Checking the physical link and port status is part of Layer 1 (Physical) diagnostics." },
+                    { text: "ping, traceroute, and show ip route", isCorrect: true, rationale: "These tools directly test IP connectivity, trace the path across subnets, and verify the routing table, all of which are core Layer 3 functions." }
+                ],
+                hint: "You need tools that can verify IP addresses, routing paths, and the contents of the routing table."
+            },
+            {
+                qNum: 10,
+                question: "In the Cyber.SoHo final project grading ponderation, which category receives a 50% weight because \"real life rewards what runs\"?",
+                options: [
+                    { text: "Theory understanding", isCorrect: false, rationale: "While important for foundational knowledge, theory only accounts for 25% of the final grade." },
+                    { text: "Lab implementation", isCorrect: true, rationale: "The ability to actually configure the gear and make the network operational is the most critical and heavily weighted skill." },
+                    { text: "Documentation quality", isCorrect: false, rationale: "Documentation is a vital professional skill and accounts for 25% of the grade, but it is secondary to getting the network running." },
+                    { text: "Troubleshooting methodology", isCorrect: false, rationale: "This is a skill applied during the project, but the grading rubric explicitly highlights lab implementation for the 50% weight." }
+                ],
+                hint: "Think about the hands-on aspect where you prove your configurations actually work on the equipment."
+            }
+        ];
+
+        // --- Tab Logic ---
+        function switchTab(tabId) {
+            // Update buttons
+            document.getElementById('tab-btn-flashcards').className = tabId === 'flashcards' 
+                ? 'px-6 py-3 rounded-lg font-semibold bg-blue-600 text-white shadow-md transition-colors' 
+                : 'px-6 py-3 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 shadow-md transition-colors';
+            
+            document.getElementById('tab-btn-quiz').className = tabId === 'quiz' 
+                ? 'px-6 py-3 rounded-lg font-semibold bg-blue-600 text-white shadow-md transition-colors' 
+                : 'px-6 py-3 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 shadow-md transition-colors';
+
+            // Update content visibility
+            document.getElementById('tab-flashcards').classList.toggle('hidden', tabId !== 'flashcards');
+            document.getElementById('tab-quiz').classList.toggle('hidden', tabId !== 'quiz');
+        }
+
+        // --- Render Flashcards ---
+        const fcContainer = document.getElementById('flashcard-container');
+        flashcardsData.forEach((fc, index) => {
+            const cardHTML = `
+                <div class="group perspective-1000 w-full h-56 cursor-pointer">
+                    <div class="relative w-full h-full transition-transform duration-500 transform-style-3d group-hover:rotate-y-180">
+                        <div class="absolute w-full h-full backface-hidden bg-white border border-slate-200 shadow-sm rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                            <span class="text-xs text-slate-400 absolute top-3 left-4">Card ${index + 1}/25</span>
+                            <h3 class="text-lg font-bold text-slate-800">${fc.front}</h3>
+                        </div>
+                        <div class="absolute w-full h-full backface-hidden bg-blue-50 border border-blue-200 shadow-md rounded-xl p-6 flex items-center justify-center text-center rotate-y-180">
+                            <p class="text-sm font-medium text-blue-900">${fc.back}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            fcContainer.innerHTML += cardHTML;
+        });
+
+        // --- Render Quiz ---
+        const quizForm = document.getElementById('quiz-form');
+        quizData.forEach((q, qIndex) => {
+            // Shuffle options
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+            
+            let optionsHTML = '';
+            shuffledOptions.forEach((opt, oIndex) => {
+                const optId = `q${qIndex}_o${oIndex}`;
+                optionsHTML += `
+                    <div class="relative flex items-start py-2">
+                        <div class="min-w-0 flex-1 text-sm">
+                            <label for="${optId}" class="flex items-start cursor-pointer p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors" id="label_${optId}">
+                                <input id="${optId}" name="question_${qIndex}" type="radio" value="${opt.isCorrect}" class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-3 block text-slate-700 text-base">${opt.text}</span>
+                            </label>
+                            <div id="rationale_${optId}" class="hidden mt-2 ml-7 text-sm italic"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const qHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200" id="question_block_${qIndex}">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4"><span class="text-blue-600 mr-2">${q.qNum}.</span>${q.question}</h3>
+                    <div class="space-y-2 mb-4">
+                        ${optionsHTML}
+                    </div>
+                    <button type="button" onclick="toggleHint('hint_${qIndex}')" class="text-sm text-blue-600 font-medium hover:underline flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Need a hint?
+                    </button>
+                    <p id="hint_${qIndex}" class="hidden mt-2 text-sm text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">${q.hint}</p>
+                </div>
+            `;
+            quizForm.innerHTML += qHTML;
+        });
+
+        // --- Quiz Interactions ---
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.classList.toggle('hidden');
+        }
+
+        function gradeQuiz() {
+            let score = 0;
+            
+            quizData.forEach((q, qIndex) => {
+                const inputs = document.getElementsByName(`question_${qIndex}`);
+                let answered = false;
+
+                inputs.forEach((input) => {
+                    const label = document.getElementById(`label_${input.id}`);
+                    const rationale = document.getElementById(`rationale_${input.id}`);
+                    
+                    // Reset previous styling
+                    label.classList.remove('bg-red-50', 'border-red-300', 'bg-green-50', 'border-green-400');
+                    rationale.classList.add('hidden');
+                    
+                    // Find the original option object to get the rationale text
+                    const optText = label.querySelector('span').innerText;
+                    const originalOpt = q.options.find(o => o.text === optText);
+
+                    if (input.checked) {
+                        answered = true;
+                        rationale.innerText = originalOpt.rationale;
+                        rationale.classList.remove('hidden');
+
+                        if (input.value === "true") {
+                            score++;
+                            label.classList.add('bg-green-50', 'border-green-400');
+                            rationale.classList.add('text-green-700');
+                        } else {
+                            label.classList.add('bg-red-50', 'border-red-300');
+                            rationale.classList.add('text-red-700');
+                        }
+                    } else if (input.value === "true") {
+                        // Highlight correct answer if they missed it
+                        label.classList.add('border-green-400', 'bg-green-50', 'opacity-60');
+                    }
+                    
+                    // Disable inputs after grading
+                    input.disabled = true;
+                });
+            });
+
+            // Show Results
+            const resultsDiv = document.getElementById('quiz-results');
+            resultsDiv.classList.remove('hidden');
+            const percentage = (score / quizData.length) * 100;
+            
+            let message = "";
+            if (percentage >= 90) message = "Excellent work! You are ready for the Final Project.";
+            else if (percentage >= 70) message = "Good job! Review the flashcards for the ones you missed.";
+            else message = "Keep studying! Use the flashcards tab to reinforce these concepts.";
+
+            resultsDiv.innerHTML = `You scored ${score} out of ${quizData.length} (${percentage}%)<br><span class="text-base font-normal text-slate-600 mt-2 block">${message}</span>`;
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+
+
+
